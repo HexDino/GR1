@@ -1,0 +1,35 @@
+// This is a reference schema showing the Appointment model with the timeSlot field
+// To be implemented in the main prisma/schema.prisma file
+
+model Appointment {
+  id              String            @id @default(cuid())
+  patientId       String
+  doctorId        String
+  patient         User              @relation("PatientAppointments", fields: [patientId], references: [id])
+  doctor          User              @relation("DoctorAppointments", fields: [doctorId], references: [id])
+  date            DateTime
+  timeSlot        String?           // Added field for storing the time slot (format: "HH:MM")
+  status          AppointmentStatus @default(PENDING)
+  type            AppointmentType   @default(IN_PERSON)
+  symptoms        String?
+  diagnosis       String?
+  notes           String?
+  review          DoctorReview?     @relation("AppointmentReview")
+  aiAnalysis      AIAnalysis?
+  prescriptions   Prescription[]
+  followUpDate    DateTime?
+  cancelReason    String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  patientRelation Patient?          @relation("Appointment_patientId_Patient_fkey", fields: [patientId], references: [id], map: "appointment_patient_fkey")
+  doctorRelation  Doctor?           @relation("Appointment_doctorId_Doctor_fkey", fields: [doctorId], references: [id], map: "appointment_doctor_fkey")
+
+  // Relation to doctor review
+  doctorReviewId String?       @unique
+  doctorReview   DoctorReview? @relation("AppointmentDoctorReview", fields: [doctorReviewId], references: [id])
+  
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([date])
+  @@index([status])
+} 

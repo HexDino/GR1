@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M50 20V44" stroke="#6C27FF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M35 35V26C35 23.2386 37.2386 21 40 21H60C62.7614 21 65 23.2386 65 26V35" stroke="#6C27FF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M35 35C35 35 32 36 30 40C28 44 25 54 25 54C25 54 22 64 23 69C24 74 28 78 34 78C40 78 44 73 43 66C42 59 37 54 37 54" fill="#F3E8FF"/>
+  <path d="M35 35C35 35 32 36 30 40C28 44 25 54 25 54C25 54 22 64 23 69C24 74 28 78 34 78C40 78 44 73 43 66C42 59 37 54 37 54" stroke="#6C27FF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M65 35C65 35 68 36 70 40C72 44 75 54 75 54C75 54 78 64 77 69C76 74 72 78 66 78C60 78 56 73 57 66C58 59 63 54 63 54" fill="#F3E8FF"/>
+  <path d="M65 35C65 35 68 36 70 40C72 44 75 54 75 54C75 54 78 64 77 69C76 74 72 78 66 78C60 78 56 73 57 66C58 59 63 54 63 54" stroke="#6C27FF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="30" cy="50" r="3" fill="#6C27FF"/>
+  <circle cx="70" cy="50" r="3" fill="#6C27FF"/>
+  <circle cx="33" cy="64" r="3" fill="#6C27FF"/>
+  <circle cx="67" cy="64" r="3" fill="#6C27FF"/>
+</svg> 
