@@ -18,7 +18,8 @@ export function middleware(request: NextRequest) {
   response.headers.set('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;")
   
   // Implement basic rate limiting
-  const ip = request.ip || 'unknown'
+  const forwarded = request.headers.get('x-forwarded-for')
+  const ip = forwarded ? forwarded.split(',')[0].trim() : 'unknown'
   const now = Date.now()
   
   // Clean up old entries - using Array.from to avoid iteration issues
