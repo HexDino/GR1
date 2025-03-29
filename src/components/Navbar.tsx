@@ -1,3 +1,5 @@
+"use client"
+
 import Link from 'next/link';
 import { useState } from 'react';
 import { SignupPopup, LoginPopup } from '@/components/AuthPopups';
