@@ -1,8 +1,9 @@
 export interface JWTPayload {
-  userId: string
-  role: 'ADMIN' | 'DOCTOR' | 'PATIENT'
-  email: string
-  name: string
-  iat: number
-  exp: number
+  userId: string;
+  email?: string;
+  role?: string;
+  name?: string;
+  tokenType?: 'access' | 'refresh';
+  iat?: number;
+  exp?: number;
 } 

@@ -1,15 +1,14 @@
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import './globals.css'
-import Navbar from '@/components/Navbar'
-import Footer from '@/components/Footer'
+import './globals.css';
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import { Navbar } from '@/components/Navbar';
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Medical Hub',
-  description: 'Professional medical services for your family',
-}
+  title: 'Medical Appointment System',
+  description: 'Book appointments with the best doctors in town',
+};
 
 export default function RootLayout({
   children,
@@ -21,8 +20,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <Navbar />
         {children}
-        <Footer />
       </body>
     </html>
-  )
+  );
 } 

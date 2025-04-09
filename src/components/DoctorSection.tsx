@@ -86,7 +86,7 @@ const DoctorCard = ({
   );
 };
 
-const DoctorsPage = () => {
+export const DoctorSection = () => {
   // Mẫu dữ liệu, sau này sẽ được lấy từ cơ sở dữ liệu
   const doctors = [
     {
@@ -124,65 +124,36 @@ const DoctorsPage = () => {
       rating: 4.5,
       reviewCount: 72,
       available: true
-    },
-    {
-      id: "dr-emily-johnson",
-      name: "Dr. Emily Johnson",
-      specialty: "Dermatologist",
-      image: "/doctors/doctor1.jpg", // Reused image as placeholder
-      rating: 4.8,
-      reviewCount: 89,
-      available: true
-    },
-    {
-      id: "dr-michael-williams",
-      name: "Dr. Michael Williams",
-      specialty: "Ophthalmologist",
-      image: "/doctors/doctor2.jpg", // Reused image as placeholder
-      rating: 4.6,
-      reviewCount: 65,
-      available: false
-    },
-    {
-      id: "dr-sarah-rodriguez",
-      name: "Dr. Sarah Rodriguez",
-      specialty: "Endocrinologist",
-      image: "/doctors/doctor3.jpg", // Reused image as placeholder
-      rating: 4.7,
-      reviewCount: 103,
-      available: true
-    },
-    {
-      id: "dr-james-brown",
-      name: "Dr. James Brown",
-      specialty: "Gastroenterologist",
-      image: "/doctors/doctor4.jpg", // Reused image as placeholder
-      rating: 4.4,
-      reviewCount: 78,
-      available: true
     }
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-16">
+    <section className="py-16 bg-white">
       <div className="container mx-auto px-4">
         <div className="max-w-2xl mx-auto text-center mb-16">
-          <h1 className="text-3xl font-bold text-gray-800 mb-4">Our Doctors</h1>
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">Meet our Doctors</h2>
           <p className="text-gray-600">
-            Meet our team of qualified healthcare professionals who are committed to providing you with the best medical care
+            Well qualified doctors are ready to serve you
           </p>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 max-w-7xl mx-auto">
-          {doctors.map((doctor) => (
-            <div key={doctor.id} className="col-span-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
+          {doctors.slice(0, 4).map((doctor) => (
+            <div key={doctor.id} className="col-span-1 sm:col-span-1">
               <DoctorCard doctor={doctor} />
             </div>
           ))}
         </div>
+        
+        <div className="mt-12 text-center">
+          <Link 
+            href="/doctors" 
+            className="inline-block bg-purple-600 text-white rounded-full px-6 py-3 text-sm font-medium transition hover:bg-purple-700"
+          >
+            See more
+          </Link>
+        </div>
       </div>
-    </div>
+    </section>
   );
-};
-
-export default DoctorsPage; 
+}; 
