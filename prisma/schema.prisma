@@ -109,12 +109,15 @@ model VerificationToken {
 
 // Permission model for fine-grained access control
 model Permission {
-  id              String           @id @default(cuid())
-  name            String           @unique
+  id              String            @id @default(cuid())
+  name            String            @unique
   description     String?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  action          String            @unique // e.g., "read:users", "create:appointment"
+  resource        String            // e.g., "users", "appointments"
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
   userPermissions UserPermission[]
+  rolePermissions RolePermission[]
 }
 
 // User Permission mapping
@@ -128,6 +131,18 @@ model UserPermission {
   updatedAt    DateTime   @updatedAt
 
   @@unique([userId, permissionId])
+}
+
+// Add RolePermission model
+model RolePermission {
+  id           String     @id @default(cuid())
+  role         UserRole
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([role, permissionId])
 }
 
 // Profile model
@@ -413,7 +428,6 @@ enum UserRole {
   PATIENT
   DOCTOR
   ADMIN
-  STAFF
 }
 
 enum Gender {

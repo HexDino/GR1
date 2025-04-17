@@ -9,7 +9,7 @@ import { AuthModal } from './AuthModal';
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isServicesOpen, setIsServicesOpen] = useState(false);
+  const [isDepartmentsOpen, setIsDepartmentsOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
   const pathname = usePathname();
@@ -35,24 +35,24 @@ export const Navbar = () => {
     setIsOpen(!isOpen);
   };
 
-  // Services dropdown toggle
-  const toggleServices = () => {
-    setIsServicesOpen(!isServicesOpen);
+  // Departments dropdown toggle
+  const toggleDepartments = () => {
+    setIsDepartmentsOpen(!isDepartmentsOpen);
   };
 
-  // Services list for dropdown
-  const services = [
-    { name: 'Cardiology', href: '/services/cardiology' },
-    { name: 'Neurology', href: '/services/neurology' },
-    { name: 'Pediatrics', href: '/services/pediatrics' },
-    { name: 'Orthopedics', href: '/services/orthopedics' },
-    { name: 'Dermatology', href: '/services/dermatology' },
-    { name: 'Gastroenterology', href: '/services/gastroenterology' },
-    { name: 'Ophthalmology', href: '/services/ophthalmology' },
-    { name: 'Gynecology', href: '/services/gynecology' }
+  // Departments list for dropdown
+  const departments = [
+    { name: 'Cardiology', href: '/departments/cardiology' },
+    { name: 'Neurology', href: '/departments/neurology' },
+    { name: 'Pediatrics', href: '/departments/pediatrics' },
+    { name: 'Orthopedics', href: '/departments/orthopedics' },
+    { name: 'Dermatology', href: '/departments/dermatology' },
+    { name: 'Gastroenterology', href: '/departments/gastroenterology' },
+    { name: 'Ophthalmology', href: '/departments/ophthalmology' },
+    { name: 'Gynecology', href: '/departments/gynecology' }
   ];
 
-  // Navigation links (excluding Services which will be handled separately)
+  // Navigation links (excluding Departments which will be handled separately)
   const navLinks = [
     { name: 'Home', href: '/' },
     { name: 'Doctors', href: '/doctors' },
@@ -65,9 +65,9 @@ export const Navbar = () => {
     return pathname === path;
   };
 
-  // Check if any service route is active
-  const isServiceActive = () => {
-    return pathname.startsWith('/services');
+  // Check if any department route is active
+  const isDepartmentActive = () => {
+    return pathname.startsWith('/departments');
   };
 
   const openSignIn = () => {
@@ -103,20 +103,20 @@ export const Navbar = () => {
               Home
             </Link>
 
-            {/* Services dropdown */}
+            {/* Departments dropdown */}
             <div className="relative">
               <button
-                onClick={toggleServices}
+                onClick={toggleDepartments}
                 className={`text-sm font-medium transition duration-300 flex items-center ${
-                  isServiceActive()
+                  isDepartmentActive()
                     ? 'text-purple-600'
                     : 'text-gray-700 hover:text-purple-600'
                 }`}
               >
-                Services
+                Departments
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className={`h-4 w-4 ml-1 transition-transform ${isServicesOpen ? 'rotate-180' : ''}`}
+                  className={`h-4 w-4 ml-1 transition-transform ${isDepartmentsOpen ? 'rotate-180' : ''}`}
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -125,15 +125,15 @@ export const Navbar = () => {
                 </svg>
               </button>
               
-              {isServicesOpen && (
+              {isDepartmentsOpen && (
                 <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
-                  {services.map((service) => (
+                  {departments.map((department) => (
                     <Link
-                      key={service.name}
-                      href={service.href}
+                      key={department.name}
+                      href={department.href}
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600"
                     >
-                      {service.name}
+                      {department.name}
                     </Link>
                   ))}
                 </div>
@@ -158,15 +158,15 @@ export const Navbar = () => {
 
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link href="/login" className="text-sm font-medium text-gray-700 hover:text-purple-600 transition duration-300">
+            <button onClick={openSignIn} className="text-sm font-medium text-gray-700 hover:text-purple-600 transition duration-300">
               Log In
-            </Link>
-            <Link
-              href="/register"
+            </button>
+            <button
+              onClick={openSignUp}
               className="bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-purple-700 transition duration-300"
             >
               Sign Up
-            </Link>
+            </button>
           </div>
 
           {/* Mobile Menu Button */}
@@ -217,20 +217,20 @@ export const Navbar = () => {
                 Home
               </Link>
 
-              {/* Services dropdown for mobile */}
+              {/* Departments dropdown for mobile */}
               <div>
                 <button
-                  onClick={toggleServices}
+                  onClick={toggleDepartments}
                   className={`w-full text-left px-2 py-1 text-base font-medium rounded flex items-center justify-between ${
-                    isServiceActive()
+                    isDepartmentActive()
                       ? 'text-purple-600'
                       : 'text-gray-700 hover:text-purple-600'
                   }`}
                 >
-                  Services
+                  Departments
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className={`h-4 w-4 transition-transform ${isServicesOpen ? 'rotate-180' : ''}`}
+                    className={`h-4 w-4 transition-transform ${isDepartmentsOpen ? 'rotate-180' : ''}`}
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -239,16 +239,16 @@ export const Navbar = () => {
                   </svg>
                 </button>
                 
-                {isServicesOpen && (
+                {isDepartmentsOpen && (
                   <div className="ml-4 mt-2 space-y-1">
-                    {services.map((service) => (
+                    {departments.map((department) => (
                       <Link
-                        key={service.name}
-                        href={service.href}
+                        key={department.name}
+                        href={department.href}
                         className="block px-2 py-1 text-sm text-gray-700 hover:text-purple-600"
                         onClick={() => setIsOpen(false)}
                       >
-                        {service.name}
+                        {department.name}
                       </Link>
                     ))}
                   </div>
