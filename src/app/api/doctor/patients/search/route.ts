@@ -1,0 +1,240 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/db/prisma';
+import { verifyToken } from '@/lib/auth/jwt';
+
+export async function GET(req: NextRequest) {
+  try {
+    // Get the auth token from cookie
+    const token = req.cookies.get('token')?.value;
+    
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+    
+    // Verify the token
+    const payload = await verifyToken(token);
+    
+    // Get the doctor ID
+    const userId = payload.userId;
+    
+    // Get query parameters
+    const searchParams = req.nextUrl.searchParams;
+    const query = searchParams.get('q') || '';
+    
+    // SPECIAL CASE: For test doctor account
+    if (userId === 'test-doctor-id') {
+      console.log('[DOCTOR PATIENTS SEARCH API] Using test doctor account, query:', query);
+      
+      // Mock data for test account
+      const mockPatients = [
+        { 
+          id: '1',
+          name: 'Shyam Khanna', 
+          email: 'shyam.khanna@example.com',
+          phone: '+1234567890',
+          gender: 'MALE',
+          condition: 'Heart Disease',
+          lastVisit: '2023-05-10',
+          nextAppointment: '2023-06-15 09:30 AM'
+        },
+        { 
+          id: '2',
+          name: 'James Cleveland', 
+          email: 'james.cleveland@example.com',
+          phone: '+1987654321',
+          gender: 'MALE',
+          condition: 'Diabetes',
+          lastVisit: '2023-05-15',
+          nextAppointment: null
+        },
+        { 
+          id: '3',
+          name: 'Tyler Johnson', 
+          email: 'tyler.johnson@example.com',
+          phone: '+1122334455',
+          gender: 'MALE',
+          condition: 'Hypertension',
+          lastVisit: '2023-05-08',
+          nextAppointment: '2023-06-20 11:00 AM'
+        },
+        { 
+          id: '4',
+          name: 'Emma Wilson', 
+          email: 'emma.wilson@example.com',
+          phone: '+1555666777',
+          gender: 'FEMALE',
+          condition: 'Asthma',
+          lastVisit: '2023-05-12',
+          nextAppointment: '2023-06-18 10:15 AM'
+        },
+        { 
+          id: '5',
+          name: 'Olivia Garcia', 
+          email: 'olivia.garcia@example.com',
+          phone: '+1888999000',
+          gender: 'FEMALE',
+          condition: 'Arthritis',
+          lastVisit: '2023-05-05',
+          nextAppointment: null
+        }
+      ];
+      
+      // Filter mock data based on query
+      if (query) {
+        const filteredPatients = mockPatients.filter(patient => 
+          patient.name.toLowerCase().includes(query.toLowerCase()) || 
+          patient.email.toLowerCase().includes(query.toLowerCase()) ||
+          patient.phone.includes(query) ||
+          patient.id === query
+        );
+        return NextResponse.json(filteredPatients);
+      }
+      
+      return NextResponse.json(mockPatients);
+    }
+    
+    // For real doctors, search in the database
+    const doctor = await prisma.doctor.findUnique({
+      where: { userId },
+      select: { id: true }
+    });
+    
+    if (!doctor) {
+      return NextResponse.json(
+        { error: 'Doctor profile not found' },
+        { status: 404 }
+      );
+    }
+    
+    // Get all patients who have had appointments with this doctor
+    const patientIds = await prisma.appointment.findMany({
+      where: {
+        doctorId: doctor.id,
+      },
+      select: {
+        patientId: true
+      },
+      distinct: ['patientId']
+    });
+    
+    const patientIdList = patientIds.map(p => p.patientId);
+    
+    // Search patients based on the query
+    const patients = await prisma.patient.findMany({
+      where: {
+        id: {
+          in: patientIdList
+        },
+        OR: query ? [
+          {
+            user: {
+              name: {
+                contains: query,
+                mode: 'insensitive'
+              }
+            }
+          },
+          {
+            user: {
+              email: {
+                contains: query,
+                mode: 'insensitive'
+              }
+            }
+          },
+          {
+            user: {
+              phone: {
+                contains: query
+              }
+            }
+          }
+        ] : undefined
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            avatar: true
+          }
+        },
+        appointments: {
+          where: {
+            doctorId: doctor.id
+          },
+          orderBy: {
+            date: 'desc'
+          },
+          take: 1
+        }
+      }
+    });
+    
+    // Get next upcoming appointment for each patient
+    const patientNextAppointments = await prisma.appointment.findMany({
+      where: {
+        patientId: {
+          in: patients.map(p => p.id)
+        },
+        doctorId: doctor.id,
+        date: {
+          gt: new Date()
+        },
+        status: {
+          in: ['PENDING', 'CONFIRMED']
+        }
+      },
+      orderBy: {
+        date: 'asc'
+      },
+      distinct: ['patientId']
+    });
+    
+    // Format response
+    const formattedPatients = patients.map(patient => {
+      // Find the last appointment to get the condition
+      const lastAppointment = patient.appointments[0];
+      const condition = lastAppointment 
+        ? lastAppointment.diagnosis || lastAppointment.symptoms || 'General Checkup'
+        : 'Unknown';
+      
+      // Find the next appointment
+      const nextAppointment = patientNextAppointments.find(
+        appointment => appointment.patientId === patient.id
+      );
+      
+      const nextAppointmentStr = nextAppointment 
+        ? `${nextAppointment.date.toISOString().split('T')[0]} ${nextAppointment.date.toLocaleTimeString([], { 
+            hour: 'numeric', 
+            minute: '2-digit',
+            hour12: true
+          })}`
+        : null;
+      
+      return {
+        id: patient.id,
+        name: patient.user.name,
+        email: patient.user.email,
+        phone: patient.user.phone || 'Not provided',
+        gender: patient.gender || 'Not specified',
+        condition,
+        lastVisit: lastAppointment ? lastAppointment.date.toISOString().split('T')[0] : 'Never',
+        nextAppointment: nextAppointmentStr
+      };
+    });
+    
+    return NextResponse.json(formattedPatients);
+  } catch (error) {
+    console.error('Error searching patients:', error);
+    return NextResponse.json(
+      { error: 'Failed to search patients' },
+      { status: 500 }
+    );
+  }
+} 

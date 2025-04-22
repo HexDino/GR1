@@ -73,6 +73,9 @@ export const Navbar = () => {
   const openSignIn = () => {
     setAuthModalMode('signin');
     setIsAuthModalOpen(true);
+    
+    // Add this debug option for easy login with doctor account
+    console.log('For testing - Doctor login: email: doctor@test.com, password: password123');
   };
 
   const openSignUp = () => {
@@ -156,16 +159,19 @@ export const Navbar = () => {
             ))}
           </nav>
 
-          {/* Auth Buttons */}
+          {/* Login/Signup buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <button onClick={openSignIn} className="text-sm font-medium text-gray-700 hover:text-purple-600 transition duration-300">
-              Log In
-            </button>
-            <button
-              onClick={openSignUp}
-              className="bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-purple-700 transition duration-300"
+            <button 
+              onClick={openSignIn}
+              className="text-sm font-medium text-gray-600 hover:text-purple-600"
             >
-              Sign Up
+              Sign in
+            </button>
+            <button 
+              onClick={openSignUp}
+              className="text-sm font-medium bg-purple-600 text-white px-4 py-2 rounded-full hover:bg-purple-700"
+            >
+              Sign up
             </button>
           </div>
 
@@ -273,20 +279,18 @@ export const Navbar = () => {
               
               <hr className="my-2 border-gray-200" />
               <div className="flex flex-col space-y-3">
-                <Link
-                  href="/login"
+                <button
+                  onClick={openSignIn}
                   className="px-2 py-1 text-base font-medium text-gray-700 hover:text-purple-600"
-                  onClick={() => setIsOpen(false)}
                 >
                   Log In
-                </Link>
-                <Link
-                  href="/register"
+                </button>
+                <button
+                  onClick={openSignUp}
                   className="bg-purple-600 text-white px-4 py-2 rounded-full text-base font-medium hover:bg-purple-700 transition duration-300"
-                  onClick={() => setIsOpen(false)}
                 >
                   Sign Up
-                </Link>
+                </button>
               </div>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { seedDoctors } from './doctors';
 import { seedUsers } from './users';
+import { seedTestAccounts } from './test-accounts';
 
 const prisma = new PrismaClient();
 
@@ -13,6 +14,9 @@ async function main() {
     
     // Seed doctors
     await seedDoctors();
+    
+    // Seed test accounts
+    await seedTestAccounts();
     
     console.log('Database seeding completed successfully.');
   } catch (error) {

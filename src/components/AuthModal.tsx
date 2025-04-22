@@ -103,20 +103,70 @@ export const AuthModal = ({ isOpen, onClose, initialMode }: AuthModalProps) => {
 
   if (!isOpen) return null;
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
+      console.log('Validating login form data');
       loginSchema.parse(loginFormData);
-      // Handle successful login here
-      console.log('Login successful', loginFormData);
-      onClose();
+      
+      // Gọi API đăng nhập
+      console.log('Submitting login request to API', { email: loginFormData.email });
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: loginFormData.email,
+          password: loginFormData.password,
+          remember: true, // Lưu phiên đăng nhập
+        }),
+        credentials: 'include', // Đảm bảo cookie được gửi và nhận
+      });
+
+      console.log('Login API response status:', response.status);
+      const data = await response.json();
+      console.log('Login API response:', data);
+      
+      if (data.success) {
+        console.log('Login successful, redirecting based on role:', data.data.user.role);
+        
+        // Đóng modal
+        onClose();
+        
+        // Đảm bảo cookie được thiết lập trước khi chuyển hướng
+        setTimeout(() => {
+          // Chuyển hướng dựa theo role
+          const userRole = data.data.user.role.toLowerCase();
+          const dashboardUrl = `/dashboard/${userRole}`;
+          console.log('Redirecting to dashboard:', dashboardUrl);
+          
+          // Thực hiện chuyển hướng
+          window.location.href = dashboardUrl;
+        }, 1000);
+      } else {
+        // Hiển thị lỗi từ server
+        console.error('Login failed:', data.message);
+        setErrors([{
+          path: 'server',
+          message: data.message || 'Login failed. Please try again.',
+        }]);
+      }
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error('Validation error:', error.errors);
         setErrors(error.errors.map(err => ({
           path: err.path[0].toString(),
           message: err.message,
         })));
+      } else {
+        // Lỗi không xác định
+        console.error('Login error:', error);
+        setErrors([{
+          path: 'server',
+          message: 'An unexpected error occurred. Please try again.',
+        }]);
       }
     }
   };

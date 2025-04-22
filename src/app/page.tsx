@@ -3,15 +3,19 @@ import { DepartmentSection } from "@/components/DepartmentSection";
 import { DoctorSection } from "@/components/DoctorSection";
 import { TestimonialSection } from "@/components/TestimonialSection";
 import { HospitalIntroSection } from "@/components/HospitalIntroSection";
+import { Navbar } from '@/components/Navbar';
 
 export default function Home() {
   return (
-    <main>
-      <HeroSection />
-      <DepartmentSection />
-      <DoctorSection />
-      <TestimonialSection />
-      <HospitalIntroSection />
-    </main>
+    <>
+      <Navbar />
+      <main>
+        <HeroSection />
+        <DepartmentSection />
+        <DoctorSection />
+        <TestimonialSection />
+        <HospitalIntroSection />
+      </main>
+    </>
   );
 } 

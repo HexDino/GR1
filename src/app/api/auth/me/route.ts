@@ -5,7 +5,9 @@ import { verifyToken } from '@/lib/auth/jwt';
 export async function GET(req: NextRequest) {
   try {
     // Get the auth token from cookie
-    const token = req.cookies.get('auth-token')?.value;
+    const token = req.cookies.get('token')?.value;
+    
+    console.log('[ME API] Checking token:', token ? 'Token exists' : 'No token');
     
     if (!token) {
       return NextResponse.json(
@@ -15,9 +17,61 @@ export async function GET(req: NextRequest) {
     }
     
     // Verify the token
-    const payload = verifyToken(token);
+    const payload = await verifyToken(token);
+    console.log('[ME API] Token verified, userId:', payload.userId);
     
-    // Get the user from database with permissions
+    // SPECIAL CASE: For test doctor account
+    if (payload.userId === 'test-doctor-id') {
+      console.log('[ME API] Using test doctor account');
+      
+      // Return mock data for test doctor
+      return NextResponse.json({
+        user: {
+          id: 'test-doctor-id',
+          email: 'doctor@test.com',
+          name: 'Test Doctor',
+          role: 'DOCTOR',
+          isActive: true,
+          avatar: null,
+          doctor: {
+            id: 'test-doctor-profile-id',
+            specialization: 'General Medicine',
+            experience: 5,
+            bio: 'Test doctor for development purposes',
+            imageUrl: '/healthcare/doctors/doctor-1.jpg',
+            rating: 4.5,
+            department: {
+              id: 'test-department-id',
+              name: 'General Medicine'
+            }
+          },
+          patient: null
+        },
+        permissions: [
+          {
+            name: 'doctor:read',
+            resource: 'doctor',
+            action: 'read',
+            scope: 'all'
+          },
+          {
+            name: 'doctor:write',
+            resource: 'doctor',
+            action: 'write',
+            scope: 'own'
+          },
+          {
+            name: 'patient:read',
+            resource: 'patient',
+            action: 'read',
+            scope: 'own'
+          }
+        ],
+        authExpires: new Date(payload.exp! * 1000).toISOString()
+      });
+    }
+    
+    // For normal users, proceed with database query
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
       select: {
@@ -60,11 +114,14 @@ export async function GET(req: NextRequest) {
     });
     
     if (!user) {
+      console.log('[ME API] User not found with ID:', payload.userId);
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
       );
     }
+    
+    console.log('[ME API] User found:', { id: user.id, email: user.email, role: user.role });
     
     // Get role permissions
     const rolePermissions = await prisma.rolePermission.findMany({
@@ -101,6 +158,8 @@ export async function GET(req: NextRequest) {
       allPermissions.find(p => p.name === name)
     );
     
+    console.log('[ME API] Permissions loaded, returning data');
+    
     return NextResponse.json({
       user: {
         id: user.id,
@@ -116,7 +175,7 @@ export async function GET(req: NextRequest) {
       authExpires: new Date(payload.exp! * 1000).toISOString()
     });
   } catch (error) {
-    console.error('API Error:', error);
+    console.error('[ME API] Authentication error:', error);
     return NextResponse.json(
       { error: 'Authentication failed' },
       { status: 401 }

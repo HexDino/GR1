@@ -1,6 +1,6 @@
 import { Navbar } from '@/components/Navbar';
 
-export default function DepartmentsLayout({
+export default function ContactLayout({
   children,
 }: {
   children: React.ReactNode;

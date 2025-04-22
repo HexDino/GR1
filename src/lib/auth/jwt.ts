@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken'
+import * as jose from 'jose';
 import { JWTPayload } from './types'
 
 // Đảm bảo JWT_SECRET luôn tồn tại và là an toàn
@@ -20,14 +20,47 @@ export interface User {
   name: string;
 }
 
+// Chuyển đổi thời gian hạn sử dụng thành số giây
+function parseExpiration(expiresIn: string): number {
+  const units: Record<string, number> = {
+    s: 1,
+    m: 60,
+    h: 60 * 60,
+    d: 24 * 60 * 60,
+  };
+
+  const match = expiresIn.match(/^(\d+)([smhd])$/);
+  if (match) {
+    const [, value, unit] = match;
+    return parseInt(value) * units[unit];
+  }
+  
+  // Mặc định 1 giờ nếu không phân tích được
+  return 60 * 60;
+}
+
 /**
  * Tạo JWT token với payload
  * @param payload Data để mã hóa trong token
  * @param expiresIn Thời gian hết hạn (mặc định 1h)
  * @returns Chuỗi JWT token
  */
-export function generateToken(payload: JWTPayload, expiresIn: string = ACCESS_TOKEN_EXPIRES): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn })
+export async function generateToken(payload: JWTPayload, expiresIn: string = ACCESS_TOKEN_EXPIRES): Promise<string> {
+  // Chuyển JWT_SECRET thành Uint8Array
+  const secretKey = new TextEncoder().encode(JWT_SECRET);
+  
+  // Tạo expirationTime từ expiresIn
+  const expiresInSeconds = parseExpiration(expiresIn);
+  const expirationTime = Math.floor(Date.now() / 1000) + expiresInSeconds;
+  
+  // Ký JWT token
+  const jwt = await new jose.SignJWT({ ...payload })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime(expirationTime)
+    .sign(secretKey);
+  
+  return jwt;
 }
 
 /**
@@ -35,19 +68,19 @@ export function generateToken(payload: JWTPayload, expiresIn: string = ACCESS_TO
  * @param user Thông tin user
  * @returns Access token
  */
-export function generateAccessToken(user: {
+export async function generateAccessToken(user: {
   userId: string;
   email: string;
   role: string;
   name?: string;
-}): string {
+}): Promise<string> {
   return generateToken({
     userId: user.userId,
     email: user.email,
     role: user.role,
     name: user.name || '',
     tokenType: 'access',
-  })
+  });
 }
 
 /**
@@ -55,14 +88,14 @@ export function generateAccessToken(user: {
  * @param userId User ID
  * @returns Refresh token
  */
-export function generateRefreshToken(userId: string): string {
+export async function generateRefreshToken(userId: string): Promise<string> {
   return generateToken(
     {
       userId,
       tokenType: 'refresh',
     },
     REFRESH_TOKEN_EXPIRES
-  )
+  );
 }
 
 /**
@@ -70,18 +103,30 @@ export function generateRefreshToken(userId: string): string {
  * @param token JWT token cần verify
  * @returns Payload hoặc thông báo lỗi nếu không hợp lệ
  */
-export function verifyToken(token: string): JWTPayload {
+export async function verifyToken(token: string): Promise<JWTPayload> {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload
-    return decoded
+    console.log('Verifying token:', token.substring(0, 10) + '...');
+    
+    // Chuyển JWT_SECRET thành Uint8Array
+    const secretKey = new TextEncoder().encode(JWT_SECRET);
+    
+    // Xác thực token
+    const { payload } = await jose.jwtVerify(token, secretKey);
+    
+    console.log('Token verification successful:', payload.userId, payload.role);
+    
+    return payload as unknown as JWTPayload;
   } catch (error) {
-    // Cải thiện xử lý lỗi
-    if (error instanceof jwt.TokenExpiredError) {
-      throw new Error('Token has expired')
-    } else if (error instanceof jwt.JsonWebTokenError) {
-      throw new Error('Invalid token')
+    // Ghi lại lỗi cụ thể
+    console.error('Token verification error:', error);
+    
+    // Xử lý lỗi cụ thể
+    if (error instanceof jose.errors.JWTExpired) {
+      throw new Error('Token has expired');
+    } else if (error instanceof jose.errors.JWTInvalid) {
+      throw new Error('Invalid token: ' + error.message);
     } else {
-      throw new Error('Failed to authenticate token')
+      throw new Error('Failed to authenticate token: ' + (error instanceof Error ? error.message : String(error)));
     }
   }
 }
@@ -91,24 +136,24 @@ export function verifyToken(token: string): JWTPayload {
  * @param refreshToken Refresh token hiện tại
  * @returns Access và refresh token mới
  */
-export function refreshTokens(refreshToken: string): { accessToken: string; refreshToken: string } {
-  const payload = verifyToken(refreshToken)
+export async function refreshTokens(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
+  const payload = await verifyToken(refreshToken);
   
   if (payload.tokenType !== 'refresh') {
-    throw new Error('Invalid refresh token')
+    throw new Error('Invalid refresh token');
   }
   
-  const newAccessToken = generateToken({
+  const newAccessToken = await generateToken({
     userId: payload.userId,
     email: payload.email || '',
     role: payload.role || 'USER',
     tokenType: 'access',
-  })
+  });
   
-  const newRefreshToken = generateRefreshToken(payload.userId)
+  const newRefreshToken = await generateRefreshToken(payload.userId);
   
   return {
     accessToken: newAccessToken,
     refreshToken: newRefreshToken,
-  }
+  };
 } 
