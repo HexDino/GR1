@@ -29,7 +29,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   // Sidebar links for patients
   const patientLinks: SidebarLink[] = [
-    { href: '/dashboard/patient', label: 'My Dashboard', icon: '🏠' },
     { href: '/dashboard/patient/health-dashboard', label: 'Health Overview', icon: '❤️' },
     { href: '/dashboard/patient/appointments', label: 'Appointments', icon: '📅' },
     { href: '/dashboard/patient/prescriptions', label: 'Prescriptions', icon: '💊' },
@@ -37,7 +36,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     { href: '/dashboard/patient/health-goals', label: 'Health Goals', icon: '🎯' },
     { href: '/dashboard/patient/reviews', label: 'My Reviews', icon: '⭐' },
     { href: '/dashboard/patient/notifications', label: 'Notifications', icon: '🔔' },
-    
     { href: '/dashboard/patient/profile', label: 'My Profile', icon: '👤' },
   ];
 

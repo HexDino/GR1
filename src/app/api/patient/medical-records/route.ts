@@ -144,74 +144,9 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Add mock test results and diagnoses for demonstration
-    if (!type || type === 'all' || type === 'test_result') {
-      // These would come from a TestResult table in a real application
-      const mockTestResults = [
-        {
-          id: 'test_001',
-          type: 'test_result' as const,
-          title: 'Blood Test Results',
-          doctorName: 'Sarah Johnson',
-          doctorSpecialty: 'Internal Medicine',
-          date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
-          content: 'Complete blood count and lipid panel. All values within normal range. Cholesterol: 180 mg/dL, Blood sugar: 90 mg/dL.',
-          status: 'COMPLETED',
-          tags: ['Blood Test', 'Normal', 'Lab Results']
-        },
-        {
-          id: 'test_002',
-          type: 'test_result' as const,
-          title: 'X-Ray Chest',
-          doctorName: 'Michael Chen',
-          doctorSpecialty: 'Radiology',
-          date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days ago
-          content: 'Chest X-ray shows clear lungs with no signs of infection or abnormalities. Heart size normal.',
-          status: 'COMPLETED',
-          tags: ['X-Ray', 'Clear', 'Imaging']
-        }
-      ];
-
-      for (const testResult of mockTestResults) {
-        if (!dateFilter || new Date(testResult.date) >= dateFilter) {
-          if (!search || 
-              testResult.title.toLowerCase().includes(search.toLowerCase()) ||
-              testResult.doctorName.toLowerCase().includes(search.toLowerCase()) ||
-              testResult.content.toLowerCase().includes(search.toLowerCase())) {
-            records.push(testResult);
-          }
-        }
-      }
-    }
-
-    if (!type || type === 'all' || type === 'diagnosis') {
-      // These would come from a Diagnosis table in a real application
-      const mockDiagnoses = [
-        {
-          id: 'diag_001',
-          type: 'diagnosis' as const,
-          title: 'Hypertension Management',
-          doctorName: 'Sarah Johnson',
-          doctorSpecialty: 'Internal Medicine',
-          date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days ago
-          content: 'Diagnosed with stage 1 hypertension. Recommended lifestyle changes including reduced sodium intake and regular exercise. Follow-up in 3 months.',
-          status: 'ACTIVE',
-          tags: ['Chronic', 'Hypertension', 'Lifestyle']
-        }
-      ];
-
-      for (const diagnosis of mockDiagnoses) {
-        if (!dateFilter || new Date(diagnosis.date) >= dateFilter) {
-          if (!search || 
-              diagnosis.title.toLowerCase().includes(search.toLowerCase()) ||
-              diagnosis.doctorName.toLowerCase().includes(search.toLowerCase()) ||
-              diagnosis.content.toLowerCase().includes(search.toLowerCase())) {
-            records.push(diagnosis);
-          }
-        }
-      }
-    }
-
+    // NOTE: Test results and diagnoses would come from dedicated tables in a real application
+    // For now, we only show appointments and prescriptions from the database
+    
     // Sort records by date (newest first) and limit
     const sortedRecords = records
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())

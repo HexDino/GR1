@@ -1,77 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-// Mock health alerts data
-const mockHealthAlerts = [
-  {
-    id: '1',
-    type: 'medication',
-    title: 'Medication Reminder',
-    message: 'Time to take your blood pressure medication (Lisinopril 10mg)',
-    severity: 'medium',
-    date: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 minutes ago
-    read: false
-  },
-  {
-    id: '2',
-    type: 'appointment',
-    title: 'Upcoming Appointment',
-    message: 'You have a follow-up appointment with Dr. Smith tomorrow at 2:00 PM',
-    severity: 'high',
-    date: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-    read: false
-  },
-  {
-    id: '3',
-    type: 'goal',
-    title: 'Goal Progress Update',
-    message: 'Great job! You\'ve completed 75% of your weekly exercise goal',
-    severity: 'low',
-    date: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4 hours ago
-    read: true
-  },
-  {
-    id: '4',
-    type: 'checkup',
-    title: 'Health Check Reminder',
-    message: 'It\'s time for your monthly blood pressure check. Please record your readings.',
-    severity: 'medium',
-    date: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), // 6 hours ago
-    read: false
-  },
-  {
-    id: '5',
-    type: 'medication',
-    title: 'Prescription Refill',
-    message: 'Your prescription for Metformin is running low. Contact your pharmacy for a refill.',
-    severity: 'high',
-    date: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), // 12 hours ago
-    read: false
-  },
-  {
-    id: '6',
-    type: 'goal',
-    title: 'Weight Goal Achievement',
-    message: 'Congratulations! You\'ve reached your first weight loss milestone of 2kg',
-    severity: 'low',
-    date: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-    read: true
-  },
-  {
-    id: '7',
-    type: 'appointment',
-    title: 'Lab Results Available',
-    message: 'Your recent blood test results are now available. Please review them in your medical records.',
-    severity: 'medium',
-    date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-    read: true
-  }
-];
+import { prisma } from '@/lib/db/prisma';
+import { ApiError } from '@/lib/utils/apiError';
 
 export async function GET(request: NextRequest) {
   try {
+    const userId = request.headers.get('x-user-id');
+    const userRole = request.headers.get('x-user-role');
+    
+    if (!userId) {
+      throw ApiError.unauthorized('Not authenticated');
+    }
+    
+    if (userRole !== 'PATIENT') {
+      throw ApiError.forbidden('Only patients can access this resource');
+    }
+
+    // Health alerts would need a dedicated table in the future
+    // For now, we can return urgent notifications as alerts
+    const alerts = await prisma.notification.findMany({
+      where: {
+        userId: userId,
+        type: {
+          in: ['APPOINTMENT_REMINDER', 'PRESCRIPTION_REMINDER', 'HEALTH_REPORT']
+        },
+        isRead: false
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 10
+    });
+
+    // Transform notifications to alert format
+    const transformedAlerts = alerts.map(notification => ({
+      id: notification.id,
+      type: mapNotificationTypeToAlertType(notification.type),
+      title: notification.title,
+      message: notification.message,
+      severity: 'medium' as const, // Default severity
+      date: notification.createdAt.toISOString(),
+      read: notification.isRead
+    }));
+
     return NextResponse.json({
       success: true,
-      alerts: mockHealthAlerts
+      alerts: transformedAlerts
     });
   } catch (error) {
     console.error('Error fetching health alerts:', error);
@@ -80,4 +51,15 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+// Helper function to map notification types to alert types
+function mapNotificationTypeToAlertType(notificationType: string): string {
+  const typeMapping: Record<string, string> = {
+    'APPOINTMENT_REMINDER': 'appointment',
+    'PRESCRIPTION_REMINDER': 'medication',
+    'HEALTH_REPORT': 'checkup',
+    'GENERAL': 'goal'
+  };
+  return typeMapping[notificationType] || 'goal';
 } 

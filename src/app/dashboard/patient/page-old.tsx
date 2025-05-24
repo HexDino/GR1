@@ -475,45 +475,6 @@ export default function PatientDashboard() {
           </div>
         </div>
       </div>
-
-      {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-        <h2 className="text-lg font-semibold text-gray-800 mb-6">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link 
-            href="/doctors"
-            className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow group"
-          >
-            <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors mb-4">
-              <CalendarIcon className="h-6 w-6" />
-            </div>
-            <h3 className="font-medium text-gray-800 mb-2">Book Appointment</h3>
-            <p className="text-sm text-gray-500">Schedule a consultation with a doctor</p>
-          </Link>
-
-          <Link 
-            href="/dashboard/patient/prescriptions"
-            className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow group"
-          >
-            <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center text-green-600 group-hover:bg-green-600 group-hover:text-white transition-colors mb-4">
-              <ClipboardDocumentListIcon className="h-6 w-6" />
-            </div>
-            <h3 className="font-medium text-gray-800 mb-2">View Prescriptions</h3>
-            <p className="text-sm text-gray-500">Check your medication history</p>
-          </Link>
-
-          <Link 
-            href="/dashboard/patient/reviews"
-            className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow group"
-          >
-            <div className="h-12 w-12 bg-yellow-100 rounded-lg flex items-center justify-center text-yellow-600 group-hover:bg-yellow-600 group-hover:text-white transition-colors mb-4">
-              <StarIcon className="h-6 w-6" />
-            </div>
-            <h3 className="font-medium text-gray-800 mb-2">My Reviews</h3>
-            <p className="text-sm text-gray-500">Rate and review your doctors</p>
-          </Link>
-        </div>
-      </div>
     </div>
   );
 } 

@@ -4,7 +4,31 @@ import { useState, useEffect } from 'react';
 import { usePermissions } from '@/hooks/usePermissions';
 import useSWR from 'swr';
 import Link from 'next/link';
-import {   HeartIcon,  BeakerIcon,  ScaleIcon,  ClockIcon,  ArrowTrendingUpIcon,  ArrowTrendingDownIcon,  ExclamationTriangleIcon,  CheckCircleIcon,  PlusIcon,  CalendarDaysIcon,  BoltIcon} from '@heroicons/react/24/outline';
+import { 
+  HeartIcon,
+  BeakerIcon,
+  ScaleIcon,
+  ClockIcon,
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+  PlusIcon,
+  CalendarDaysIcon,
+  BoltIcon,
+  FireIcon,
+  EyeIcon,
+  ChartBarIcon,
+  AcademicCapIcon,
+  ShieldCheckIcon,
+  StarIcon
+} from '@heroicons/react/24/outline';
+import { 
+  HeartIcon as HeartIconSolid,
+  FireIcon as FireIconSolid,
+  ChartBarIcon as ChartBarIconSolid,
+  BeakerIcon as BeakerIconSolid
+} from '@heroicons/react/24/solid';
 
 // Fetcher function for SWR
 const fetcher = (url: string) => fetch(url).then(res => {
@@ -18,6 +42,7 @@ interface HealthMetric {
   value: string;
   date: string;
   notes?: string;
+  status: 'normal' | 'warning' | 'critical';
 }
 
 interface HealthGoal {
@@ -28,6 +53,7 @@ interface HealthGoal {
   progress: number;
   deadline: string;
   status: 'active' | 'completed' | 'overdue';
+  category: 'fitness' | 'nutrition' | 'medication' | 'checkup';
 }
 
 interface HealthAlert {
@@ -43,6 +69,15 @@ interface HealthAlert {
 export default function HealthDashboard() {
   const { user, isLoading: userLoading } = usePermissions();
   const [selectedTimeRange, setSelectedTimeRange] = useState<'7d' | '30d' | '90d'>('30d');
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update time every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Fetch health metrics
   const { data: metricsData, error: metricsError, isLoading: metricsLoading } = useSWR<{metrics: HealthMetric[]}>(
@@ -50,7 +85,7 @@ export default function HealthDashboard() {
     fetcher,
     { 
       revalidateOnFocus: false,
-      refreshInterval: 300000, // Refresh every 5 minutes
+      refreshInterval: 300000,
     }
   );
 
@@ -70,14 +105,30 @@ export default function HealthDashboard() {
     fetcher,
     { 
       revalidateOnFocus: false,
-      refreshInterval: 60000, // Refresh every minute for alerts
+      refreshInterval: 60000,
+    }
+  );
+
+  // Fetch health score
+  const { data: healthScoreData, error: healthScoreError, isLoading: healthScoreLoading } = useSWR<{score: number}>(
+    '/api/patient/health-score',
+    fetcher,
+    { 
+      revalidateOnFocus: false,
+      refreshInterval: 300000,
     }
   );
 
   if (userLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative">
+            <div className="w-20 h-20 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
+            <HeartIconSolid className="w-8 h-8 text-purple-600 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-pulse" />
+          </div>
+          <p className="text-gray-600 font-medium">Loading your health dashboard...</p>
+        </div>
       </div>
     );
   }
@@ -86,52 +137,30 @@ export default function HealthDashboard() {
   const goals = goalsData?.goals || [];
   const alerts = alertsData?.alerts || [];
 
+  // Use only real data from API
+  const displayMetrics = metrics;
+  const displayGoals = goals;
+  const displayAlerts = alerts;
+
+  // Get health score from API or default to 0
+  const healthScore = healthScoreData?.score || 0;
+
   // Process metrics for display
   const getLatestMetric = (type: string) => {
-    return metrics.filter(m => m.type === type).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+    return displayMetrics.filter(m => m.type === type).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
   };
 
   const getMetricTrend = (type: string) => {
-    const typeMetrics = metrics.filter(m => m.type === type).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const typeMetrics = displayMetrics.filter(m => m.type === type).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     if (typeMetrics.length < 2) return 'stable';
     
-    const latest = parseFloat(typeMetrics[typeMetrics.length - 1].value);
-    const previous = parseFloat(typeMetrics[typeMetrics.length - 2].value);
+    const latest = parseFloat(typeMetrics[typeMetrics.length - 1].value.split('/')[0] || typeMetrics[typeMetrics.length - 1].value);
+    const previous = parseFloat(typeMetrics[typeMetrics.length - 2].value.split('/')[0] || typeMetrics[typeMetrics.length - 2].value);
     
     if (latest > previous) return 'up';
     if (latest < previous) return 'down';
     return 'stable';
   };
-
-  const getHealthScore = () => {
-    // Calculate health score based on various factors
-    let score = 75; // Base score
-    
-    // Adjust based on recent metrics
-    const recentMetrics = metrics.filter(m => {
-      const metricDate = new Date(m.date);
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      return metricDate >= weekAgo;
-    });
-
-    if (recentMetrics.length > 3) score += 10; // Bonus for regular monitoring
-    
-    // Adjust based on goals completion
-    const completedGoals = goals.filter(g => g.status === 'completed').length;
-    const totalGoals = goals.length;
-    if (totalGoals > 0) {
-      score += (completedGoals / totalGoals) * 15;
-    }
-
-    // Penalize for high severity alerts
-    const highAlerts = alerts.filter(a => a.severity === 'high' && !a.read).length;
-    score -= highAlerts * 5;
-
-    return Math.max(Math.min(Math.round(score), 100), 0);
-  };
-
-  const healthScore = getHealthScore();
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -164,302 +193,369 @@ export default function HealthDashboard() {
     }
   };
 
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Health Dashboard</h1>
-          <p className="text-gray-600 mt-1">
-            Monitor your health metrics and track your wellness journey
-          </p>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="flex bg-white rounded-lg border border-gray-200 p-1">
-            {['7d', '30d', '90d'].map((range) => (
-              <button
-                key={range}
-                onClick={() => setSelectedTimeRange(range as any)}
-                className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
-                  selectedTimeRange === range
-                    ? 'bg-purple-600 text-white'
-                    : 'text-gray-600 hover:text-gray-800'
-                }`}
-              >
-                {range === '7d' ? '7 Days' : range === '30d' ? '30 Days' : '90 Days'}
-              </button>
-            ))}
-          </div>
-          <Link
-            href="/dashboard/patient/health-records"
-            className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
-          >
-            <PlusIcon className="h-4 w-4 mr-2" />
-            Add Health Data
-          </Link>
-        </div>
-      </div>
+  const getMetricIcon = (type: string) => {
+    switch (type) {
+      case 'blood_pressure':
+        return <HeartIconSolid className="w-6 h-6" />;
+      case 'heart_rate':
+        return <BeakerIconSolid className="w-6 h-6" />;
+      case 'weight':
+        return <ChartBarIconSolid className="w-6 h-6" />;
+      case 'temperature':
+        return <FireIconSolid className="w-6 h-6" />;
+      case 'blood_sugar':
+        return <BeakerIcon className="w-6 h-6" />;
+      default:
+        return <HeartIcon className="w-6 h-6" />;
+    }
+  };
 
-      {/* Health Score Card */}
-      <div className="bg-gradient-to-r from-purple-600 to-purple-700 rounded-xl p-6 text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-semibold mb-2">Your Health Score</h2>
-            <div className="flex items-center space-x-4">
-              <div className="text-3xl font-bold">{healthScore}/100</div>
-              <div className="flex items-center text-purple-200">
-                <BoltIcon className="h-5 w-5 mr-1" />
-                <span className="text-sm">
-                  {healthScore >= 85 ? 'Excellent' : 
-                   healthScore >= 70 ? 'Good' : 
-                   healthScore >= 55 ? 'Fair' : 'Needs Improvement'}
-                </span>
+  const getMetricUnit = (type: string) => {
+    switch (type) {
+      case 'blood_pressure':
+        return 'mmHg';
+      case 'heart_rate':
+        return 'BPM';
+      case 'weight':
+        return 'kg';
+      case 'temperature':
+        return '°F';
+      case 'blood_sugar':
+        return 'mg/dL';
+      default:
+        return '';
+    }
+  };
+
+  const getMetricName = (type: string) => {
+    switch (type) {
+      case 'blood_pressure':
+        return 'Blood Pressure';
+      case 'heart_rate':
+        return 'Heart Rate';
+      case 'weight':
+        return 'Weight';
+      case 'temperature':
+        return 'Temperature';
+      case 'blood_sugar':
+        return 'Blood Sugar';
+      default:
+        return type;
+    }
+  };
+
+  const getGoalIcon = (category: string) => {
+    switch (category) {
+      case 'fitness':
+        return <BoltIcon className="w-5 h-5" />;
+      case 'nutrition':
+        return <BeakerIcon className="w-5 h-5" />;
+      case 'medication':
+        return <ClockIcon className="w-5 h-5" />;
+      case 'checkup':
+        return <AcademicCapIcon className="w-5 h-5" />;
+      default:
+        return <StarIcon className="w-5 h-5" />;
+    }
+  };
+
+  const getGoalCategoryColor = (category: string) => {
+    switch (category) {
+      case 'fitness':
+        return 'text-red-600 bg-red-50 border-red-200';
+      case 'nutrition':
+        return 'text-green-600 bg-green-50 border-green-200';
+      case 'medication':
+        return 'text-blue-600 bg-blue-50 border-blue-200';
+      case 'checkup':
+        return 'text-purple-600 bg-purple-50 border-purple-200';
+      default:
+        return 'text-gray-600 bg-gray-50 border-gray-200';
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+        {/* Header */}
+        <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 rounded-3xl p-8 text-white overflow-hidden">
+          <div className="absolute inset-0 opacity-20">
+            <div className="w-full h-full bg-pattern-dots"></div>
+          </div>
+          
+          <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/20">
+                <ChartBarIconSolid className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl lg:text-4xl font-bold mb-2">Health Dashboard</h1>
+                <p className="text-blue-100 text-lg">
+                  Monitor your wellness journey and track health metrics
+                </p>
+                <div className="flex items-center gap-4 mt-3 text-white/90">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <span className="text-sm font-medium">Health tracking active</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <ClockIcon className="w-4 h-4" />
+                    <span className="text-sm">
+                      Last updated: {currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 p-1">
+                {['7d', '30d', '90d'].map((range) => (
+                  <button
+                    key={range}
+                    onClick={() => setSelectedTimeRange(range as any)}
+                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                      selectedTimeRange === range
+                        ? 'bg-white text-blue-600 shadow-lg'
+                        : 'text-white/80 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    {range === '7d' ? '7 Days' : range === '30d' ? '30 Days' : '90 Days'}
+                  </button>
+                ))}
+              </div>
+              <Link
+                href="/dashboard/patient/health-goals"
+                className="group inline-flex items-center px-6 py-3 bg-white text-blue-600 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+              >
+                <PlusIcon className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform duration-200" />
+                Add Health Data
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Health Score Card */}
+        <div className="bg-white rounded-3xl shadow-lg p-8 border border-gray-100">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center">
+                <ShieldCheckIcon className="w-6 h-6 text-green-600" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Overall Health Score</h2>
+                <p className="text-gray-600">Based on your recent health metrics and goals</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-4xl font-bold text-green-600">{healthScore}</div>
+              <div className="text-sm text-gray-500">out of 100</div>
+            </div>
+          </div>
+          
+          <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
+            <div 
+              className={`h-4 rounded-full transition-all duration-500 ${
+                healthScore >= 80 ? 'bg-gradient-to-r from-green-500 to-green-600' :
+                healthScore >= 60 ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' :
+                'bg-gradient-to-r from-red-500 to-red-600'
+              }`}
+              style={{ width: `${healthScore}%` }}
+            ></div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+            <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
+              <CheckCircleIcon className="w-6 h-6 text-green-600" />
+              <div>
+                <div className="font-semibold text-gray-900">Normal Metrics</div>
+                <div className="text-sm text-gray-600">{displayMetrics.filter(m => m.status === 'normal').length} out of {displayMetrics.length}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+              <StarIcon className="w-6 h-6 text-blue-600" />
+              <div>
+                <div className="font-semibold text-gray-900">Active Goals</div>
+                <div className="text-sm text-gray-600">{displayGoals.filter(g => g.status === 'active').length} in progress</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
+              <ExclamationTriangleIcon className="w-6 h-6 text-yellow-600" />
+              <div>
+                <div className="font-semibold text-gray-900">Pending Alerts</div>
+                <div className="text-sm text-gray-600">{displayAlerts.filter(a => !a.read).length} require attention</div>
               </div>
             </div>
           </div>
-          <div className="relative h-20 w-20">
-            <svg className="h-20 w-20 transform -rotate-90" viewBox="0 0 100 100">
-              <circle
-                cx="50"
-                cy="50"
-                r="40"
-                stroke="currentColor"
-                strokeWidth="8"
-                fill="transparent"
-                className="text-purple-300 opacity-30"
-              />
-              <circle
-                cx="50"
-                cy="50"
-                r="40"
-                stroke="currentColor"
-                strokeWidth="8"
-                fill="transparent"
-                strokeDasharray={`${2 * Math.PI * 40}`}
-                strokeDashoffset={`${2 * Math.PI * 40 * (1 - healthScore / 100)}`}
-                className="text-white transition-all duration-1000"
-              />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <HeartIcon className="h-8 w-8 text-white" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Health Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Blood Pressure */}
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-          <div className="flex items-center justify-between mb-4">
-            <div className="h-12 w-12 bg-red-100 rounded-lg flex items-center justify-center text-red-600">
-              <HeartIcon className="h-6 w-6" />
-            </div>
-            {getTrendIcon(getMetricTrend('blood_pressure'))}
-          </div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-1">Blood Pressure</h3>
-          <p className="text-2xl font-bold text-gray-900">
-            {getLatestMetric('blood_pressure')?.value || 'No data'}
-          </p>
-          <p className="text-xs text-gray-500 mt-1">
-            {getLatestMetric('blood_pressure') ? formatDate(getLatestMetric('blood_pressure').date) : 'Never recorded'}
-          </p>
         </div>
 
-        {/* Heart Rate */}
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-          <div className="flex items-center justify-between mb-4">
-            <div className="h-12 w-12 bg-pink-100 rounded-lg flex items-center justify-center text-pink-600">
-              <HeartIcon className="h-6 w-6" />
+        {/* Health Metrics Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <h2 className="col-span-full text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+            <ChartBarIcon className="w-6 h-6 text-purple-600" />
+            Current Health Metrics
+          </h2>
+          
+          {displayMetrics.map((metric) => (
+            <div key={metric.id} className="group bg-white rounded-2xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+              <div className="flex items-center justify-between mb-4">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                  metric.status === 'normal' ? 'bg-green-50 text-green-600' :
+                  metric.status === 'warning' ? 'bg-yellow-50 text-yellow-600' :
+                  'bg-red-50 text-red-600'
+                }`}>
+                  {getMetricIcon(metric.type)}
+                </div>
+                <div className="flex items-center gap-2">
+                  {getTrendIcon(getMetricTrend(metric.type))}
+                  <div className={`w-3 h-3 rounded-full ${
+                    metric.status === 'normal' ? 'bg-green-500' :
+                    metric.status === 'warning' ? 'bg-yellow-500' :
+                    'bg-red-500'
+                  } animate-pulse`}></div>
+                </div>
+              </div>
+              
+              <h3 className="font-bold text-gray-900 mb-1">{getMetricName(metric.type)}</h3>
+              <div className="flex items-baseline gap-2 mb-2">
+                <span className="text-2xl font-bold text-gray-900">{metric.value}</span>
+                <span className="text-sm text-gray-500">{getMetricUnit(metric.type)}</span>
+              </div>
+              
+              <div className="flex items-center justify-between text-xs text-gray-500">
+                <span>Updated: {formatDate(metric.date)}</span>
+                <span className={`capitalize px-2 py-1 rounded-full font-medium ${
+                  metric.status === 'normal' ? 'bg-green-100 text-green-700' :
+                  metric.status === 'warning' ? 'bg-yellow-100 text-yellow-700' :
+                  'bg-red-100 text-red-700'
+                }`}>
+                  {metric.status}
+                </span>
+              </div>
+              
+              {metric.notes && (
+                <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                  <p className="text-sm text-blue-900">{metric.notes}</p>
+                </div>
+              )}
             </div>
-            {getTrendIcon(getMetricTrend('heart_rate'))}
-          </div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-1">Heart Rate</h3>
-          <p className="text-2xl font-bold text-gray-900">
-            {getLatestMetric('heart_rate')?.value || 'No data'}
-          </p>
-          <p className="text-xs text-gray-500 mt-1">
-            {getLatestMetric('heart_rate') ? formatDate(getLatestMetric('heart_rate').date) : 'Never recorded'}
-          </p>
+          ))}
         </div>
 
-        {/* Weight */}
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-          <div className="flex items-center justify-between mb-4">
-            <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
-              <ScaleIcon className="h-6 w-6" />
-            </div>
-            {getTrendIcon(getMetricTrend('weight'))}
-          </div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-1">Weight</h3>
-          <p className="text-2xl font-bold text-gray-900">
-            {getLatestMetric('weight')?.value || 'No data'}
-          </p>
-          <p className="text-xs text-gray-500 mt-1">
-            {getLatestMetric('weight') ? formatDate(getLatestMetric('weight').date) : 'Never recorded'}
-          </p>
-        </div>
-
-        {/* Blood Sugar */}
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-          <div className="flex items-center justify-between mb-4">
-            <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center text-green-600">
-              <BeakerIcon className="h-6 w-6" />
-            </div>
-            {getTrendIcon(getMetricTrend('blood_sugar'))}
-          </div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-1">Blood Sugar</h3>
-          <p className="text-2xl font-bold text-gray-900">
-            {getLatestMetric('blood_sugar')?.value || 'No data'}
-          </p>
-          <p className="text-xs text-gray-500 mt-1">
-            {getLatestMetric('blood_sugar') ? formatDate(getLatestMetric('blood_sugar').date) : 'Never recorded'}
-          </p>
-        </div>
-      </div>
-
-      {/* Health Goals and Alerts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Health Goals */}
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-semibold text-gray-800">Health Goals</h2>
-            <Link
-              href="/dashboard/patient/health-goals"
-              className="text-sm text-purple-600 hover:text-purple-800 font-medium"
-            >
-              View All
-            </Link>
-          </div>
-
-          {goalsLoading ? (
-            <div className="flex justify-center items-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
-            </div>
-          ) : goals.length === 0 ? (
-            <div className="text-center py-8">
-              <CalendarDaysIcon className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 mb-4">No health goals set</p>
-              <Link
-                href="/dashboard/patient/health-goals/create"
-                className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors"
-              >
-                <PlusIcon className="h-4 w-4 mr-2" />
-                Set Your First Goal
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {goals.slice(0, 3).map((goal) => (
-                <div key={goal.id} className="p-4 border border-gray-100 rounded-lg">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-medium text-gray-900">{goal.title}</h3>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      goal.status === 'completed' ? 'bg-green-100 text-green-800' :
-                      goal.status === 'overdue' ? 'bg-red-100 text-red-800' :
-                      'bg-blue-100 text-blue-800'
-                    }`}>
-                      {goal.status}
-                    </span>
+        {/* Health Goals and Alerts */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          {/* Health Goals */}
+          <div className="xl:col-span-2">
+            <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                    <StarIcon className="w-5 h-5 text-purple-600" />
                   </div>
-                  <div className="mb-2">
-                    <div className="flex justify-between text-sm text-gray-600 mb-1">
-                      <span>Progress</span>
-                      <span>{goal.progress}%</span>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">Health Goals</h2>
+                    <p className="text-gray-600 text-sm">Track your wellness objectives</p>
+                  </div>
+                </div>
+                <Link
+                  href="/dashboard/patient/health-goals"
+                  className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-800 font-semibold text-sm bg-purple-50 px-4 py-2 rounded-xl hover:bg-purple-100 transition-all duration-200"
+                >
+                  <EyeIcon className="w-4 h-4" />
+                  View All
+                </Link>
+              </div>
+
+              <div className="space-y-4">
+                {displayGoals.slice(0, 3).map((goal) => (
+                  <div key={goal.id} className="p-4 border border-gray-100 rounded-xl hover:shadow-md transition-all duration-200 bg-gradient-to-r from-white to-purple-50/30">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${getGoalCategoryColor(goal.category)}`}>
+                          {getGoalIcon(goal.category)}
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-900">{goal.title}</h3>
+                          <p className="text-sm text-gray-600">{goal.current} of {goal.target}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-bold text-gray-900">{goal.progress}%</div>
+                        <div className={`text-xs font-medium px-2 py-1 rounded-full ${
+                          goal.status === 'completed' ? 'bg-green-100 text-green-700' :
+                          goal.status === 'overdue' ? 'bg-red-100 text-red-700' :
+                          'bg-blue-100 text-blue-700'
+                        }`}>
+                          {goal.status}
+                        </div>
+                      </div>
                     </div>
+                    
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div 
-                        className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                        className={`h-2 rounded-full transition-all duration-500 ${
+                          goal.progress >= 80 ? 'bg-gradient-to-r from-green-500 to-green-600' :
+                          goal.progress >= 50 ? 'bg-gradient-to-r from-blue-500 to-blue-600' :
+                          'bg-gradient-to-r from-yellow-500 to-yellow-600'
+                        }`}
                         style={{ width: `${goal.progress}%` }}
                       ></div>
                     </div>
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    Target: {goal.target} | Current: {goal.current}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Health Alerts */}
-        <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-semibold text-gray-800">Health Alerts</h2>
-            <Link
-              href="/dashboard/patient/notifications"
-              className="text-sm text-purple-600 hover:text-purple-800 font-medium"
-            >
-              View All
-            </Link>
-          </div>
-
-          {alertsLoading ? (
-            <div className="flex justify-center items-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
-            </div>
-          ) : alerts.length === 0 ? (
-            <div className="text-center py-8">
-              <CheckCircleIcon className="h-12 w-12 text-green-300 mx-auto mb-4" />
-              <p className="text-gray-500">No active alerts</p>
-                             <p className="text-sm text-gray-400 mt-1">You&apos;re all caught up!</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {alerts.slice(0, 4).map((alert) => (
-                <div key={alert.id} className={`p-4 rounded-lg border-l-4 ${
-                  alert.severity === 'high' ? 'border-red-500 bg-red-50' :
-                  alert.severity === 'medium' ? 'border-yellow-500 bg-yellow-50' :
-                  'border-blue-500 bg-blue-50'
-                }`}>
-                  <div className="flex items-start space-x-3">
-                    {getAlertIcon(alert.severity)}
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{alert.title}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{alert.message}</p>
-                      <p className="text-xs text-gray-500 mt-2">{formatDate(alert.date)}</p>
+                    
+                    <div className="mt-2 text-xs text-gray-500">
+                      Deadline: {new Date(goal.deadline).toLocaleDateString('en-US')}
                     </div>
                   </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Health Alerts */}
+          <div>
+            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
+                  <ExclamationTriangleIcon className="w-5 h-5 text-orange-600" />
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Health Alerts</h3>
+                  <p className="text-gray-600 text-sm">Important notifications</p>
+                </div>
+              </div>
 
-      {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-        <h2 className="text-lg font-semibold text-gray-800 mb-6">Quick Health Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link 
-            href="/dashboard/patient/health-records/add"
-            className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow group"
-          >
-            <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors mb-4">
-              <PlusIcon className="h-6 w-6" />
-            </div>
-            <h3 className="font-medium text-gray-800 mb-2">Log Health Data</h3>
-            <p className="text-sm text-gray-500">Record your vital signs and measurements</p>
-          </Link>
+              <div className="space-y-4">
+                {displayAlerts.slice(0, 3).map((alert) => (
+                  <div key={alert.id} className={`p-4 rounded-xl border transition-all duration-200 hover:shadow-md ${
+                    alert.severity === 'high' ? 'bg-red-50 border-red-200' :
+                    alert.severity === 'medium' ? 'bg-yellow-50 border-yellow-200' :
+                    'bg-blue-50 border-blue-200'
+                  }`}>
+                    <div className="flex items-start gap-3">
+                      {getAlertIcon(alert.severity)}
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-900 text-sm">{alert.title}</h4>
+                        <p className="text-sm text-gray-600 mt-1">{alert.message}</p>
+                        <div className="mt-2 text-xs text-gray-500">
+                          {formatDate(alert.date)}
+                        </div>
+                      </div>
+                      {!alert.read && (
+                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
 
-          <Link 
-            href="/dashboard/patient/health-goals/create"
-            className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow group"
-          >
-            <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center text-green-600 group-hover:bg-green-600 group-hover:text-white transition-colors mb-4">
-              <CalendarDaysIcon className="h-6 w-6" />
+              <Link
+                href="/dashboard/patient/notifications"
+                className="block w-full mt-4 text-center py-3 text-orange-600 hover:text-orange-800 font-semibold text-sm bg-orange-50 rounded-xl hover:bg-orange-100 transition-colors"
+              >
+                View All Alerts
+              </Link>
             </div>
-            <h3 className="font-medium text-gray-800 mb-2">Set Health Goal</h3>
-            <p className="text-sm text-gray-500">Create personalized health targets</p>
-          </Link>
-
-                    <Link            href="/dashboard/patient/health-goals"            className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow group"          >
-            <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-colors mb-4">
-              <BoltIcon className="h-6 w-6" />
-            </div>
-                        <h3 className="font-medium text-gray-800 mb-2">Health Goals</h3>            <p className="text-sm text-gray-500">View and manage your health goals</p>
-          </Link>
+          </div>
         </div>
       </div>
     </div>
