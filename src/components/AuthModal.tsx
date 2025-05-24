@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { z } from 'zod';
 import Image from 'next/image';
+import PasswordInput from './ui/PasswordInput';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -266,23 +267,17 @@ export const AuthModal = ({ isOpen, onClose, initialMode }: AuthModalProps) => {
                   )}
                 </div>
                 
-                <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    value={loginFormData.password}
-                    onChange={handleLoginChange}
-                    className={`w-full px-3 py-2 border ${getErrorForField('password') ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500`}
-                    placeholder="Enter your password"
-                  />
-                  {getErrorForField('password') && (
-                    <p className="mt-1 text-sm text-red-600">{getErrorForField('password')}</p>
-                  )}
-                </div>
+                <PasswordInput
+                  id="password"
+                  name="password"
+                  value={loginFormData.password}
+                  onChange={handleLoginChange}
+                  placeholder="Enter your password"
+                  label="Password"
+                  error={getErrorForField('password')}
+                  className="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
+                  autoComplete="current-password"
+                />
                 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
@@ -390,41 +385,29 @@ export const AuthModal = ({ isOpen, onClose, initialMode }: AuthModalProps) => {
                   )}
                 </div>
                 
-                <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    value={registerFormData.password}
-                    onChange={handleRegisterChange}
-                    className={`w-full px-3 py-2 border ${getErrorForField('password') ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500`}
-                    placeholder="Your Password"
-                  />
-                  {getErrorForField('password') && (
-                    <p className="mt-1 text-sm text-red-600">{getErrorForField('password')}</p>
-                  )}
-                </div>
+                <PasswordInput
+                  id="password"
+                  name="password"
+                  value={registerFormData.password}
+                  onChange={handleRegisterChange}
+                  placeholder="Your Password"
+                  label="Password"
+                  error={getErrorForField('password')}
+                  className="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
+                  autoComplete="new-password"
+                />
                 
-                <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                    Confirm Password
-                  </label>
-                  <input
-                    type="password"
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    value={registerFormData.confirmPassword}
-                    onChange={handleRegisterChange}
-                    className={`w-full px-3 py-2 border ${getErrorForField('confirmPassword') ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500`}
-                    placeholder="Confirm Your Password"
-                  />
-                  {getErrorForField('confirmPassword') && (
-                    <p className="mt-1 text-sm text-red-600">{getErrorForField('confirmPassword')}</p>
-                  )}
-                </div>
+                <PasswordInput
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={registerFormData.confirmPassword}
+                  onChange={handleRegisterChange}
+                  placeholder="Confirm Your Password"
+                  label="Confirm Password"
+                  error={getErrorForField('confirmPassword')}
+                  className="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
+                  autoComplete="new-password"
+                />
                 
                 <div className="flex items-center">
                   <input

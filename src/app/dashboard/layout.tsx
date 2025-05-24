@@ -3,140 +3,67 @@
 import { ReactNode, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { usePermissions } from '@/hooks/usePermissions';
-import { AuthenticatedOnly } from '@/components/PermissionGate';
-import { 
-  HomeIcon, 
-  UserIcon, 
-  CalendarIcon, 
-  ClipboardDocumentListIcon,
-  UsersIcon,
-  BuildingOffice2Icon,
-  UserCircleIcon,
-  Cog6ToothIcon,
-  ArrowRightOnRectangleIcon,
-  MagnifyingGlassIcon,
-  BellIcon,
-  SunIcon,
-  MoonIcon
-} from '@heroicons/react/24/outline';
+import { handleLogout } from '@/lib/auth/logout';
 
-// Sidebar links based on user role
+// Simple sidebar links for doctors only
 type SidebarLink = {
   href: string;
   label: string;
-  icon: ReactNode;
-  requiredRole?: 'PATIENT' | 'DOCTOR' | 'ADMIN';
-  requiredPermission?: {
-    resource: string;
-    action: string;
-    scope?: string;
-  };
+  icon: string;
 };
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { user, hasPermission, isLoading } = usePermissions();
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
   
-  // Define sidebar links with icons
-  const sidebarLinks: SidebarLink[] = [
-    // Common links for all users
-    { href: '/dashboard', label: 'Dashboard', icon: <HomeIcon className="w-5 h-5" /> },
-    { href: '/dashboard/profile', label: 'My Profile', icon: <UserIcon className="w-5 h-5" /> },
-    
-    // Patient-specific links
-    { 
-      href: '/dashboard/appointments', 
-      label: 'My Appointments', 
-      icon: <CalendarIcon className="w-5 h-5" />,
-      requiredRole: 'PATIENT'
-    },
-    { 
-      href: '/dashboard/medical-records', 
-      label: 'Medical Records', 
-      icon: <ClipboardDocumentListIcon className="w-5 h-5" />,
-      requiredRole: 'PATIENT'
-    },
-    
-    // Doctor-specific links
-    { 
-      href: '/dashboard/doctor/appointments', 
-      label: 'Appointment Schedule', 
-      icon: <CalendarIcon className="w-5 h-5" />,
-      requiredRole: 'DOCTOR'
-    },
-    { 
-      href: '/dashboard/doctor/patients', 
-      label: 'My Patients', 
-      icon: <UsersIcon className="w-5 h-5" />,
-      requiredRole: 'DOCTOR'
-    },
-    { 
-      href: '/dashboard/doctor/reviews', 
-      label: 'My Reviews', 
-      icon: <UserCircleIcon className="w-5 h-5" />,
-      requiredRole: 'DOCTOR'
-    },
-    
-    // Admin-specific links
-    { 
-      href: '/dashboard/admin/users', 
-      label: 'User Management', 
-      icon: <UsersIcon className="w-5 h-5" />,
-      requiredRole: 'ADMIN'
-    },
-    { 
-      href: '/dashboard/admin/departments', 
-      label: 'Departments', 
-      icon: <BuildingOffice2Icon className="w-5 h-5" />,
-      requiredRole: 'ADMIN'
-    },
-    { 
-      href: '/dashboard/admin/doctors', 
-      label: 'Doctors', 
-      icon: <UserIcon className="w-5 h-5" />,
-      requiredRole: 'ADMIN'
-    },
-    { 
-      href: '/dashboard/admin/settings', 
-      label: 'System Settings', 
-      icon: <Cog6ToothIcon className="w-5 h-5" />,
-      requiredRole: 'ADMIN'
-    },
+  // Sidebar links for doctors
+  const doctorLinks: SidebarLink[] = [
+    { href: '/dashboard/doctor', label: 'Dashboard', icon: '🏠' },
+    { href: '/dashboard/doctor/appointments', label: 'Appointments', icon: '📅' },
+    { href: '/dashboard/doctor/patients', label: 'My Patients', icon: '👥' },
+    { href: '/dashboard/doctor/prescriptions', label: 'Prescriptions', icon: '📋' },
+    { href: '/dashboard/doctor/profile', label: 'My Profile', icon: '👤' },
   ];
+
+  // Sidebar links for patients
+  const patientLinks: SidebarLink[] = [
+    { href: '/dashboard/patient', label: 'My Dashboard', icon: '🏠' },
+    { href: '/dashboard/patient/health-dashboard', label: 'Health Overview', icon: '❤️' },
+    { href: '/dashboard/patient/appointments', label: 'Appointments', icon: '📅' },
+    { href: '/dashboard/patient/prescriptions', label: 'Prescriptions', icon: '💊' },
+    { href: '/dashboard/patient/medical-records', label: 'Medical Records', icon: '📋' },
+    { href: '/dashboard/patient/health-goals', label: 'Health Goals', icon: '🎯' },
+    { href: '/dashboard/patient/reviews', label: 'My Reviews', icon: '⭐' },
+    { href: '/dashboard/patient/notifications', label: 'Notifications', icon: '🔔' },
+    
+    { href: '/dashboard/patient/profile', label: 'My Profile', icon: '👤' },
+  ];
+
+  // Get current navigation links based on user role
+  const currentLinks = user?.role === 'PATIENT' ? patientLinks : doctorLinks;
   
-  // Filter links based on user role and permissions
-  const filteredLinks = sidebarLinks.filter(link => {
-    if (!user || isLoading) return false;
-    
-    // Check role-based access
-    if (link.requiredRole && user.role !== link.requiredRole) {
-      return false;
-    }
-    
-    // Check permission-based access
-    if (link.requiredPermission) {
-      const { resource, action, scope } = link.requiredPermission;
-      if (!hasPermission(resource, action, scope)) {
-        return false;
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const response = await fetch('/api/auth/me');
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.user);
+        }
+      } catch (error) {
+        console.error('Failed to load user:', error);
+      } finally {
+        setLoading(false);
       }
-    }
+    };
     
-    return true;
-  });
+    loadUser();
+  }, []);
   
-  // Toggle mobile menu
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
-  
-  // Toggle dark mode
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    // Implement dark mode logic here
-    document.documentElement.classList.toggle('dark');
   };
   
   // Close mobile menu when path changes
@@ -144,217 +71,165 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     setIsMobileMenuOpen(false);
   }, [pathname]);
   
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+      </div>
+    );
+  }
+  
   return (
-    <AuthenticatedOnly redirectTo="/login">
-      <div className={`min-h-screen bg-gray-50 ${darkMode ? 'dark' : ''}`}>
-        <div className="flex h-screen overflow-hidden">
-          {/* Sidebar Navigation - Desktop */}
-          <aside className="hidden md:flex md:flex-shrink-0">
-            <div className="flex flex-col w-64 bg-white shadow-lg">
-              {/* Logo */}
-              <div className="flex items-center h-16 px-6 border-b">
-                <Link href="/" className="text-xl font-bold text-purple-600">
+    <div className="min-h-screen bg-gray-50">
+      <div className="flex h-screen overflow-hidden">
+        {/* Desktop Sidebar */}
+        <aside className="hidden md:flex md:flex-shrink-0">
+          <div className="flex flex-col w-64 bg-white shadow-lg border-r border-gray-200">
+            {/* Logo */}
+            <div className="flex items-center justify-center h-16 px-6 border-b border-gray-200 bg-gradient-to-r from-purple-600 to-purple-800">
+              <Link href="/" className="text-xl font-bold text-white">
+                MedCare
+              </Link>
+            </div>
+            
+            {/* User Profile */}
+            <div className="flex flex-col items-center px-6 py-6 border-b border-gray-100 bg-gray-50">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-purple-700 flex items-center justify-center text-white mb-3">
+                <span className="text-2xl font-bold">
+                  {user?.name ? user.name.charAt(0).toUpperCase() : 'D'}
+                </span>
+              </div>
+              <h3 className="text-sm font-semibold text-gray-900">{user?.name || (user?.role === 'PATIENT' ? 'Patient' : 'Doctor')}</h3>
+              <p className="text-xs text-gray-500 mt-1">{user?.role === 'PATIENT' ? 'Patient' : 'Medical Professional'}</p>
+            </div>
+            
+            {/* Navigation Links */}
+            <nav className="flex-1 overflow-y-auto py-4 px-3">
+              <ul className="space-y-2">
+                {currentLinks.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className={`flex items-center px-4 py-3 rounded-xl transition-all duration-200 group ${
+                        pathname === link.href
+                          ? 'bg-gradient-to-r from-purple-500 to-purple-700 text-white shadow-lg'
+                          : 'text-gray-700 hover:bg-purple-50 hover:text-purple-600'
+                      }`}
+                    >
+                      <span className="text-xl mr-3">{link.icon}</span>
+                      <span className="font-medium">{link.label}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+            
+            {/* Logout */}
+            <div className="p-4 border-t border-gray-100">
+              <button
+                className="w-full flex items-center px-4 py-3 rounded-xl text-gray-700 hover:bg-red-50 hover:text-red-600 transition-all duration-200"
+                onClick={handleLogout}
+              >
+                <span className="text-xl mr-3">🚪</span>
+                <span className="font-medium">Log Out</span>
+              </button>
+            </div>
+          </div>
+        </aside>
+        
+        {/* Main Content */}
+        <div className="flex flex-col flex-1 overflow-hidden">
+          {/* Mobile Header */}
+          <header className="bg-white shadow-sm md:hidden border-b border-gray-200">
+            <div className="px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center">
+                <button 
+                  className="text-gray-600 focus:outline-none p-2 rounded-lg hover:bg-gray-100"
+                  onClick={toggleMobileMenu}
+                >
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    {isMobileMenuOpen ? (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    ) : (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+                    )}
+                  </svg>
+                </button>
+                <Link href="/" className="ml-2 text-lg font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
                   MedCare
                 </Link>
-                
-                {/* Dark mode toggle - Desktop */}
-                <button 
-                  className="p-1 ml-auto rounded-full text-gray-500 hover:bg-gray-100"
-                  onClick={toggleDarkMode}
-                >
-                  {darkMode ? (
-                    <SunIcon className="w-5 h-5" />
-                  ) : (
-                    <MoonIcon className="w-5 h-5" />
-                  )}
-                </button>
               </div>
-              
-              {/* User info */}
-              <div className="flex flex-col items-center px-4 py-5 border-b">
-                <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 mb-2">
-                  {!isLoading && user?.name ? (
-                    <span className="text-2xl font-bold">{user.name.charAt(0).toUpperCase()}</span>
-                  ) : (
-                    <UserIcon className="w-8 h-8" />
-                  )}
-                </div>
-                <h3 className="text-sm font-semibold mt-2">
-                  {!isLoading && user ? user.name : 'Loading...'}
-                </h3>
-                <p className="text-xs text-gray-500 mt-1">
-                  {!isLoading && user ? user.role : ''}
-                </p>
-              </div>
-              
-              {/* Navigation Links */}
-              <nav className="flex-1 overflow-y-auto py-4 px-3">
-                <ul className="space-y-1">
-                  {filteredLinks.map((link) => (
-                    <li key={link.href}>
-                      <Link
-                        href={link.href}
-                        className={`flex items-center px-4 py-3 rounded-lg transition-colors ${
-                          pathname === link.href
-                            ? 'bg-purple-100 text-purple-700'
-                            : 'text-gray-700 hover:bg-gray-100 hover:text-purple-600'
-                        }`}
-                      >
-                        <span className="mr-3 text-gray-500">{link.icon}</span>
-                        <span>{link.label}</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-              
-              {/* Logout */}
-              <div className="p-4 border-t">
-                <button
-                  className="w-full flex items-center px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 hover:text-purple-600"
-                  onClick={() => {
-                    fetch('/api/auth/logout', { method: 'POST' }).then(() => {
-                      window.location.href = '/login';
-                    });
-                  }}
-                >
-                  <ArrowRightOnRectangleIcon className="w-5 h-5 mr-3 text-gray-500" />
-                  <span>Log Out</span>
-                </button>
+              <div className="text-sm font-medium text-gray-700">
+                {user?.role === 'PATIENT' ? user?.name || 'Patient' : `Dr. ${user?.name || 'Doctor'}`}
               </div>
             </div>
-          </aside>
+          </header>
           
-          {/* Main Content */}
-          <div className="flex flex-col flex-1 overflow-hidden">
-            {/* Top Navigation - Mobile */}
-            <header className="bg-white shadow-sm md:hidden">
-              <div className="px-4 py-3 flex items-center justify-between">
-                <div className="flex items-center">
-                  <button 
-                    className="text-gray-600 focus:outline-none"
-                    onClick={toggleMobileMenu}
-                  >
-                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      {isMobileMenuOpen ? (
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      ) : (
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-                      )}
-                    </svg>
-                  </button>
-                  <Link href="/" className="ml-2 text-lg font-bold text-purple-600">
+          {/* Mobile Sidebar */}
+          {isMobileMenuOpen && (
+            <div className="fixed inset-0 z-40 md:hidden">
+              <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsMobileMenuOpen(false)}></div>
+              <div className="fixed inset-y-0 left-0 w-64 bg-white overflow-y-auto z-50 shadow-xl">
+                {/* Mobile Logo */}
+                <div className="flex items-center justify-center h-16 px-6 border-b border-gray-200 bg-gradient-to-r from-purple-600 to-purple-800">
+                  <Link href="/" className="text-xl font-bold text-white">
                     MedCare
                   </Link>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <button className="p-1 rounded-full text-gray-500 hover:bg-gray-100">
-                    <BellIcon className="w-6 h-6" />
-                  </button>
-                  <button 
-                    className="p-1 rounded-full text-gray-500 hover:bg-gray-100"
-                    onClick={toggleDarkMode}
-                  >
-                    {darkMode ? (
-                      <SunIcon className="w-6 h-6" />
-                    ) : (
-                      <MoonIcon className="w-6 h-6" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            </header>
-            
-            {/* Mobile Sidebar - Slide out menu */}
-            {isMobileMenuOpen && (
-              <div className="fixed inset-0 z-40 md:hidden">
-                <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsMobileMenuOpen(false)}></div>
-                <div className="fixed inset-y-0 left-0 w-64 bg-white overflow-y-auto z-50">
-                  {/* Mobile Menu Content */}
-                  <div className="p-4 border-b">
-                    <div className="flex items-center justify-between">
-                      <Link href="/" className="text-lg font-bold text-purple-600">
-                        MedCare
-                      </Link>
-                      <button 
-                        className="text-gray-500"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
+                
+                {/* Mobile User info */}
+                <div className="flex flex-col items-center px-6 py-6 border-b border-gray-100 bg-gray-50">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-purple-700 flex items-center justify-center text-white mb-3">
+                    <span className="text-2xl font-bold">
+                      {user?.name ? user.name.charAt(0).toUpperCase() : 'D'}
+                    </span>
                   </div>
+                  <h3 className="text-sm font-semibold text-gray-900">{user?.name || (user?.role === 'PATIENT' ? 'Patient' : 'Doctor')}</h3>
+                  <p className="text-xs text-gray-500 mt-1">{user?.role === 'PATIENT' ? 'Patient' : 'Medical Professional'}</p>
+                </div>
+                
+                {/* Mobile Navigation */}
+                <nav className="p-4">
+                  <ul className="space-y-2">
+                    {currentLinks.map((link) => (
+                      <li key={link.href}>
+                        <Link
+                          href={link.href}
+                          className={`flex items-center px-4 py-3 rounded-xl transition-all duration-200 ${
+                            pathname === link.href
+                              ? 'bg-gradient-to-r from-purple-500 to-purple-700 text-white shadow-lg'
+                              : 'text-gray-700 hover:bg-purple-50 hover:text-purple-600'
+                          }`}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          <span className="text-xl mr-3">{link.icon}</span>
+                          <span className="font-medium">{link.label}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
                   
-                  {/* User info */}
-                  <div className="flex flex-col items-center px-4 py-5 border-b">
-                    <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 mb-2">
-                      {!isLoading && user?.name ? (
-                        <span className="text-2xl font-bold">{user.name.charAt(0).toUpperCase()}</span>
-                      ) : (
-                        <UserIcon className="w-8 h-8" />
-                      )}
-                    </div>
-                    <h3 className="text-sm font-semibold mt-2">
-                      {!isLoading && user ? user.name : 'Loading...'}
-                    </h3>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {!isLoading && user ? user.role : ''}
-                    </p>
+                  {/* Mobile Logout */}
+                  <div className="mt-6 pt-4 border-t border-gray-100">
+                    <button
+                      className="w-full flex items-center px-4 py-3 rounded-xl text-gray-700 hover:bg-red-50 hover:text-red-600 transition-all duration-200"
+                      onClick={handleLogout}
+                    >
+                      <span className="text-xl mr-3">🚪</span>
+                      <span className="font-medium">Log Out</span>
+                    </button>
                   </div>
-                  
-                  {/* Mobile Navigation Links */}
-                  <nav className="p-4">
-                    <ul className="space-y-1">
-                      {filteredLinks.map((link) => (
-                        <li key={link.href}>
-                          <Link
-                            href={link.href}
-                            className={`flex items-center px-4 py-3 rounded-lg transition-colors ${
-                              pathname === link.href
-                                ? 'bg-purple-100 text-purple-700'
-                                : 'text-gray-700 hover:bg-gray-100 hover:text-purple-600'
-                            }`}
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                            <span className="mr-3 text-gray-500">{link.icon}</span>
-                            <span>{link.label}</span>
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                    
-                    {/* Mobile Logout */}
-                    <div className="mt-4 pt-4 border-t">
-                      <button
-                        className="w-full flex items-center px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 hover:text-purple-600"
-                        onClick={() => {
-                          fetch('/api/auth/logout', { method: 'POST' }).then(() => {
-                            window.location.href = '/login';
-                          });
-                        }}
-                      >
-                        <ArrowRightOnRectangleIcon className="w-5 h-5 mr-3 text-gray-500" />
-                        <span>Log Out</span>
-                      </button>
-                    </div>
-                  </nav>
-                </div>
+                </nav>
               </div>
-            )}
-            
-            {/* Main Content Area */}
-            <main className="flex-1 overflow-y-auto bg-gray-50 p-4">
-              <div className="container mx-auto">
-                <div className="bg-white shadow rounded-lg p-6">
-                  {children}
-                </div>
-              </div>
-            </main>
-          </div>
+            </div>
+          )}
+          
+          {/* Main Content Area */}
+          <main className="flex-1 overflow-y-auto">
+            {children}
+          </main>
         </div>
       </div>
-    </AuthenticatedOnly>
+    </div>
   );
 } 

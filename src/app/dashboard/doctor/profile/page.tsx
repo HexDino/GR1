@@ -2,11 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { usePermissions } from '@/hooks/usePermissions';
+import PasswordInput from '@/components/ui/PasswordInput';
 
 export default function DoctorProfile() {
   const { user, isLoading } = usePermissions();
   const [isEditing, setIsEditing] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
   const [formData, setFormData] = useState({
     name: 'Dr. John Smith',
     email: 'john.smith@hospital.com',
@@ -36,27 +43,68 @@ export default function DoctorProfile() {
       [name]: value
     }));
   };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Here you would typically save the data to a backend
     setIsEditing(false);
   };
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Here you would typically handle password change
+    console.log('Password change requested');
+    // Reset password form
+    setPasswordData({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    });
+  };
   
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50 flex justify-center items-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
       </div>
     );
   }
   
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">My Profile</h1>
-        <p className="text-gray-600">Manage your personal and professional information</p>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
+                My Profile
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Manage your personal and professional information
+              </p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Link
+                href="/dashboard/doctor"
+                className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Back to Dashboard
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
+
+      <div className="max-w-7xl mx-auto px-6 py-8">
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Profile Info */}
@@ -311,28 +359,43 @@ export default function DoctorProfile() {
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
             <div className="p-6">
               <h2 className="text-lg font-bold text-gray-900 mb-4">Change Password</h2>
-              <form className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Current Password</label>
-                  <input
-                    type="password"
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">New Password</label>
-                  <input
-                    type="password"
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Confirm New Password</label>
-                  <input
-                    type="password"
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
-                  />
-                </div>
+              <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                <PasswordInput
+                  id="currentPassword"
+                  name="currentPassword"
+                  value={passwordData.currentPassword}
+                  onChange={handlePasswordChange}
+                  placeholder="Enter current password"
+                  label="Current Password"
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                  autoComplete="current-password"
+                  required
+                />
+                
+                <PasswordInput
+                  id="newPassword"
+                  name="newPassword"
+                  value={passwordData.newPassword}
+                  onChange={handlePasswordChange}
+                  placeholder="Enter new password"
+                  label="New Password"
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                  autoComplete="new-password"
+                  required
+                />
+                
+                <PasswordInput
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={passwordData.confirmPassword}
+                  onChange={handlePasswordChange}
+                  placeholder="Confirm new password"
+                  label="Confirm New Password"
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm"
+                  autoComplete="new-password"
+                  required
+                />
+                
                 <div>
                   <button
                     type="submit"
@@ -345,6 +408,7 @@ export default function DoctorProfile() {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

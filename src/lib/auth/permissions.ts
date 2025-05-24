@@ -6,13 +6,11 @@ import { UserRole } from '@prisma/client';
  * @param userId - The user ID
  * @param resource - The resource to check (e.g. 'patient', 'appointment')
  * @param action - The action to check (e.g. 'create', 'view', 'update')
- * @param scope - Optional scope (e.g. 'own', 'assigned', 'all')
  */
 export async function hasPermission(
   userId: string,
   resource: string, 
-  action: string,
-  scope?: string
+  action: string
 ): Promise<boolean> {
   // Get user with their role and permissions
   const user = await prisma.user.findUnique({
@@ -39,11 +37,6 @@ export async function hasPermission(
     const resourceMatch = perm.resource === resource;
     const actionMatch = perm.action === action;
     
-    // If scope is provided, check it too, otherwise just check resource and action
-    if (scope && perm.scope) {
-      return resourceMatch && actionMatch && perm.scope === scope;
-    }
-    
     return resourceMatch && actionMatch;
   });
   
@@ -55,8 +48,7 @@ export async function hasPermission(
       role: user.role as UserRole,
       permission: {
         resource,
-        action,
-        ...(scope ? { scope } : {})
+        action
       }
     },
     include: {
@@ -77,7 +69,7 @@ export async function getRolePermissions(role: UserRole): Promise<string[]> {
   });
   
   return permissions.map(p => 
-    `${p.permission.resource}:${p.permission.action}${p.permission.scope ? `:${p.permission.scope}` : ''}`
+    `${p.permission.resource}:${p.permission.action}`
   );
 }
 

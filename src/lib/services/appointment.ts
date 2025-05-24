@@ -119,7 +119,7 @@ export async function sendReviewReminders() {
         userId: appointment.patientId,
         title: 'How was your appointment?',
         message: `Thank you for visiting Dr. ${appointment.doctor.name}. Please take a moment to leave a review.`,
-        type: NotificationType.DOCTOR_REVIEW_REMINDER,
+        type: NotificationType.GENERAL,
         relatedId: appointment.id,
       })
     })

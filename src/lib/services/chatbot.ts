@@ -38,54 +38,54 @@ export interface ChatbotResponse {
 }
 
 /**
- * Phân tích ý định của người dùng từ tin nhắn của họ
- * @param userMessage Tin nhắn của người dùng
+ * Analyze user intent from their message
+ * @param userMessage User's message
  */
 export function analyzeUserIntent(userMessage: string): UserIntentType {
   const message = userMessage.toLowerCase();
 
-  // Sử dụng regex để nhận diện intent
-  if (/đặt\s+(lịch|cuộc hẹn)|book|appointment/i.test(message)) {
+  // Use regex to recognize intent
+  if (/book|appointment|schedule|arrange|make.*appointment/i.test(message)) {
     return UserIntentType.BOOK_APPOINTMENT;
   }
   
-  if (/kiểm tra|xem|check|lịch|cuộc hẹn|hẹn\s+(của|tôi)/i.test(message) && 
-      !/hủy|cancel/i.test(message)) {
+  if (/check|view|see|my.*appointment|appointment.*status/i.test(message) && 
+      !/cancel|delete/i.test(message)) {
     return UserIntentType.CHECK_APPOINTMENT;
   }
   
-  if (/hủy|cancel|xóa|bỏ|lịch|cuộc hẹn/i.test(message)) {
+  if (/cancel|delete|remove|appointment/i.test(message)) {
     return UserIntentType.CANCEL_APPOINTMENT;
   }
   
-  if (/thuốc|đơn thuốc|toa thuốc|prescription|medicine/i.test(message)) {
+  if (/prescription|medicine|medication|drug/i.test(message)) {
     return UserIntentType.PRESCRIPTION_INFO;
   }
   
-  if (/bác sĩ|doctor|bác|bs/i.test(message) && 
-      !/lịch|hẹn|schedule|appointment/i.test(message)) {
+  if (/doctor|physician|dr\./i.test(message) && 
+      !/appointment|schedule/i.test(message)) {
     return UserIntentType.DOCTOR_INFO;
   }
   
-  if (/khoa|phòng|chuyên khoa|department|specialty/i.test(message)) {
+  if (/department|specialty|ward|unit/i.test(message)) {
     return UserIntentType.DEPARTMENT_INFO;
   }
   
-  if (/triệu chứng|symptom|đau|ốm|bệnh|fever|cough|sốt|ho/i.test(message) && 
-      !/bác sĩ|doctor|lịch|hẹn/i.test(message)) {
+  if (/symptom|pain|sick|illness|fever|cough|headache/i.test(message) && 
+      !/doctor|appointment/i.test(message)) {
     return UserIntentType.SYMPTOMS_CHECK;
   }
   
-  // Kiểm tra xem có phải câu hỏi y tế không
-  if (/tại sao|vì sao|nguyên nhân|cách|phương pháp|điều trị|what|why|how|treat|cure|prevent/i.test(message)) {
+  // Check if it's a medical question
+  if (/what|why|how|cause|treatment|cure|prevent|diagnose/i.test(message)) {
     return UserIntentType.MEDICAL_QUESTION;
   }
   
-  if (/giúp|help|hướng dẫn|guide|how to/i.test(message)) {
+  if (/help|guide|assist|how.*to/i.test(message)) {
     return UserIntentType.GENERAL_HELP;
   }
   
-  // Nếu không rõ ý định
+  // If intent is unclear
   return UserIntentType.UNKNOWN;
 }
 
@@ -96,47 +96,47 @@ export function analyzeUserIntent(userMessage: string): UserIntentType {
 export async function processGPT4MedicalQuestion(question: string): Promise<string> {
   try {
     if (!process.env.OPENAI_API_KEY) {
-      return "Xin lỗi, tôi không thể trả lời câu hỏi y tế phức tạp lúc này. Vui lòng liên hệ bác sĩ để được tư vấn.";
+      return "Sorry, I cannot answer complex medical questions at this time. Please consult a doctor for accurate advice.";
     }
     
     const medicalPrompt = `
-    Bạn là một trợ lý y tế được đào tạo để cung cấp thông tin sức khỏe chung.
-    Hãy trả lời câu hỏi sau một cách chính xác, ngắn gọn và dễ hiểu:
+    You are a medical assistant trained to provide health information.
+    Please answer the following question in a concise and understandable way:
     
     ${question}
     
-    Hãy nhớ:
-    1. Chỉ cung cấp thông tin dựa trên bằng chứng khoa học.
-    2. KHÔNG đưa ra chẩn đoán y tế.
-    3. LUÔN khuyến nghị người dùng tham khảo ý kiến bác sĩ.
-    4. Trả lời ngắn gọn, không quá 150 từ.
-    5. Nếu không chắc chắn, hãy thẳng thắn về những hạn chế.
+    Remember:
+    1. Provide information based on scientific evidence.
+    2. DO NOT provide a medical diagnosis.
+    3. ALWAYS advise users to consult a doctor.
+    4. Keep answers concise, no more than 150 words.
+    5. If unsure, be honest about limitations.
     `;
     
     const response = await openai.chat.completions.create({
-      model: "gpt-4-turbo",
+      model: "gpt-4",
       messages: [
         {
           role: "system",
-          content: "Bạn là trợ lý y tế ảo trong hệ thống đặt lịch khám bệnh. Bạn cung cấp thông tin sức khỏe chung nhưng không chẩn đoán hay đưa ra tư vấn y tế thay thế cho bác sĩ."
+          content: "You are a virtual medical assistant in the appointment system. You provide general health information but do not diagnose or give alternative medical advice to doctors."
         },
         {
           role: "user",
           content: medicalPrompt
         }
       ],
-      temperature: 0.3,
-      max_tokens: 300,
+      max_tokens: 200,
+      temperature: 0.7,
     });
     
     const answer = response.choices[0]?.message?.content?.trim() || 
-                "Xin lỗi, tôi không thể xử lý câu hỏi của bạn lúc này. Vui lòng thử lại sau.";
+                "Sorry, I cannot process your question at this time. Please try again later.";
     
     // Luôn thêm tuyên bố miễn trừ trách nhiệm
-    return answer + "\n\n(Lưu ý: Thông tin này chỉ mang tính chất tham khảo và không thay thế cho tư vấn y tế chuyên nghiệp)";
+    return answer + "\n\n(Note: This information is for informational purposes only and does not replace professional medical advice)";
   } catch (error) {
     console.error("Error calling OpenAI API:", error);
-    return "Xin lỗi, tôi không thể trả lời câu hỏi y tế phức tạp lúc này. Vui lòng liên hệ bác sĩ để được tư vấn.";
+    return "Sorry, I cannot answer complex medical questions at this time. Please consult a doctor for accurate advice.";
   }
 }
 
@@ -148,44 +148,43 @@ export async function analyzeSymptoms(symptoms: string): Promise<any> {
   try {
     if (!process.env.OPENAI_API_KEY) {
       return {
-        message: "Xin lỗi, tôi không thể phân tích triệu chứng lúc này. Vui lòng liên hệ bác sĩ để được tư vấn.",
+        message: "Sorry, I cannot analyze symptoms at this time. Please consult a doctor for accurate advice.",
         suggestions: []
       };
     }
     
     const symptomsPrompt = `
-    Phân tích các triệu chứng sau và đưa ra gợi ý sơ bộ:
+    Analyze the following symptoms and provide preliminary suggestions:
     
     ${symptoms}
     
-    Hãy trả lời với định dạng JSON như sau:
+    Please respond in JSON format as follows:
     {
-      "analysis": "Phân tích ngắn gọn các triệu chứng",
-      "possibleConditions": ["Tình trạng có thể 1", "Tình trạng có thể 2"],
-      "recommendations": ["Khuyến nghị 1", "Khuyến nghị 2"],
-      "urgencyLevel": "THẤP/TRUNG BÌNH/CAO/KHẨN CẤP",
-      "specialistType": "Loại bác sĩ chuyên khoa nên gặp"
+      "analysis": "Short analysis of symptoms",
+      "possibleConditions": ["Possible condition 1", "Possible condition 2"],
+      "recommendations": ["Recommendation 1", "Recommendation 2"],
+      "urgencyLevel": "LOW/MEDIUM/HIGH/EMERGENCY",
+      "specialistType": "Type of specialist to consult"
     }
     
-    KHÔNG đưa ra chẩn đoán y tế chính thức. Chỉ cung cấp thông tin tham khảo.
-    Nếu triệu chứng nghiêm trọng, luôn khuyến nghị người dùng tìm kiếm sự trợ giúp y tế ngay lập tức.
+    DO NOT provide a medical diagnosis. Provide only informational suggestions.
+    If symptoms are serious, always advise users to seek immediate medical help.
     `;
     
     const response = await openai.chat.completions.create({
-      model: "gpt-4-turbo",
+      model: "gpt-4",
       messages: [
         {
           role: "system",
-          content: "Bạn là trợ lý y tế ảo trong hệ thống đặt lịch khám bệnh. Bạn phân tích triệu chứng sơ bộ nhưng không chẩn đoán chính thức."
+          content: "You are a virtual medical assistant in the appointment system. You analyze preliminary symptoms but do not diagnose."
         },
         {
           role: "user",
           content: symptomsPrompt
         }
       ],
+      max_tokens: 300,
       temperature: 0.3,
-      max_tokens: 500,
-      response_format: { type: "json_object" }
     });
     
     const jsonResponse = response.choices[0]?.message?.content?.trim() || "{}";
@@ -196,21 +195,21 @@ export async function analyzeSymptoms(symptoms: string): Promise<any> {
     } catch (error) {
       console.error("Error parsing JSON from OpenAI:", error);
       result = {
-        analysis: "Không thể phân tích triệu chứng.",
-        recommendations: ["Vui lòng tham khảo ý kiến bác sĩ."]
+        analysis: "Cannot analyze symptoms.",
+        recommendations: ["Please consult a doctor."]
       };
     }
     
     // Thêm cảnh báo miễn trừ trách nhiệm
     return {
       ...result,
-      disclaimer: "Phân tích này chỉ mang tính chất tham khảo và không thay thế cho tư vấn y tế chuyên nghiệp."
+      disclaimer: "Note: This is for informational purposes only and does not replace professional medical advice."
     };
   } catch (error) {
     console.error("Error analyzing symptoms with OpenAI:", error);
     return {
-      message: "Xin lỗi, tôi không thể phân tích triệu chứng lúc này. Vui lòng liên hệ bác sĩ để được tư vấn.",
-      suggestions: ["Đặt lịch khám với bác sĩ"]
+      message: "Sorry, I cannot analyze symptoms at this time. Please consult a doctor for accurate advice.",
+      suggestions: ["Book an appointment"]
     };
   }
 }
@@ -230,16 +229,16 @@ export async function generateResponse(
   switch(intent) {
     case UserIntentType.BOOK_APPOINTMENT:
       return {
-        message: "Tôi có thể giúp bạn đặt lịch khám bệnh. Bạn muốn khám khoa nào và vào thời gian nào?",
+        message: "I can help you book an appointment. What hospital or when would you like to visit?",
         intent,
         suggestedActions: [
-          "Xem các khoa",
-          "Xem bác sĩ khả dụng",
-          "Đặt lịch khám Nội khoa"
+          "View hospitals",
+          "View doctor availability",
+          "Book Internal Medicine appointment"
         ],
         links: [
-          { text: "Các khoa phòng", url: "/departments" },
-          { text: "Các bác sĩ", url: "/doctors" }
+          { text: "Hospitals", url: "/departments" },
+          { text: "Doctors", url: "/doctors" }
         ]
       };
       
@@ -257,101 +256,97 @@ export async function generateResponse(
               date: 'asc'
             },
             include: {
-              doctor: {
+              doctorRelation: {
                 select: {
-                  user: {
-                    select: {
-                      name: true
-                    }
-                  }
+                  specialization: true
                 }
               }
             },
-            take: 3
+            take: 5
           });
           
           if (appointments.length > 0) {
             return {
-              message: `Bạn có ${appointments.length} cuộc hẹn sắp tới.`,
+              message: `You have ${appointments.length} upcoming appointments.`,
               intent,
               data: appointments,
               links: [
-                { text: "Xem tất cả lịch hẹn", url: "/appointments" }
+                { text: "View all appointments", url: "/appointments" }
               ]
             };
           } else {
             return {
-              message: "Bạn không có cuộc hẹn nào sắp tới.",
+              message: "You have no upcoming appointments.",
               intent,
-              suggestedActions: ["Đặt lịch khám ngay"]
+              suggestedActions: ["Book appointment now"]
             };
           }
         } catch (error) {
           console.error("Error fetching appointments:", error);
           return {
-            message: "Xin lỗi, tôi không thể kiểm tra lịch hẹn của bạn lúc này. Vui lòng thử lại sau.",
+            message: "Sorry, I cannot check your appointments at this time. Please try again later.",
             intent
           };
         }
       } else {
         return {
-          message: "Bạn cần đăng nhập để xem lịch hẹn của mình.",
+          message: "You need to log in to view your appointments.",
           intent,
           links: [
-            { text: "Đăng nhập", url: "/login" }
+            { text: "Login", url: "/login" }
           ]
         };
       }
       
     case UserIntentType.CANCEL_APPOINTMENT:
       return {
-        message: "Để hủy lịch khám, vui lòng cho tôi biết thời gian của cuộc hẹn bạn muốn hủy, hoặc bạn có thể xem tất cả lịch hẹn và chọn hủy từ danh sách.",
+        message: "To cancel your appointment, please let me know the time of the appointment you want to cancel, or you can view all appointments and choose to cancel from the list.",
         intent,
         links: [
-          { text: "Xem tất cả lịch hẹn", url: "/appointments" }
+          { text: "View all appointments", url: "/appointments" }
         ]
       };
       
     case UserIntentType.SYMPTOMS_CHECK:
-      // Sử dụng GPT-4 để phân tích triệu chứng
+      // Use GPT-4 to analyze symptoms
       try {
         const analysis = await analyzeSymptoms(userMessage);
         
         const urgencyMap: Record<string, string> = {
-          "THẤP": "thấp",
-          "TRUNG BÌNH": "trung bình",
-          "CAO": "cao",
-          "KHẨN CẤP": "khẩn cấp"
+          "LOW": "low",
+          "MEDIUM": "medium", 
+          "HIGH": "high",
+          "EMERGENCY": "emergency"
         };
         
-        let message = analysis.analysis || "Tôi đã phân tích triệu chứng của bạn.";
+        let message = analysis.analysis || "I have analyzed your symptoms.";
         
         if (analysis.urgencyLevel) {
           const urgencyText = urgencyMap[analysis.urgencyLevel] || analysis.urgencyLevel.toLowerCase();
-          message += `\n\nMức độ cần thiết để thăm khám: ${urgencyText}.`;
+          message += `\n\nUrgency level for medical consultation: ${urgencyText}.`;
         }
         
         if (analysis.specialistType) {
-          message += `\n\nBạn nên tham khảo ý kiến của bác sĩ ${analysis.specialistType}.`;
+          message += `\n\nYou should consult with a ${analysis.specialistType} specialist.`;
         }
         
-        // Thêm khuyến cáo
+        // Add recommendations
         if (analysis.recommendations && analysis.recommendations.length > 0) {
-          message += "\n\nKhuyến nghị:\n" + analysis.recommendations.map((rec: string) => `- ${rec}`).join("\n");
+          message += "\n\nRecommendations:\n" + analysis.recommendations.map((rec: string) => `- ${rec}`).join("\n");
         }
         
-        // Thêm miễn trừ trách nhiệm
-        message += "\n\n" + (analysis.disclaimer || "Lưu ý: Đây chỉ là thông tin tham khảo và không thay thế cho tư vấn y tế chuyên nghiệp.");
+        // Add disclaimer
+        message += "\n\n" + (analysis.disclaimer || "Note: This is for informational purposes only and does not replace professional medical advice.");
         
         return {
           message,
           intent,
           suggestedActions: [
-            "Đặt lịch khám ngay",
-            "Tìm bác sĩ chuyên khoa"
+            "Book appointment now",
+            "Find specialist doctor"
           ],
           links: [
-            { text: "Đặt lịch khám", url: "/appointments/new" }
+            { text: "Book appointment", url: "/appointments/new" }
           ],
           data: {
             analysis: analysis
@@ -359,79 +354,79 @@ export async function generateResponse(
         };
       } catch (error) {
         return {
-          message: "Tôi có thể giúp bạn kiểm tra sơ bộ các triệu chứng. Tuy nhiên, đây chỉ là thông tin tham khảo và không thay thế cho tư vấn y tế chuyên nghiệp. Vui lòng mô tả chi tiết các triệu chứng của bạn.",
+          message: "I can help you check your symptoms preliminarily. However, this is for reference only and does not replace professional medical advice. Please describe your symptoms in detail.",
           intent,
           suggestedActions: [
-            "Tôi bị sốt và ho",
-            "Tôi bị đau đầu",
-            "Tôi bị đau bụng"
+            "I have fever and cough",
+            "I have headache",
+            "I have stomach pain"
           ]
         };
       }
       
     case UserIntentType.DOCTOR_INFO:
       return {
-        message: "Bạn muốn tìm hiểu thông tin về bác sĩ nào hoặc chuyên khoa nào?",
+        message: "Which doctor or specialty would you like to learn about?",
         intent,
         links: [
-          { text: "Xem tất cả bác sĩ", url: "/doctors" },
-          { text: "Tìm theo chuyên khoa", url: "/departments" }
+          { text: "View all doctors", url: "/doctors" },
+          { text: "Find by specialty", url: "/departments" }
         ]
       };
       
     case UserIntentType.PRESCRIPTION_INFO:
       if (userId && userId !== 'guest') {
         return {
-          message: "Bạn có thể xem tất cả đơn thuốc của mình trong phần Đơn thuốc.",
+          message: "You can view all your prescriptions in the Prescriptions section.",
           intent,
           links: [
-            { text: "Xem đơn thuốc", url: "/prescriptions" }
+            { text: "View prescriptions", url: "/prescriptions" }
           ]
         };
       } else {
         return {
-          message: "Bạn cần đăng nhập để xem thông tin đơn thuốc.",
+          message: "You need to log in to view prescription information.",
           intent,
           links: [
-            { text: "Đăng nhập", url: "/login" }
+            { text: "Login", url: "/login" }
           ]
         };
       }
       
     case UserIntentType.MEDICAL_QUESTION:
-      // Sử dụng GPT-4 để trả lời câu hỏi y tế
+      // Use GPT-4 to answer medical questions
       try {
         const answer = await processGPT4MedicalQuestion(userMessage);
         return {
           message: answer,
           intent,
           suggestedActions: [
-            "Đặt lịch tư vấn với bác sĩ",
-            "Tìm hiểu thêm về sức khỏe"
+            "Book consultation with doctor",
+            "Learn more about health"
           ]
         };
       } catch (error) {
         return {
-          message: "Xin lỗi, tôi không thể trả lời câu hỏi y tế phức tạp lúc này. Vui lòng tham khảo ý kiến bác sĩ để được tư vấn chính xác.",
+          message: "Sorry, I cannot answer complex medical questions at this time. Please consult a doctor for accurate advice.",
           intent,
           links: [
-            { text: "Đặt lịch tư vấn", url: "/appointments/new" }
+            { text: "Book consultation", url: "/appointments/new" }
           ]
         };
       }
       
     case UserIntentType.GENERAL_HELP:
       return {
-        message: "Tôi có thể giúp bạn với các vấn đề sau:",
+        message: "I can help you with the following:",
         intent,
         suggestedActions: [
-          "Đặt lịch khám",
-          "Xem lịch khám",
-          "Hủy lịch khám",
-          "Tìm thông tin bác sĩ",
-          "Kiểm tra triệu chứng",
-          "Xem đơn thuốc",
-          "Hỏi về vấn đề sức khỏe"
+          "Book appointment",
+          "View appointments",
+          "Cancel appointment",
+          "Find doctor information",
+          "Check symptoms",
+          "View prescriptions",
+          "Ask health questions"
         ]
       };
       
@@ -445,8 +440,8 @@ export async function generateResponse(
             message: answer,
             intent: UserIntentType.MEDICAL_QUESTION,
             suggestedActions: [
-              "Đặt lịch khám",
-              "Tìm hiểu thêm"
+              "Book appointment",
+              "Learn more"
             ]
           };
         }
@@ -455,14 +450,14 @@ export async function generateResponse(
       }
       
       return {
-        message: "Xin lỗi, tôi không hiểu yêu cầu của bạn. Bạn có thể nói rõ hơn hoặc chọn một trong các hỗ trợ tôi có thể cung cấp:",
+        message: "Sorry, I don't understand your request. You can choose one of the following options I can provide:",
         intent: UserIntentType.UNKNOWN,
         suggestedActions: [
-          "Đặt lịch khám",
-          "Xem lịch khám",
-          "Tìm bác sĩ",
-          "Kiểm tra triệu chứng",
-          "Hỏi về vấn đề sức khỏe"
+          "Book appointment",
+          "View appointments",
+          "Find doctor",
+          "Check symptoms",
+          "Ask health questions"
         ]
       };
   }
@@ -477,14 +472,14 @@ export async function generateResponse(
 export async function saveChatMessage(
   sessionId: string,
   content: string,
-  role: 'user' | 'system' | 'assistant'
+  role: 'user' | 'assistant'
 ) {
   try {
     await prisma.chatMessage.create({
       data: {
-        sessionId,
+        chatId: sessionId,
         content,
-        role,
+        role: role === 'user' ? 'USER' : 'ASSISTANT'
       }
     });
     return true;

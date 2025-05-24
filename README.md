@@ -1,88 +1,88 @@
-# Hệ thống đặt lịch khám bệnh
+# Medical Appointment System
 
-Hệ thống đặt lịch khám bệnh với đầy đủ các tính năng quản lý bác sĩ, bệnh nhân, lịch hẹn, đơn thuốc và chatbot thông minh hỗ trợ người dùng.
+A comprehensive medical appointment booking system with full features for managing doctors, patients, appointments, prescriptions, and an intelligent chatbot to assist users.
 
-## Tính năng chính
+## Key Features
 
-- **Quản lý bác sĩ và bệnh nhân**: Hồ sơ đầy đủ với thông tin y tế.
-- **Đặt lịch khám**: Hệ thống đặt lịch thông minh với kiểm tra xung đột.
-- **Quản lý đơn thuốc**: Kê đơn, theo dõi và xem lịch sử đơn thuốc.
-- **Theo dõi sức khỏe**: Ghi nhận và phân tích chỉ số sức khỏe.
-- **Thông báo thông minh**: Tự động gửi nhắc nhở lịch hẹn, đánh giá bác sĩ.
-- **Chatbot hỗ trợ**: Tích hợp GPT-4 để trả lời câu hỏi y tế và hỗ trợ đặt lịch.
+- **Doctor and Patient Management**: Complete profiles with medical information.
+- **Appointment Booking**: Smart booking system with conflict checking.
+- **Prescription Management**: Prescribe, track, and view prescription history.
+- **Health Monitoring**: Record and analyze health metrics.
+- **Smart Notifications**: Automatic appointment reminders and doctor reviews.
+- **Support Chatbot**: Integrated GPT-4 to answer medical questions and assist with booking.
 
-## Cài đặt
+## Installation
 
-1. Clone dự án
+1. Clone the project
 ```bash
 git clone <repository_url>
 cd medical-appointment-system
 ```
 
-2. Cài đặt các phụ thuộc
+2. Install dependencies
 ```bash
 npm install
 ```
 
-3. Tạo file `.env.local` với nội dung sau:
+3. Create `.env.local` file with the following content:
 ```
-# Cấu hình cơ sở dữ liệu
+# Database configuration
 DATABASE_URL="postgresql://username:password@localhost:5432/medical_app"
 
-# Cấu hình JWT
+# JWT configuration
 JWT_SECRET="your-super-secret-jwt-key"
 
-# Cấu hình OpenAI API cho chatbot
+# OpenAI API configuration for chatbot
 OPENAI_API_KEY="your-openai-api-key"
 ```
 
-4. Cấu hình cơ sở dữ liệu
+4. Configure database
 ```bash
 npx prisma migrate dev
 ```
 
-5. Khởi động ứng dụng
+5. Start the application
 ```bash
 npm run dev
 ```
 
-## Cấu hình Chatbot với GPT-4
+## Chatbot Configuration with GPT-4
 
-Hệ thống chatbot được tích hợp với OpenAI GPT-4 để xử lý:
-- Phân tích triệu chứng sơ bộ
-- Trả lời câu hỏi y tế tổng quát
-- Hỗ trợ đặt lịch thông minh
+The chatbot system is integrated with OpenAI GPT-4 to handle:
+- Preliminary symptom analysis
+- General medical Q&A
+- Smart appointment booking assistance
 
-Để sử dụng tính năng này, bạn cần:
-1. Đăng ký tài khoản tại [OpenAI](https://platform.openai.com/)
-2. Tạo API key tại [OpenAI API Keys](https://platform.openai.com/account/api-keys)
-3. Thêm API key vào file `.env.local`
+To use this feature, you need to:
+1. Register an account at [OpenAI](https://platform.openai.com/)
+2. Create an API key at [OpenAI API Keys](https://platform.openai.com/account/api-keys)
+3. Add the API key to `.env.local` file
 
 ## API Endpoints
 
 ### Authentication
-- `POST /api/auth/register`: Đăng ký tài khoản mới
-- `POST /api/auth/login`: Đăng nhập
+- `POST /api/auth/register`: Register new account
+- `POST /api/auth/login`: Login
 
-### Bác sĩ
-- `GET /api/doctors`: Lấy danh sách bác sĩ
-- `GET /api/doctors/[id]`: Xem thông tin bác sĩ
-- `GET /api/doctors/[id]/schedule`: Xem lịch làm việc của bác sĩ
+### Doctors
+- `GET /api/doctors`: Get list of doctors
+- `GET /api/doctors/[id]`: View doctor information
+- `GET /api/doctors/[id]/schedule`: View doctor's schedule
 
-### Lịch hẹn
-- `GET /api/appointments`: Lấy danh sách lịch hẹn
-- `POST /api/appointments`: Tạo lịch hẹn mới
-- `PUT /api/appointments/[id]`: Cập nhật lịch hẹn
-- `GET /api/appointments/[id]/prescriptions`: Xem đơn thuốc của lịch hẹn
+### Appointments
+- `GET /api/appointments`: Get list of appointments
+- `POST /api/appointments`: Create new appointment
+- `PUT /api/appointments/[id]`: Update appointment
+- `GET /api/appointments/[id]/prescriptions`: View appointment prescriptions
 
 ### Chatbot
-- `POST /api/chat`: Gửi tin nhắn đến chatbot
+- `POST /api/chat`: Send message to chatbot
 
-### Sức khỏe
-- `GET /api/health/metrics`: Xem số liệu theo dõi sức khỏe
-- `POST /api/health/metrics`: Thêm số liệu sức khỏe mới
-- `GET /api/health/insights`: Xem phân tích sức khỏe
+### Health
+- `GET /api/health/metrics`: View health monitoring data
+- `POST /api/health/metrics`: Add new health metrics
+- `GET /api/health/insights`: View health analysis
 
-## Tác giả
+## Author
 
-© 2025. Đồ án môn học. 
+© 2025. Course Project. 

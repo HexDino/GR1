@@ -2,14 +2,23 @@ import * as jose from 'jose';
 import { JWTPayload } from './types'
 
 // Đảm bảo JWT_SECRET luôn tồn tại và là an toàn
-const JWT_SECRET = process.env.JWT_SECRET || 'DEFAULT_JWT_SECRET_FOR_DEV'
+let JWT_SECRET = process.env.JWT_SECRET
 const ACCESS_TOKEN_EXPIRES = process.env.TOKEN_EXPIRES_IN || '1h'
 const REFRESH_TOKEN_EXPIRES = process.env.REFRESH_TOKEN_EXPIRES_IN || '7d'
 
 // Kiểm tra an toàn cho production
-if (process.env.NODE_ENV === 'production' && process.env.JWT_SECRET === undefined) {
-  console.error('JWT_SECRET is missing in production environment!')
-  process.exit(1)
+if (!JWT_SECRET) {
+  console.error('JWT_SECRET is missing! This is a security risk.')
+  
+  if (process.env.NODE_ENV === 'production') {
+    console.error('JWT_SECRET must be set in production environment!')
+    process.exit(1)
+  } else {
+    console.warn('Using an auto-generated secret for development only')
+    // Trong môi trường dev, tạo secret ngẫu nhiên cho mỗi lần khởi động
+    // Điều này đảm bảo không ai có thể dự đoán được secret, nhưng sẽ làm token không hợp lệ khi restart server
+    JWT_SECRET = require('crypto').randomBytes(32).toString('hex')
+  }
 }
 
 // Định nghĩa User interface dựa trên cấu trúc cần thiết
@@ -132,9 +141,9 @@ export async function verifyToken(token: string): Promise<JWTPayload> {
 }
 
 /**
- * Tạo mới cả access và refresh token từ refresh token
- * @param refreshToken Refresh token hiện tại
- * @returns Access và refresh token mới
+ * Generate new access and refresh tokens from refresh token
+ * @param refreshToken Current refresh token
+ * @returns New access and refresh tokens
  */
 export async function refreshTokens(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
   const payload = await verifyToken(refreshToken);

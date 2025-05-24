@@ -94,12 +94,12 @@ export default function About() {
               <h3 className="text-2xl font-bold text-purple-900 mb-4">Our Story</h3>
               <p className="text-gray-700 mb-4">
                 Founded in 1995, our hospital began as a small community clinic with just 15 beds and a handful of 
-                dedicated physicians. Over the decades, we've grown into a comprehensive medical center, but we've 
+                dedicated physicians. Over the decades, we&#39;ve grown into a comprehensive medical center, but we&#39;ve 
                 never lost sight of our founding principle: putting patients first.
               </p>
               <p className="text-gray-700">
-                Through economic challenges, healthcare reforms, and even a global pandemic, we've continuously 
-                adapted and evolved to meet the changing needs of our community. Today, we're proud to offer 
+                Through economic challenges, healthcare reforms, and even a global pandemic, we&#39;ve continuously 
+                adapted and evolved to meet the changing needs of our community. Today, we&#39;re proud to offer 
                 state-of-the-art facilities, advanced medical technologies, and a diverse team of healthcare 
                 professionals who are leaders in their fields.
               </p>
@@ -219,7 +219,7 @@ export default function About() {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-6">Experience Our Exceptional Care</h2>
           <p className="text-xl text-purple-100 max-w-3xl mx-auto mb-8">
-            We're dedicated to providing the highest quality healthcare for you and your family
+            We&#39;re dedicated to providing the highest quality healthcare for you and your family
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link href="/departments" className="bg-white text-purple-700 font-semibold px-6 py-3 rounded-lg shadow-md hover:bg-gray-100 transition-colors">

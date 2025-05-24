@@ -6,10 +6,10 @@ import { Appointment, NotificationType } from '@prisma/client';
 // GET endpoint to get appointment details
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const appointmentId = params.id;
+    const { id: appointmentId } = await params;
     const token = req.cookies.get('token')?.value;
     
     if (!token) {
@@ -146,10 +146,10 @@ export async function GET(
 // PATCH endpoint to update appointment
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const appointmentId = params.id;
+    const { id: appointmentId } = await params;
     const token = req.cookies.get('token')?.value;
     
     if (!token) {
@@ -481,10 +481,10 @@ export async function PATCH(
 // DELETE endpoint to delete an appointment
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const appointmentId = params.id;
+    const { id: appointmentId } = await params;
     const token = req.cookies.get('token')?.value;
     
     if (!token) {

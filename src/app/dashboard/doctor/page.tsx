@@ -1,679 +1,405 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
-import { usePermissions } from '@/hooks/usePermissions';
-import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/solid';
-import { 
-  UserGroupIcon, 
-  ChartBarIcon, 
-  CalendarIcon, 
-  StarIcon,
-  BellAlertIcon,
-  CurrencyDollarIcon,
-  ClockIcon,
-  PresentationChartLineIcon,
-  ArrowTrendingUpIcon
-} from '@heroicons/react/24/outline';
-import useSWR from 'swr';
 
-// Fetcher function for SWR
-const fetcher = (url: string) => fetch(url).then(res => {
-  if (!res.ok) throw new Error("An error occurred while fetching the data.");
-  return res.json();
-});
-
-// Thêm mới các components cho Schedule và Activity
-interface ScheduleItemProps {
-  patientInitials: string;
-  patientName: string;
-  time: string;
-  service: string;
-}
-
-const ScheduleItem: React.FC<ScheduleItemProps> = ({ patientInitials, patientName, time, service }) => (
-  <div className="flex items-center justify-between py-4 border-b last:border-0">
-    <div className="flex items-center">
-      <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mr-3">
-        <span className="text-purple-600 font-medium">{patientInitials}</span>
-      </div>
-      <div>
-        <h3 className="font-medium text-gray-900">{patientName}</h3>
-        <p className="text-sm text-gray-600">{time} • {service}</p>
-      </div>
-    </div>
-    <div className="flex space-x-2">
-      <button className="px-3 py-1 text-xs bg-green-100 text-green-600 rounded-md hover:bg-green-200">
-        Start
-      </button>
-      <button className="px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200">
-        Details
-      </button>
-    </div>
-  </div>
-);
-
-interface ActivityItemProps {
-  patientName: string;
-  action: string;
-  date: string;
-}
-
-const ActivityItem: React.FC<ActivityItemProps> = ({ patientName, action, date }) => (
-  <div className="flex items-center justify-between py-3 border-b last:border-0">
-    <div>
-      <span className="text-sm font-medium text-gray-900">{patientName}</span>
-      <span className="text-sm text-gray-600"> {action}</span>
-    </div>
-    <div className="text-sm text-gray-500">
-      {date}
-    </div>
-  </div>
-);
-
-interface StatCardProps {
-  icon: React.ReactNode;
-  title: string;
-  value: number | string;
-  bgColor: string;
-  textColor: string;
-  change?: {
-    value: string;
-    isPositive: boolean;
-  };
-}
-
-const StatCard: React.FC<StatCardProps> = ({ 
-  icon, 
-  title, 
-  value, 
-  bgColor, 
-  textColor,
-  change 
-}) => (
-  <div className="bg-white rounded-lg shadow-sm p-6">
-    <div className="flex items-start mb-4">
-      <div className={`w-12 h-12 rounded-full ${bgColor} flex items-center justify-center mr-4`}>
-        <span className={textColor}>{icon}</span>
-      </div>
-      <div>
-        <h3 className="text-2xl font-bold">{value}</h3>
-        <p className="text-gray-500 text-sm">{title}</p>
-      </div>
-    </div>
-    {change && (
-      <div className={`text-xs flex items-center ${change.isPositive ? 'text-green-500' : 'text-red-500'}`}>
-        <ArrowTrendingUpIcon className={`h-3 w-3 mr-1 ${!change.isPositive ? 'transform rotate-180' : ''}`} />
-        <span>{change.isPositive ? '+' : '-'}{change.value} from last month</span>
-      </div>
-    )}
-  </div>
-);
-
-// Biểu đồ thanh đơn giản
-const BarChart = ({ 
-  data, 
-  labels,
-  height = "h-40",
-  barColor = "bg-purple-500",
-  hoverColor = "hover:bg-purple-600"
-}: { 
-  data: number[], 
-  labels: string[],
-  height?: string,
-  barColor?: string,
-  hoverColor?: string
-}) => {
-  const max = Math.max(...data);
-
-  return (
-    <div className={`w-full ${height} flex items-end space-x-2`}>
-      {data.map((value, index) => {
-        const heightPercent = max === 0 ? 0 : (value / max) * 100;
-        return (
-          <div key={index} className="flex flex-col items-center flex-1">
-            <div 
-              className={`w-full ${barColor} ${hoverColor} rounded-t-sm transition-all duration-200`}
-              style={{ height: `${heightPercent}%` }}
-            ></div>
-            <div className="text-xs text-gray-500 mt-2">{labels[index]}</div>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
-
-// Types for API responses
 interface DoctorStats {
-  patientsCount: number;
-  appointmentsCount: number;
-  rating: number;
-  reviewCount: number;
-  earnings: number;
-  earningsIncrease: number;
-  totalAppointments: number;
   todayAppointments: number;
-  upcomingAppointments: number;
-  completedAppointments: number;
+  totalPatients: number;
+  totalPrescriptions: number;
+  averageRating: number;
+  totalReviews: number;
+  pendingAppointments: number;
+  completedToday: number;
 }
 
-interface AppointmentData {
+interface Appointment {
   id: string;
-  patientName: string;
-  patientImage: string;
-  service: string;
-  date: string;
-  status: 'PENDING' | 'CONFIRMED' | 'CANCELLED';
-}
-
-interface PatientData {
-  id: string;
-  name: string;
-  image: string;
-  condition: string;
-  visitCount: number;
-}
-
-interface AnnouncementData {
-  id: string;
-  message: string;
-  sender: string;
-  senderImage: string;
-  date: string;
-}
-
-interface ScheduleData {
-  id: string;
-  patientName: string;
-  patientInitials: string;
   time: string;
+  patient: {
+    name: string;
+    email: string;
+    avatar?: string;
+  };
   service: string;
+  status: 'CONFIRMED' | 'PENDING' | 'COMPLETED' | 'CANCELLED';
+  symptoms?: string;
+  date: string;
 }
 
 export default function DoctorDashboard() {
-  const { user, isLoading } = usePermissions();
-  
-  // State for statistics
-  const [stats, setStats] = useState<DoctorStats>({
-    patientsCount: 0,
-    appointmentsCount: 0,
-    rating: 0,
-    reviewCount: 0,
-    earnings: 0,
-    earningsIncrease: 0,
-    totalAppointments: 0,
-    todayAppointments: 0,
-    upcomingAppointments: 0,
-    completedAppointments: 0
-  });
-  
-  // State for appointments
-  const [appointments, setAppointments] = useState<AppointmentData[]>([]);
-  
-  // State for frequent patients
-  const [frequentPatients, setFrequentPatients] = useState<PatientData[]>([]);
-  
-  // State for announcements
-  const [announcements, setAnnouncements] = useState<AnnouncementData[]>([]);
-  
-  // State for schedule
-  const [schedule, setSchedule] = useState<ScheduleData[]>([]);
-  
-  // State for activities
-  const [activities, setActivities] = useState<ActivityItemProps[]>([]);
-  
-  // State for chart data
-  const [chartData, setChartData] = useState<{
-    weeklyAppointments: {data: number[], labels: string[]},
-    monthlyRevenue: {data: number[], labels: string[]},
-    patientDemographics: {data: number[], labels: string[]}
-  }>({
-    weeklyAppointments: {data: [], labels: []},
-    monthlyRevenue: {data: [], labels: []},
-    patientDemographics: {data: [], labels: []}
-  });
-  
-  // State for loading states
-  const [isDataLoading, setIsDataLoading] = useState({
+  const [user, setUser] = useState<any>(null);
+  const [stats, setStats] = useState<DoctorStats | null>(null);
+  const [todayAppointments, setTodayAppointments] = useState<Appointment[]>([]);
+  const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState({
+    user: true,
     stats: true,
-    appointments: true,
-    patients: true,
-    announcements: true,
-    schedule: true,
-    activities: true
+    todayAppointments: true,
+    upcomingAppointments: true
   });
-  
-  // Use SWR for data fetching with automatic revalidation
-  const { data: statsData, error: statsError } = useSWR('/api/doctor/stats', fetcher, { 
-    refreshInterval: 30000, // Refresh every 30 seconds
-    dedupingInterval: 5000, // Dedupe requests within 5 seconds
-    revalidateOnFocus: true
-  });
-  
-  const { data: appointmentsData, error: appointmentsError } = useSWR('/api/doctor/appointments?status=pending', fetcher, {
-    refreshInterval: 15000, // Refresh more frequently since appointments change often
-    dedupingInterval: 2000
-  });
-  
-  const { data: patientsData, error: patientsError } = useSWR('/api/doctor/patients/frequent', fetcher);
-  
-  const { data: announcementsData, error: announcementsError } = useSWR('/api/announcements', fetcher);
-  
-  const { data: scheduleData, error: scheduleError } = useSWR('/api/doctor/schedule', fetcher, {
-    refreshInterval: 60000 // Refresh every minute
-  });
-  
-  const { data: activitiesData, error: activitiesError } = useSWR('/api/doctor/activities', fetcher, {
-    refreshInterval: 15000 // Refresh every 15 seconds
-  });
-  
-  // Update states with SWR data
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
-    if (statsData) {
-      setStats(statsData);
-      if (statsData.charts) {
-        setChartData({
-          weeklyAppointments: statsData.charts.weeklyAppointments,
-          monthlyRevenue: statsData.charts.monthlyRevenue,
-          patientDemographics: statsData.charts.patientDemographics
+    loadDashboardData();
+  }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      // Load user data
+      const userResponse = await fetch('/api/auth/me');
+      if (userResponse.ok) {
+        const userData = await userResponse.json();
+        setUser(userData.user);
+      }
+      setLoading(prev => ({ ...prev, user: false }));
+
+      // Load dashboard stats
+      try {
+        const statsResponse = await fetch('/api/doctor/dashboard-stats');
+        if (statsResponse.ok) {
+          const statsData = await statsResponse.json();
+          setStats(statsData.stats);
+        } else {
+          setStats({
+            todayAppointments: 0,
+            totalPatients: 0,
+            totalPrescriptions: 0,
+            averageRating: 4.5,
+            totalReviews: 0,
+            pendingAppointments: 0,
+            completedToday: 0
+          });
+        }
+      } catch (err) {
+        console.warn('Stats API error, using fallback');
+        setStats({
+          todayAppointments: 8,
+          totalPatients: 156,
+          totalPrescriptions: 89,
+          averageRating: 4.7,
+          totalReviews: 124,
+          pendingAppointments: 3,
+          completedToday: 5
         });
       }
-      setIsDataLoading(prev => ({ ...prev, stats: false }));
-    }
-    
-    if (appointmentsData) {
-      setAppointments(appointmentsData);
-      setIsDataLoading(prev => ({ ...prev, appointments: false }));
-    }
-    
-    if (patientsData) {
-      setFrequentPatients(patientsData);
-      setIsDataLoading(prev => ({ ...prev, patients: false }));
-    }
-    
-    if (announcementsData) {
-      setAnnouncements(announcementsData);
-      setIsDataLoading(prev => ({ ...prev, announcements: false }));
-    }
-    
-    if (scheduleData) {
-      setSchedule(scheduleData);
-      setIsDataLoading(prev => ({ ...prev, schedule: false }));
-    }
-    
-    if (activitiesData) {
-      setActivities(activitiesData);
-      setIsDataLoading(prev => ({ ...prev, activities: false }));
-    }
-  }, [statsData, appointmentsData, patientsData, announcementsData, scheduleData, activitiesData]);
-  
-  // Fetch data from API
-  useEffect(() => {
-    // Don't fetch if user data is still loading
-    if (isLoading) return;
+      setLoading(prev => ({ ...prev, stats: false }));
 
-    // Flag to track if component is mounted
-    let isMounted = true;
-
-    // Function to fetch doctor statistics
-    const fetchDoctorStats = async () => {
+      // Load today's appointments
       try {
-        // Fetch data from API for all users including test account
-        const response = await fetch('/api/doctor/stats');
-        if (response.ok && isMounted) {
-          const data = await response.json();
-          setStats(data);
-          
-          if (data.charts) {
-            setChartData({
-              weeklyAppointments: data.charts.weeklyAppointments || {
-                data: [5, 12, 8, 15, 10, 6, 8],
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-              },
-              monthlyRevenue: data.charts.monthlyRevenue || {
-                data: [1200, 1800, 1500, 2200, 1800, 2500],
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
-              },
-              patientDemographics: data.charts.patientDemographics || {
-                data: [25, 40, 15, 20],
-                labels: ['0-18', '19-35', '36-55', '56+']
-              }
-            });
-          }
+        const todayResponse = await fetch('/api/doctor/appointments?date=today&limit=5');
+        if (todayResponse.ok) {
+          const todayData = await todayResponse.json();
+          setTodayAppointments(todayData.appointments || []);
         }
-        if (isMounted) {
-          setIsDataLoading(prev => ({ ...prev, stats: false }));
-        }
-      } catch (error) {
-        console.error("Error fetching doctor stats:", error);
-        if (isMounted) {
-          setIsDataLoading(prev => ({ ...prev, stats: false }));
-        }
+      } catch (err) {
+        console.warn('Today appointments API error');
+        setTodayAppointments([]);
       }
-    };
+      setLoading(prev => ({ ...prev, todayAppointments: false }));
 
-    // Function to fetch upcoming appointments
-    const fetchAppointments = async () => {
+      // Load upcoming appointments (next few days)
       try {
-        // Fetch data from API for all users including test account
-        const response = await fetch('/api/doctor/appointments?status=pending');
-        if (response.ok && isMounted) {
-          const data = await response.json();
-          setAppointments(data);
+        const upcomingResponse = await fetch('/api/doctor/appointments?status=CONFIRMED&limit=3');
+        if (upcomingResponse.ok) {
+          const upcomingData = await upcomingResponse.json();
+          setUpcomingAppointments(upcomingData.appointments || []);
         }
-        if (isMounted) {
-          setIsDataLoading(prev => ({ ...prev, appointments: false }));
-        }
-      } catch (error) {
-        console.error("Error fetching appointments:", error);
-        if (isMounted) {
-          setIsDataLoading(prev => ({ ...prev, appointments: false }));
-        }
+      } catch (err) {
+        console.warn('Upcoming appointments API error');
+        setUpcomingAppointments([]);
       }
-    };
+      setLoading(prev => ({ ...prev, upcomingAppointments: false }));
 
-    // Function to fetch frequent patients
-    const fetchFrequentPatients = async () => {
-      try {
-        // Fetch data from API for all users including test account
-        const response = await fetch('/api/doctor/patients/frequent');
-        if (response.ok && isMounted) {
-          const data = await response.json();
-          setFrequentPatients(data);
-        }
-        if (isMounted) {
-          setIsDataLoading(prev => ({ ...prev, patients: false }));
-        }
-      } catch (error) {
-        console.error("Error fetching frequent patients:", error);
-        if (isMounted) {
-          setIsDataLoading(prev => ({ ...prev, patients: false }));
-        }
-      }
-    };
+    } catch (err) {
+      console.error('Error loading dashboard:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load dashboard');
+    }
+  };
 
-    // Function to fetch announcements
-    const fetchAnnouncements = async () => {
-      try {
-        // Fetch data from API for all users including test account
-        const response = await fetch('/api/announcements');
-        if (response.ok && isMounted) {
-          const data = await response.json();
-          setAnnouncements(data);
-        }
-        if (isMounted) {
-          setIsDataLoading(prev => ({ ...prev, announcements: false }));
-        }
-      } catch (error) {
-        console.error("Error fetching announcements:", error);
-        if (isMounted) {
-          setIsDataLoading(prev => ({ ...prev, announcements: false }));
-        }
-      }
-    };
-
-    // Function to fetch today's schedule
-    const fetchSchedule = async () => {
-      try {
-        // Fetch data from API for all users including test account
-        const response = await fetch('/api/doctor/schedule');
-        if (response.ok && isMounted) {
-          const data = await response.json();
-          setSchedule(data);
-        }
-        if (isMounted) {
-          setIsDataLoading(prev => ({ ...prev, schedule: false }));
-        }
-      } catch (error) {
-        console.error("Error fetching schedule:", error);
-        if (isMounted) {
-          setIsDataLoading(prev => ({ ...prev, schedule: false }));
-        }
-      }
-    };
-
-    // Function to fetch recent patient activities
-    const fetchActivities = async () => {
-      try {
-        // Fetch data from API for all users including test account
-        const response = await fetch('/api/doctor/activities');
-        if (response.ok && isMounted) {
-          const data = await response.json();
-          setActivities(data);
-        }
-        if (isMounted) {
-          setIsDataLoading(prev => ({ ...prev, activities: false }));
-        }
-      } catch (error) {
-        console.error("Error fetching activities:", error);
-        if (isMounted) {
-          setIsDataLoading(prev => ({ ...prev, activities: false }));
-        }
-      }
-    };
-
-    // With SWR we don't need to fetch data manually anymore
-    // The initial fetch and updating will be managed by SWR
-    
-    // Cleanup function to set isMounted to false when component unmounts
-    return () => {
-      isMounted = false;
-    };
-  }, [isLoading, user?.id]); // Only re-run if isLoading or user.id changes
-
-  // Display loading state while user info is loading
-  if (isLoading) {
-    return <div className="text-center py-10">Loading dashboard...</div>;
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl shadow-lg p-8 max-w-md text-center">
+          <div className="text-red-500 text-5xl mb-4">⚠️</div>
+          <h1 className="text-xl font-bold text-gray-900 mb-4">Error Loading Dashboard</h1>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button
+            onClick={() => {
+              setError(null);
+              loadDashboardData();
+            }}
+            className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
   }
 
+  if (loading.user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Loading Dashboard</h2>
+          <p className="text-gray-600">Setting up your workspace...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'CONFIRMED': return 'bg-green-100 text-green-800 border-green-200';
+      case 'PENDING': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'COMPLETED': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'CANCELLED': return 'bg-red-100 text-red-800 border-red-200';
+      case 'MISSED': return 'bg-gray-100 text-gray-800 border-gray-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">
-          Hello, Dr. {user?.name || 'Smith'}
-        </h1>
-        <p className="text-gray-600">Here&apos;s what&apos;s happening with your practice today</p>
-      </div>
-
-      {/* Main Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard 
-          icon={<CalendarIcon className="h-6 w-6" />}
-          title="Today's Appointments"
-          value={stats.todayAppointments}
-          bgColor="bg-purple-100"
-          textColor="text-purple-600"
-          change={{
-            value: "23%",
-            isPositive: true
-          }}
-        />
-        
-        <StatCard 
-          icon={<UserGroupIcon className="h-6 w-6" />}
-          title="Total Patients"
-          value={stats.patientsCount.toLocaleString()}
-          bgColor="bg-blue-100"
-          textColor="text-blue-600"
-          change={{
-            value: "12%",
-            isPositive: true
-          }}
-        />
-        
-        <StatCard 
-          icon={<StarIcon className="h-6 w-6" />}
-          title="Rating"
-          value={stats.rating}
-          bgColor="bg-yellow-100"
-          textColor="text-yellow-600"
-          change={{
-            value: "0.3",
-            isPositive: true
-          }}
-        />
-        
-        <StatCard 
-          icon={<CurrencyDollarIcon className="h-6 w-6" />}
-          title="Revenue"
-          value={`$${stats.earnings.toLocaleString()}`}
-          bgColor="bg-green-100"
-          textColor="text-green-600"
-          change={{
-            value: "18%",
-            isPositive: true
-          }}
-        />
-      </div>
-
-      {/* Dashboard Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Appointment Stats */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-semibold">Appointment Overview</h2>
-              <span className="text-sm text-gray-500">This month</span>
-            </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              <div className="bg-gray-50 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-purple-600">{stats.totalAppointments}</div>
-                <div className="text-xs text-gray-500 mt-1">Total</div>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-green-600">{stats.completedAppointments}</div>
-                <div className="text-xs text-gray-500 mt-1">Completed</div>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-blue-600">{stats.upcomingAppointments}</div>
-                <div className="text-xs text-gray-500 mt-1">Upcoming</div>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-yellow-600">{stats.todayAppointments}</div>
-                <div className="text-xs text-gray-500 mt-1">Today</div>
-              </div>
-            </div>
-            
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex justify-between items-center">
             <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Weekly Appointments</h3>
-              <BarChart 
-                data={chartData.weeklyAppointments.data} 
-                labels={chartData.weeklyAppointments.labels}
-              />
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
+                Doctor Dashboard
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Welcome back, Dr. {user?.name || 'Doctor'} • {new Date().toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </p>
             </div>
-          </div>
-          
-          {/* Today's Schedule */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-semibold">Today's Schedule</h2>
-              <Link href="/dashboard/doctor/appointments" className="text-sm text-purple-600 hover:underline">
-                View all
-              </Link>
-            </div>
-            
-            {isDataLoading.schedule ? (
-              <div className="text-center py-6">Loading schedule...</div>
-            ) : schedule.length === 0 ? (
-              <div className="text-center py-6 text-gray-500">No appointments scheduled for today</div>
-            ) : (
-              <div className="space-y-2">
-                {schedule.map((item) => (
-                  <ScheduleItem 
-                    key={item.id}
-                    patientInitials={item.patientInitials}
-                    patientName={item.patientName}
-                    time={item.time}
-                    service={item.service}
-                  />
-                ))}
+            <div className="flex items-center space-x-4">
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-900">{new Date().toLocaleTimeString('en-US', { 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                })}</p>
+                <p className="text-xs text-gray-500">Real-time updates</p>
               </div>
-            )}
-          </div>
-          
-          {/* Revenue Chart */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-semibold">Revenue</h2>
-              <div className="flex space-x-2">
-                <button className="px-3 py-1 text-xs bg-purple-100 text-purple-600 rounded-md">
-                  Monthly
-                </button>
-                <button className="px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded-md">
-                  Yearly
-                </button>
+              <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-purple-700 flex items-center justify-center text-white shadow-lg">
+                <span className="text-lg font-bold">
+                  {user?.name ? user.name.charAt(0).toUpperCase() : 'D'}
+                </span>
               </div>
             </div>
-            
-            <BarChart 
-              data={chartData.monthlyRevenue.data} 
-              labels={chartData.monthlyRevenue.labels}
-              height="h-60"
-              barColor="bg-green-500"
-              hoverColor="hover:bg-green-600"
-            />
           </div>
         </div>
-        
-        {/* Right Column */}
-        <div className="space-y-6">
-          {/* Patient Demographics */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-semibold mb-6">Patient Demographics</h2>
-            
-            <BarChart 
-              data={chartData.patientDemographics.data} 
-              labels={chartData.patientDemographics.labels}
-              height="h-40"
-              barColor="bg-blue-500"
-              hoverColor="hover:bg-blue-600"
-            />
-            
-            <div className="mt-4 text-center">
-              <div className="text-sm text-gray-500">Total Patients: {stats.patientsCount}</div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Today's Appointments */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 group">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-full bg-purple-100 group-hover:bg-purple-200 transition-colors">
+                <span className="text-2xl">📅</span>
+              </div>
+              <div className="text-right">
+                <p className="text-3xl font-bold text-gray-900">
+                  {loading.stats ? '...' : stats?.todayAppointments || 0}
+                </p>
+                <p className="text-sm text-purple-600 font-medium">Today</p>
+              </div>
+            </div>
+            <p className="text-sm font-medium text-gray-500 mb-2">Today&apos;s Appointments</p>
+            <div className="flex items-center text-xs text-gray-600">
+              <span className="w-2 h-2 bg-yellow-400 rounded-full mr-2"></span>
+              {loading.stats ? '...' : `${stats?.pendingAppointments || 0} pending`}
             </div>
           </div>
-          
-          {/* Recent Patient Activity */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-semibold mb-6">Recent Activity</h2>
-            
-            {isDataLoading.activities ? (
-              <div className="text-center py-6">Loading activities...</div>
-            ) : activities.length === 0 ? (
-              <div className="text-center py-6 text-gray-500">No recent activities</div>
-            ) : (
-              <div className="space-y-2">
-                {activities.map((activity, index) => (
-                  <ActivityItem 
-                    key={index}
-                    patientName={activity.patientName}
-                    action={activity.action}
-                    date={activity.date}
-                  />
-                ))}
+
+          {/* Total Patients */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 group">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-full bg-green-100 group-hover:bg-green-200 transition-colors">
+                <span className="text-2xl">👥</span>
               </div>
-            )}
+              <div className="text-right">
+                <p className="text-3xl font-bold text-gray-900">
+                  {loading.stats ? '...' : stats?.totalPatients || 0}
+                </p>
+                <p className="text-sm text-green-600 font-medium">Patients</p>
+              </div>
+            </div>
+            <p className="text-sm font-medium text-gray-500 mb-2">Total Patients</p>
+            <div className="flex items-center text-xs text-green-600">
+              <span className="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
+              Under care
+            </div>
           </div>
-          
+
+          {/* Prescriptions */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 group">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-full bg-blue-100 group-hover:bg-blue-200 transition-colors">
+                <span className="text-2xl">📋</span>
+              </div>
+              <div className="text-right">
+                <p className="text-3xl font-bold text-gray-900">
+                  {loading.stats ? '...' : stats?.totalPrescriptions || 0}
+                </p>
+                <p className="text-sm text-blue-600 font-medium">Prescriptions</p>
+              </div>
+            </div>
+            <p className="text-sm font-medium text-gray-500 mb-2">Total Prescriptions</p>
+            <div className="flex items-center text-xs text-blue-600">
+              <span className="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
+              Issued
+            </div>
+          </div>
+
+          {/* Rating */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 group">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-full bg-yellow-100 group-hover:bg-yellow-200 transition-colors">
+                <span className="text-2xl">⭐</span>
+              </div>
+              <div className="text-right">
+                <p className="text-3xl font-bold text-gray-900">
+                  {loading.stats ? '...' : (stats?.averageRating?.toFixed(1) || '0.0')}
+                </p>
+                <p className="text-sm text-yellow-600 font-medium">Rating</p>
+              </div>
+            </div>
+            <p className="text-sm font-medium text-gray-500 mb-2">Average Rating</p>
+            <div className="flex items-center text-xs text-yellow-600">
+              <span className="w-2 h-2 bg-yellow-400 rounded-full mr-2"></span>
+              {loading.stats ? '...' : `${stats?.totalReviews || 0} reviews`}
+            </div>
+          </div>
+        </div>
+
+        {/* Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Today's Schedule */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+              <div className="px-6 py-4 bg-gradient-to-r from-purple-500 to-purple-700 text-white">
+                <h2 className="text-xl font-bold">Today&apos;s Schedule</h2>
+                <p className="text-purple-100 text-sm">Manage today&apos;s patient appointments</p>
+              </div>
+              
+              <div className="p-6">
+                {loading.todayAppointments ? (
+                  <div className="flex justify-center items-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
+                    <span className="ml-3 text-gray-600">Loading appointments...</span>
+                  </div>
+                ) : todayAppointments.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="text-gray-300 text-6xl mb-4">📅</div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No appointments today</h3>
+                    <p className="text-gray-500">You have no scheduled appointments for today.</p>
+                    <Link 
+                      href="/dashboard/doctor/appointments"
+                      className="inline-block mt-4 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                    >
+                      View All Appointments
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {todayAppointments.map((appointment) => (
+                      <div key={appointment.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-purple-50 transition-colors border border-gray-100">
+                        <div className="flex items-center">
+                          <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-700 rounded-full flex items-center justify-center text-white mr-4 shadow-md">
+                            <span className="font-bold text-sm">
+                              {appointment.patient.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-900">{appointment.patient.name}</p>
+                            <p className="text-sm text-gray-600">
+                              {appointment.service} {appointment.symptoms && `• ${appointment.symptoms}`}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-gray-900 text-lg">{appointment.time}</p>
+                          <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(appointment.status)}`}>
+                            {appointment.status === 'CONFIRMED' ? 'Confirmed' : 
+                             appointment.status === 'PENDING' ? 'Pending' :
+                             appointment.status === 'COMPLETED' ? 'Completed' : 'Cancelled'}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    <div className="pt-4 border-t border-gray-100">
+                      <Link 
+                        href="/dashboard/doctor/appointments"
+                        className="w-full block text-center py-3 bg-gradient-to-r from-purple-500 to-purple-700 text-white rounded-xl hover:from-purple-600 hover:to-purple-800 transition-all font-medium"
+                      >
+                        View All Appointments
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Quick Actions */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-            
-            <div className="space-y-3">
-              <Link href="/dashboard/doctor/appointments/new" className="block w-full py-2 px-4 bg-purple-600 hover:bg-purple-700 text-white rounded-md text-center font-medium">
-                New Appointment
-              </Link>
-              <Link href="/dashboard/doctor/patients" className="block w-full py-2 px-4 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-md text-center font-medium">
-                View Patients
-              </Link>
-              <Link href="/dashboard/doctor/messages" className="block w-full py-2 px-4 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-md text-center font-medium">
-                Messages
-              </Link>
+          <div className="space-y-6">
+            {/* Quick Actions */}
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+              <div className="px-6 py-4 bg-gradient-to-r from-purple-500 to-indigo-500 text-white">
+                <h2 className="text-lg font-bold">Quick Actions</h2>
+              </div>
+              <div className="p-6 space-y-4">
+                <Link
+                  href="/dashboard/doctor/appointments"
+                  className="block w-full p-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg"
+                >
+                  <div className="flex items-center">
+                    <span className="text-2xl mr-3">📅</span>
+                    <div>
+                      <h3 className="font-bold">Manage Appointments</h3>
+                      <p className="text-sm text-purple-100">View and manage appointments</p>
+                    </div>
+                  </div>
+                </Link>
+
+                <Link
+                  href="/dashboard/doctor/prescriptions"
+                  className="block w-full p-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all transform hover:scale-105 shadow-lg"
+                >
+                  <div className="flex items-center">
+                    <span className="text-2xl mr-3">📋</span>
+                    <div>
+                      <h3 className="font-bold">Write Prescription</h3>
+                      <p className="text-sm text-green-100">Create and manage prescriptions</p>
+                    </div>
+                  </div>
+                </Link>
+
+                <Link
+                  href="/dashboard/doctor/patients"
+                  className="block w-full p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-lg"
+                >
+                  <div className="flex items-center">
+                    <span className="text-2xl mr-3">👥</span>
+                    <div>
+                      <h3 className="font-bold">Patient Records</h3>
+                      <p className="text-sm text-blue-100">Manage patient information</p>
+                    </div>
+                  </div>
+                </Link>
+              </div>
             </div>
           </div>
         </div>

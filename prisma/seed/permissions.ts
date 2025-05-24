@@ -1,13 +1,11 @@
-import { PrismaClient, UserRole } from '@prisma/client';
+import { prisma } from '@/lib/db/prisma';
+import { UserRole } from '@prisma/client';
 
-const prisma = new PrismaClient();
-
-// Define permissions structure
+// Permission definition type
 type PermissionDef = {
   name: string;
   resource: string;
   action: string;
-  scope?: string;
   description: string;
 };
 
@@ -17,14 +15,12 @@ const patientPermissions: PermissionDef[] = [
     name: 'patient:view_own_profile',
     resource: 'patient',
     action: 'view',
-    scope: 'own',
     description: 'View own patient profile'
   },
   {
     name: 'patient:edit_own_profile',
     resource: 'patient',
     action: 'edit',
-    scope: 'own',
     description: 'Edit own patient profile'
   },
   {
@@ -37,14 +33,12 @@ const patientPermissions: PermissionDef[] = [
     name: 'appointment:view_own',
     resource: 'appointment',
     action: 'view',
-    scope: 'own',
     description: 'View own appointments'
   },
   {
     name: 'appointment:cancel_own',
     resource: 'appointment',
     action: 'cancel',
-    scope: 'own',
     description: 'Cancel own appointments'
   },
   {
@@ -73,35 +67,30 @@ const doctorPermissions: PermissionDef[] = [
     name: 'doctor:view_own_profile',
     resource: 'doctor',
     action: 'view',
-    scope: 'own',
     description: 'View own doctor profile'
   },
   {
     name: 'doctor:edit_own_profile',
     resource: 'doctor',
     action: 'edit',
-    scope: 'own',
     description: 'Edit own doctor profile'
   },
   {
     name: 'doctor:manage_schedule',
     resource: 'doctor',
     action: 'manage_schedule',
-    scope: 'own',
     description: 'Manage own schedule'
   },
   {
     name: 'patient:view',
     resource: 'patient',
     action: 'view',
-    scope: 'assigned',
     description: 'View assigned patient profiles'
   },
   {
     name: 'appointment:view_assigned',
     resource: 'appointment',
     action: 'view',
-    scope: 'assigned',
     description: 'View assigned appointments'
   },
   {
@@ -176,14 +165,12 @@ export async function seedPermissions() {
       update: {
         resource: perm.resource,
         action: perm.action,
-        scope: perm.scope,
         description: perm.description
       },
       create: {
         name: perm.name,
         resource: perm.resource,
         action: perm.action,
-        scope: perm.scope,
         description: perm.description
       }
     });

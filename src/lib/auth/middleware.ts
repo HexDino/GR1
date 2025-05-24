@@ -96,15 +96,16 @@ export async function authenticateRequest(
       select: {
         id: true,
         email: true,
+        name: true,
         role: true,
         isActive: true,
+        avatar: true,
         profile: {
           select: {
-            name: true,
-            avatar: true,
+            bio: true,
           },
         },
-        UserPermission: {
+        permissions: {
           select: {
             permission: {
               select: {
@@ -134,9 +135,9 @@ export async function authenticateRequest(
       id: user.id,
       email: user.email,
       role: user.role,
-      name: user.profile?.name || '',
-      avatar: user.profile?.avatar || '',
-      permissions: user.UserPermission.map((up) => up.permission.name),
+      name: user.name || '',
+      avatar: user.avatar || '',
+      permissions: user.permissions.map((up: any) => up.permission.name),
     };
     
     return { authenticated: true, user: req.user };
@@ -219,15 +220,16 @@ export async function appRouterAuth(
       select: {
         id: true,
         email: true,
+        name: true,
         role: true,
         isActive: true,
+        avatar: true,
         profile: {
           select: {
-            name: true,
-            avatar: true,
+            bio: true,
           },
         },
-        UserPermission: {
+        permissions: {
           select: {
             permission: {
               select: {
@@ -266,9 +268,9 @@ export async function appRouterAuth(
       id: user.id,
       email: user.email,
       role: user.role,
-      name: user.profile?.name || '',
-      avatar: user.profile?.avatar || '',
-      permissions: user.UserPermission.map((up) => up.permission.name),
+      name: user.name || '',
+      avatar: user.avatar || '',
+      permissions: user.permissions.map((up: any) => up.permission.name),
     };
     
     return { authenticated: true, user: userData };

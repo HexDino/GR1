@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { z } from 'zod';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
-// Định nghĩa schema validation
+// Define validation schema
 const loginSchema = z.object({
-  email: z.string().email('Email không hợp lệ'),
-  password: z.string().min(1, 'Mật khẩu không được để trống'),
+  email: z.string().email('Invalid email'),
+  password: z.string().min(1, 'Password is required'),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -22,6 +23,21 @@ export default function LoginPage() {
   });
   const [errors, setErrors] = useState<Error[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+
+  // Check for success message from URL params (e.g., after registration)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const message = urlParams.get('message');
+      if (message) {
+        setSuccessMessage(message);
+        // Clean URL
+        window.history.replaceState({}, '', '/login');
+      }
+    }
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -74,7 +90,7 @@ export default function LoginPage() {
         console.log('Login failed:', data.message);
         setErrors([{
           path: 'server',
-          message: data.message || 'Đăng nhập thất bại. Vui lòng thử lại.',
+          message: data.message || 'Login failed. Please try again.',
         }]);
       }
     } catch (error) {
@@ -88,7 +104,7 @@ export default function LoginPage() {
         console.error('Login error:', error);
         setErrors([{
           path: 'server',
-          message: 'Đã xảy ra lỗi. Vui lòng thử lại sau.',
+          message: 'An error occurred. Please try again later.',        
         }]);
       }
     } finally {
@@ -106,11 +122,17 @@ export default function LoginPage() {
         {/* Left side - Login Form */}
         <div className="w-full p-6 md:p-8">
           <div className="text-center mb-6">
-            <h2 className="text-3xl font-bold text-gray-900">Đăng nhập</h2>
+            <h2 className="text-3xl font-bold text-gray-900">Login</h2>
             <p className="mt-2 text-sm text-gray-600">
-              Đăng nhập để truy cập tài khoản của bạn
+              Sign in to access your account
             </p>
           </div>
+
+          {successMessage && (
+            <div className="mb-4 bg-green-50 p-4 rounded-md">
+              <p className="text-sm text-green-700">{successMessage}</p>
+            </div>
+          )}
 
           {getErrorForField('server') && (
             <div className="mb-4 bg-red-50 p-4 rounded-md">
@@ -134,7 +156,7 @@ export default function LoginPage() {
                 className={`appearance-none relative block w-full px-3 py-2 border ${
                   getErrorForField('email') ? 'border-red-500' : 'border-gray-300'
                 } rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm`}
-                placeholder="Email của bạn"
+                placeholder="Your email"
               />
               {getErrorForField('email') && (
                 <p className="mt-1 text-sm text-red-600">{getErrorForField('email')}</p>
@@ -143,21 +165,35 @@ export default function LoginPage() {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Mật khẩu
+                Password
               </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={formData.password}
-                onChange={handleChange}
-                className={`appearance-none relative block w-full px-3 py-2 border ${
-                  getErrorForField('password') ? 'border-red-500' : 'border-gray-300'
-                } rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm`}
-                placeholder="Mật khẩu của bạn"
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
+                  className={`appearance-none relative block w-full px-3 py-2 pr-10 border ${
+                    getErrorForField('password') ? 'border-red-500' : 'border-gray-300'
+                  } rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm`}
+                  placeholder="Your password"
+                />
+                <button 
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 cursor-pointer"
+                  onClick={() => setShowPassword(!showPassword)}
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeSlashIcon className="h-5 w-5" aria-hidden="true" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5" aria-hidden="true" />
+                  )}
+                </button>
+              </div>
               {getErrorForField('password') && (
                 <p className="mt-1 text-sm text-red-600">{getErrorForField('password')}</p>
               )}
@@ -172,13 +208,13 @@ export default function LoginPage() {
                   className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                  Ghi nhớ đăng nhập
+                  Remember me
                 </label>
               </div>
 
               <div className="text-sm">
                 <a href="#" className="font-medium text-purple-600 hover:text-purple-500">
-                  Quên mật khẩu?
+                  Forgot password?
                 </a>
               </div>
             </div>
@@ -189,15 +225,15 @@ export default function LoginPage() {
                 disabled={isLoading}
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
               >
-                {isLoading ? 'Đang xử lý...' : 'Đăng nhập'}
+                {isLoading ? 'Processing...' : 'Login'}
               </button>
             </div>
 
             <div className="text-center mt-4">
               <p className="text-sm text-gray-600">
-                Chưa có tài khoản?{' '}
+                Don&apos;t have an account?{' '}
                 <a href="/register" className="font-medium text-purple-600 hover:text-purple-500">
-                  Đăng ký ngay
+                  Register now
                 </a>
               </p>
             </div>

@@ -154,16 +154,28 @@ const RatingStars = ({ rating }: { rating: number }) => {
 };
 
 // Doctor detail section component
-const DoctorDetail = ({ params }: { params: { id: string } }) => {
+const DoctorDetail = ({ params }: { params: Promise<{ id: string }> }) => {
   const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [loading, setLoading] = useState(true);
+  const [doctorId, setDoctorId] = useState<string>('');
 
   useEffect(() => {
+    // Resolve params first
+    const resolveParams = async () => {
+      const resolvedParams = await params;
+      setDoctorId(resolvedParams.id);
+    };
+    resolveParams();
+  }, [params]);
+
+  useEffect(() => {
+    if (!doctorId) return;
+    
     // Simulate fetching data from API
     const fetchDoctor = () => {
       setLoading(true);
       // Find doctor with matching ID from our mock data
-      const foundDoctor = doctorsData.find(doc => doc.id === params.id);
+      const foundDoctor = doctorsData.find(doc => doc.id === doctorId);
       
       // Simulate API delay
       setTimeout(() => {
@@ -173,7 +185,7 @@ const DoctorDetail = ({ params }: { params: { id: string } }) => {
     };
 
     fetchDoctor();
-  }, [params.id]);
+  }, [doctorId]);
 
   if (loading) {
     return (

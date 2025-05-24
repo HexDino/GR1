@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { ApiError } from '@/lib/utils/apiError';
 import { authenticateUser } from '@/services/user';
 import { generateAccessToken, generateRefreshToken } from '@/lib/auth/jwt';
+import jwt from 'jsonwebtoken';
 
 // Định nghĩa schema validation
 const loginSchema = z.object({
@@ -27,6 +28,8 @@ export async function POST(req: NextRequest) {
     }
     
     const { email, password, remember } = validation.data;
+    
+        // Remove test patient case - now using real authentication only
     
     // SPECIAL CASE: For testing - Allow login with doctor@test.com/password123
     if (email === 'doctor@test.com' && password === 'password123') {

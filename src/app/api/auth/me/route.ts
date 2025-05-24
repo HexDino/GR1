@@ -51,25 +51,24 @@ export async function GET(req: NextRequest) {
           {
             name: 'doctor:read',
             resource: 'doctor',
-            action: 'read',
-            scope: 'all'
+            action: 'read'
           },
           {
             name: 'doctor:write',
             resource: 'doctor',
-            action: 'write',
-            scope: 'own'
+            action: 'write'
           },
           {
             name: 'patient:read',
             resource: 'patient',
-            action: 'read',
-            scope: 'own'
+            action: 'read'
           }
         ],
         authExpires: new Date(payload.exp! * 1000).toISOString()
       });
     }
+    
+    // Remove test patient case - now using real authentication only
     
     // For normal users, proceed with database query
     const user = await prisma.user.findUnique({
@@ -137,15 +136,13 @@ export async function GET(req: NextRequest) {
     const userPermissions = user.permissions.map(up => ({
       name: up.permission.name,
       resource: up.permission.resource || '',
-      action: up.permission.action || '',
-      scope: up.permission.scope
+      action: up.permission.action || ''
     }));
     
     const rolePerm = rolePermissions.map(rp => ({
       name: rp.permission.name,
       resource: rp.permission.resource || '',
-      action: rp.permission.action || '',
-      scope: rp.permission.scope
+      action: rp.permission.action || ''
     }));
     
     // Combine all permissions

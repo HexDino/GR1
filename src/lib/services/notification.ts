@@ -1,27 +1,13 @@
 import { prisma } from '@/lib/db/prisma'
+import { NotificationType } from '@prisma/client'
 
-// Define NotificationType enum based on Prisma schema
-export enum NotificationType {
-  APPOINTMENT_REMINDER = 'APPOINTMENT_REMINDER',
-  APPOINTMENT_CONFIRMATION = 'APPOINTMENT_CONFIRMATION', 
-  APPOINTMENT_CANCELLATION = 'APPOINTMENT_CANCELLATION',
-  APPOINTMENT_COMPLETED = 'APPOINTMENT_COMPLETED',
-  APPOINTMENT_RESCHEDULED = 'APPOINTMENT_RESCHEDULED',
-  NEW_APPOINTMENT = 'NEW_APPOINTMENT',
-  NEW_MESSAGE = 'NEW_MESSAGE',
-  NEW_PRESCRIPTION = 'NEW_PRESCRIPTION',
-  NEW_MEDICAL_RECORD = 'NEW_MEDICAL_RECORD',
-  NEW_HEALTH_REPORT = 'NEW_HEALTH_REPORT',
-  DOCTOR_REVIEW_REMINDER = 'DOCTOR_REVIEW_REMINDER',
-  SYSTEM_ALERT = 'SYSTEM_ALERT'
-}
+export { NotificationType }
 
 export async function createNotification({
   userId,
   title,
   message,
   type,
-  relatedId,
 }: {
   userId: string
   title: string
@@ -36,7 +22,6 @@ export async function createNotification({
         title,
         message,
         type,
-        relatedId,
         isRead: false,
       },
     })

@@ -4,18 +4,18 @@ import { refreshTokens } from '@/lib/auth/jwt';
 
 export async function POST(req: NextRequest) {
   try {
-    // Lấy refresh token từ cookies
+    // Get refresh token from cookies
     const refreshToken = req.cookies.get('refreshToken')?.value;
     
-    // Kiểm tra nếu không có refresh token
+    // Check if refresh token is missing
     if (!refreshToken) {
       throw ApiError.unauthorized('Refresh token is required');
     }
     
-    // Tạo mới access token và refresh token
-    const { accessToken, refreshToken: newRefreshToken } = refreshTokens(refreshToken);
+    // Generate new access token and refresh token
+    const { accessToken, refreshToken: newRefreshToken } = await refreshTokens(refreshToken);
     
-    // Tạo response
+    // Create response
     const response = NextResponse.json({
       success: true,
       message: 'Token refreshed successfully',
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
       },
     });
     
-    // Set cookies mới
+    // Set new cookies
     const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

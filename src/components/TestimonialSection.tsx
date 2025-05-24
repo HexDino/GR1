@@ -106,21 +106,24 @@ export const TestimonialSection = () => {
     }
   ]);
 
-  useEffect(() => {
-    const fetchTestimonials = async () => {
-      try {
-        const response = await fetch('/api/testimonials');
-        if (!response.ok) throw new Error('Failed to fetch');
-        const data = await response.json();
-        setTestimonials(data);
-      } catch (error) {
-        console.error('Error fetching testimonials:', error);
-      }
-    };
+  // Temporarily disable API fetch to prevent JSON parsing errors during development
+  // useEffect(() => {
+  //   const fetchTestimonials = async () => {
+  //     try {
+  //       const response = await fetch('/api/testimonials');
+  //       if (!response.ok) throw new Error('Failed to fetch');
+  //       const data = await response.json();
+  //       if (data.success && data.testimonials) {
+  //         setTestimonials(data.testimonials);
+  //       }
+  //     } catch (error) {
+  //       console.error('Error fetching testimonials:', error);
+  //       // Keep fallback data if API fails
+  //     }
+  //   };
 
-    // Uncomment this when API is ready
-    // fetchTestimonials();
-  }, []);
+  //   fetchTestimonials();
+  // }, []);
 
   return (
     <section className="py-16 bg-gray-50">

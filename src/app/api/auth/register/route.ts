@@ -41,14 +41,14 @@ export async function POST(req: NextRequest) {
     });
     
     // Generate tokens
-    const token = generateAccessToken({
+    const token = await generateAccessToken({
       userId: user.id,
       email: user.email,
       role: user.role,
       name: user.name || '',
     });
     
-    const refreshToken = generateRefreshToken(user.id);
+    const refreshToken = await generateRefreshToken(user.id);
     
     // Create response
     const response = NextResponse.json({

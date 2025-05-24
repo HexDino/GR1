@@ -29,11 +29,6 @@ export async function findUserById(id: string): Promise<SafeUser | null> {
       where: { id },
       include: {
         profile: true,
-        UserPermission: {
-          include: {
-            permission: true,
-          },
-        },
       },
     });
     
@@ -109,11 +104,12 @@ export async function createUser(userData: {
         data: {
           email,
           password: hashedPassword,
+          name,
           role,
           phone,
           profile: {
             create: {
-              name,
+              // Profile doesn't have name field - name is in User model
             },
           },
         },
@@ -194,11 +190,6 @@ export async function authenticateUser(
       where: { email },
       include: {
         profile: true,
-        UserPermission: {
-          include: {
-            permission: true,
-          },
-        },
       },
     });
     
@@ -260,14 +251,14 @@ export async function authenticateUser(
     
     // Tạo JWT token
     const { password: _, ...safeUser } = user;
-    const token = generateToken({
+    const token = await generateToken({
       userId: user.id,
       email: user.email,
       role: user.role,
-      name: user.profile?.name || '',
+      name: user.name || '',
     });
     
-    const refreshToken = generateToken(
+    const refreshToken = await generateToken(
       {
         userId: user.id,
         tokenType: 'refresh',
@@ -308,6 +299,7 @@ export async function updateUser(
       const userUpdate: Prisma.UserUpdateInput = {};
       if (email) userUpdate.email = email;
       if (phone) userUpdate.phone = phone;
+      if (name) userUpdate.name = name;
       
       const updatedUser = await tx.user.update({
         where: { id: userId },
@@ -317,17 +309,11 @@ export async function updateUser(
         },
       });
       
-      // Cập nhật profile nếu có name
-      if (name && updatedUser.profile) {
-        await tx.profile.update({
-          where: { userId },
-          data: { name },
-        });
-      } else if (name) {
+      // Create profile if it doesn't exist
+      if (!updatedUser.profile) {
         await tx.profile.create({
           data: {
             userId,
-            name,
           },
         });
       }
@@ -422,14 +408,14 @@ export async function refreshUserToken(
     }
     
     // Tạo token mới
-    const newToken = generateToken({
+    const newToken = await generateToken({
       userId: user.id,
       email: user.email,
       role: user.role,
       name: user.name || '',
     });
     
-    const newRefreshToken = generateToken(
+    const newRefreshToken = await generateToken(
       {
         userId: user.id,
         tokenType: 'refresh',
