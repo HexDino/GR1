@@ -39,6 +39,7 @@ model User {
   doctorAppointments  Appointment[]       @relation("DoctorAppointments")
   medicalRecords      MedicalRecord[]
   healthMetrics       HealthMetric[]
+  healthGoals         HealthGoal[]
   chats               Chat[]
   doctorReviews       DoctorReview[]      @relation("UserReviews")
   receivedReviews     DoctorReview[]      @relation("DoctorReviews")
@@ -359,9 +360,33 @@ model HealthMetric {
   user      User       @relation(fields: [userId], references: [id])
   type      MetricType
   value     Float
-  unit      String
   notes     String?
   createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+// Health Goal model
+model HealthGoal {
+  id          String           @id @default(cuid())
+  userId      String
+  user        User             @relation(fields: [userId], references: [id])
+  title       String
+  description String
+  category    HealthGoalCategory
+  target      String
+  current     String
+  unit        String
+  startDate   DateTime
+  deadline    DateTime
+  progress    Int
+  status      HealthGoalStatus @default(ACTIVE)
+  priority    HealthGoalPriority @default(MEDIUM)
+  notes       String?
+  milestones  Json?           // Array of milestone objects
+  reminder    Boolean         @default(false)
+  reminderTime String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
 }
 
 // AI Analysis model
@@ -633,4 +658,28 @@ model ReviewLike {
   createdAt DateTime     @default(now())
 
   @@unique([userId, reviewId])
+}
+
+// Add new enums for HealthGoal
+enum HealthGoalCategory {
+  WEIGHT
+  EXERCISE
+  NUTRITION
+  SLEEP
+  MEDICATION
+  MENTAL_HEALTH
+  GENERAL
+}
+
+enum HealthGoalStatus {
+  ACTIVE
+  COMPLETED
+  OVERDUE
+  PAUSED
+}
+
+enum HealthGoalPriority {
+  LOW
+  MEDIUM
+  HIGH
 }

@@ -271,57 +271,39 @@ export default function Notifications() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-        {/* Header */}
-        <div className="relative bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-700 rounded-3xl p-8 text-white overflow-hidden">
-          <div className="absolute inset-0 opacity-20">
-            <div className="w-full h-full bg-pattern-dots"></div>
-          </div>
-          
-          <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/20">
-                <BellSolidIcon className="w-8 h-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl lg:text-4xl font-bold mb-2">Notifications</h1>
-                <p className="text-blue-100 text-lg">
-                  Stay updated with your health reminders and important updates
-                </p>
-                <div className="flex items-center gap-4 mt-3 text-white/90">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <span className="text-sm font-medium">{displayNotifications.length} total notifications</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <ExclamationTriangleIcon className="w-4 h-4" />
-                    <span className="text-sm">{unreadCount} unread</span>
-                  </div>
-                </div>
-              </div>
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                Notifications
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Stay updated with your health reminders and important updates
+              </p>
             </div>
-            
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex items-center space-x-4">
               <button
                 onClick={() => setShowSettings(!showSettings)}
-                className="group inline-flex items-center px-6 py-3 bg-white/10 backdrop-blur-sm text-white rounded-xl font-bold border-2 border-white/20 hover:bg-white/20 transition-all duration-300 transform hover:-translate-y-1"
+                className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
               >
-                <Cog6ToothIcon className="w-5 h-5 mr-2 group-hover:animate-spin" />
                 Settings
               </button>
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
-                  className="group inline-flex items-center px-8 py-3 bg-white text-indigo-600 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                  className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                 >
-                  <CheckIcon className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform duration-200" />
                   Mark All Read
                 </button>
               )}
             </div>
           </div>
         </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">

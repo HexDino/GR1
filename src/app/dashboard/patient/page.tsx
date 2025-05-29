@@ -245,74 +245,45 @@ export default function PatientDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Header Section */}
-      <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 overflow-hidden">
-        {/* Background pattern */}
-        <div className="absolute inset-0 opacity-20">
-          <div className="w-full h-full bg-pattern-dots"></div>
-        </div>
-        
-        <div className="relative px-6 py-12">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-              <div className="flex-1">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/20">
-                    <HeartIconSolid className="w-8 h-8 text-white" />
-                  </div>
-                  <div>
-                    <h1 className="text-4xl lg:text-5xl font-bold text-white mb-2">
-                      {getGreeting()}, {user?.name}! 👋
-                    </h1>
-                    <p className="text-blue-100 text-lg">
-                      Hope you&apos;re having a wonderful and healthy day
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex flex-wrap items-center gap-6 text-white/90">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <span className="text-sm font-medium">All systems operational</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CalendarIcon className="w-4 h-4" />
-                    <span className="text-sm">
-                      {currentTime.toLocaleDateString('en-US', { 
-                        weekday: 'long', 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric' 
-                      })}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <ClockIcon className="w-4 h-4" />
-                    <span className="text-sm">
-                      {currentTime.toLocaleTimeString('en-US', { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                      })}
-                    </span>
-                  </div>
-                </div>
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                Patient Dashboard
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Welcome back, {user?.name || 'Patient'}
+              </p>
+              <div className="flex items-center text-gray-600 mt-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full mr-3 animate-pulse"></div>
+                <span className="font-medium text-sm">
+                  {currentTime.toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
+                </span>
+                <span className="mx-3 text-gray-400">•</span>
+                <span className="font-mono">
+                  {currentTime.toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                  })}
+                </span>
               </div>
-              
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link
-                  href="/doctors"
-                  className="group inline-flex items-center px-8 py-4 bg-white text-blue-600 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105"
-                >
-                  <CalendarIconSolid className="w-5 h-5 mr-3 group-hover:animate-bounce" />
-                  Book Appointment
-                </Link>
-                <Link
-                  href="/dashboard/patient/ai-assistant"
-                  className="group inline-flex items-center px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-2xl font-bold border-2 border-white/20 hover:bg-white/20 transition-all duration-300 transform hover:-translate-y-1"
-                >
-                  <ChatBubbleLeftRightIcon className="w-5 h-5 mr-3 group-hover:animate-pulse" />
-                  AI Assistant
-                </Link>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="text-right">
+                <p className="text-gray-900 font-semibold">{user?.name || 'Patient'}</p>
+                <p className="text-gray-500 text-sm">Real-time updates</p>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+                <span className="text-lg font-bold">
+                  {user?.name ? user.name.charAt(0).toUpperCase() : 'P'}
+                </span>
               </div>
             </div>
           </div>
@@ -362,76 +333,31 @@ export default function PatientDashboard() {
         </div>
 
         {/* Main Stats Dashboard */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="group bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <CalendarIconSolid className="w-7 h-7" />
-              </div>
-              <span className="text-xs font-bold bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">Upcoming</span>
-            </div>
-            <h3 className="text-3xl font-bold mb-1">{stats.upcomingAppointments}</h3>
-            <p className="text-blue-100 text-sm font-medium">Upcoming Appointments</p>
-            <div className="mt-4 pt-4 border-t border-white/20">
-              <p className="text-xs text-blue-100">
-                Total: {stats.totalAppointments} appointments
-              </p>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6 text-center">
+            <div className="text-3xl font-bold text-purple-600">{stats.upcomingAppointments}</div>
+            <div className="text-sm text-gray-600">Upcoming Appointments</div>
+            <div className="text-xs text-gray-500 mt-1">Total: {stats.totalAppointments} appointments</div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6 text-center">
+            <div className="text-3xl font-bold text-green-600">{stats.activePrescriptions}</div>
+            <div className="text-sm text-gray-600">Active Prescriptions</div>
+            <div className="text-xs text-gray-500 mt-1">Total: {stats.totalPrescriptions} prescriptions</div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6 text-center">
+            <div className="text-3xl font-bold text-blue-600">{stats.totalDoctors}</div>
+            <div className="text-sm text-gray-600">Doctors Visited</div>
+            <div className="text-xs text-gray-500 mt-1">
+              Avg Rating: {stats.averageDoctorRating > 0 ? stats.averageDoctorRating.toFixed(1) : 'N/A'}
             </div>
           </div>
 
-          <div className="group bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <ClipboardDocumentListIcon className="w-7 h-7" />
-              </div>
-              <span className="text-xs font-bold bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">Active</span>
-            </div>
-            <h3 className="text-3xl font-bold mb-1">{stats.activePrescriptions}</h3>
-            <p className="text-green-100 text-sm font-medium">Current Prescriptions</p>
-            <div className="mt-4 pt-4 border-t border-white/20">
-              <p className="text-xs text-green-100">
-                Total: {stats.totalPrescriptions} prescriptions
-              </p>
-            </div>
-          </div>
-
-          <div className="group bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <UserGroupIcon className="w-7 h-7" />
-              </div>
-              <span className="text-xs font-bold bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">Visited</span>
-            </div>
-            <h3 className="text-3xl font-bold mb-1">{stats.totalDoctors}</h3>
-            <p className="text-purple-100 text-sm font-medium">Doctors Visited</p>
-            <div className="mt-4 pt-4 border-t border-white/20">
-              <div className="flex items-center gap-1">
-                <StarIconSolid className="w-4 h-4 text-yellow-300" />
-                <p className="text-xs text-purple-100">
-                  Average Rating: {stats.averageDoctorRating > 0 ? stats.averageDoctorRating.toFixed(1) : 'N/A'}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="group bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <BellIcon className="w-7 h-7" />
-              </div>
-              {stats.unreadNotifications > 0 && (
-                <span className="text-xs font-bold bg-red-500 px-3 py-1 rounded-full animate-pulse">
-                  {stats.unreadNotifications} new
-                </span>
-              )}
-            </div>
-            <h3 className="text-3xl font-bold mb-1">{stats.unreadNotifications || 0}</h3>
-            <p className="text-orange-100 text-sm font-medium">New Notifications</p>
-            <div className="mt-4 pt-4 border-t border-white/20">
-              <p className="text-xs text-orange-100">
-                {stats.newMessages} new messages
-              </p>
-            </div>
+          <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6 text-center">
+            <div className="text-3xl font-bold text-orange-600">{stats.unreadNotifications || 0}</div>
+            <div className="text-sm text-gray-600">New Notifications</div>
+            <div className="text-xs text-gray-500 mt-1">{stats.newMessages} new messages</div>
           </div>
         </div>
 
@@ -439,92 +365,92 @@ export default function PatientDashboard() {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           {/* Upcoming Appointments */}
           <div className="xl:col-span-2">
-            <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
-              <div className="flex justify-between items-center mb-8">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                    <CalendarIconSolid className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Upcoming Appointments</h2>
-                    <p className="text-gray-600">All scheduled appointments</p>
-                  </div>
-                </div>
-                <Link
-                  href="/dashboard/patient/appointments"
-                  className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-semibold text-sm bg-blue-50 px-4 py-2 rounded-xl hover:bg-blue-100 transition-all duration-200"
-                >
-                  <EyeIcon className="w-4 h-4" />
-                  View All
-                </Link>
+            <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
+              <div className="px-6 py-4 bg-gradient-to-r from-purple-500 to-purple-700 text-white">
+                <h2 className="text-xl font-bold">
+                  Upcoming Appointments ({appointments.length} appointments)
+                </h2>
               </div>
-
-              {appointments.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                    <CalendarIcon className="h-12 w-12 text-gray-400" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">No upcoming appointments</h3>
-                  <p className="text-gray-500 mb-6 max-w-sm mx-auto">
-                    Schedule your first appointment with a specialist doctor to start caring for your health
-                  </p>
-                  <Link
-                    href="/doctors"
-                    className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-                  >
-                    <PlusIcon className="h-5 w-5 mr-2" />
-                    Book Appointment
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {appointments.map((appointment, index) => (
-                    <div key={appointment.id} className="group p-6 border-2 border-gray-100 rounded-2xl hover:border-blue-200 hover:shadow-lg transition-all duration-300 bg-gradient-to-r from-white to-blue-50/30">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div className="relative">
-                            <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center text-blue-700 font-bold text-lg shadow-sm group-hover:scale-105 transition-transform duration-300">
-                              {appointment.doctorAvatar ? (
-                                <img 
-                                  src={appointment.doctorAvatar} 
-                                  alt={appointment.doctorName} 
-                                  className="h-16 w-16 rounded-2xl object-cover"
-                                />
-                              ) : (
-                                appointment.doctorName.charAt(0).toUpperCase()
-                              )}
-                            </div>
-                            <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center shadow-sm">
-                              <CheckCircleIcon className="h-4 w-4 text-white" />
-                            </div>
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-bold text-gray-900 text-lg">BS. {appointment.doctorName}</h3>
-                            <p className="text-blue-600 font-medium">{appointment.doctorSpecialty}</p>
-                            <div className="flex items-center text-gray-600 mt-2">
-                              <ClockIcon className="h-4 w-4 mr-2" />
-                              <span className="font-medium">{formatDateTime(appointment.date, appointment.time)}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-right space-y-2">
-                          {getStatusBadge(appointment.status)}
-                          <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
-                            {appointment.type}
-                          </p>
-                        </div>
-                      </div>
-                      {appointment.symptoms && (
-                        <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
-                          <p className="text-sm text-blue-900">
-                            <span className="font-semibold">Symptoms:</span> {appointment.symptoms}
-                          </p>
-                        </div>
-                      )}
+              <div className="p-8">
+                <div className="flex justify-between items-center mb-8">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                      <CalendarIconSolid className="w-5 h-5 text-blue-600" />
                     </div>
-                  ))}
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-900">Upcoming Appointments</h2>
+                      <p className="text-gray-600">All scheduled appointments</p>
+                    </div>
+                  </div>
                 </div>
-              )}
+
+                {appointments.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                      <CalendarIcon className="h-12 w-12 text-gray-400" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">No upcoming appointments</h3>
+                    <p className="text-gray-500 mb-6 max-w-sm mx-auto">
+                      Schedule your first appointment with a specialist doctor to start caring for your health
+                    </p>
+                    <Link
+                      href="/doctors"
+                      className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                    >
+                      <PlusIcon className="h-5 w-5 mr-2" />
+                      Book Appointment
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {appointments.map((appointment, index) => (
+                      <div key={appointment.id} className="group p-6 border-2 border-gray-100 rounded-2xl hover:border-blue-200 hover:shadow-lg transition-all duration-300 bg-gradient-to-r from-white to-blue-50/30">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-4">
+                            <div className="relative">
+                              <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center text-blue-700 font-bold text-lg shadow-sm group-hover:scale-105 transition-transform duration-300">
+                                {appointment.doctorAvatar ? (
+                                  <img 
+                                    src={appointment.doctorAvatar} 
+                                    alt={appointment.doctorName} 
+                                    className="h-16 w-16 rounded-2xl object-cover"
+                                  />
+                                ) : (
+                                  appointment.doctorName.charAt(0).toUpperCase()
+                                )}
+                              </div>
+                              <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center shadow-sm">
+                                <CheckCircleIcon className="h-4 w-4 text-white" />
+                              </div>
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="font-bold text-gray-900 text-lg">BS. {appointment.doctorName}</h3>
+                              <p className="text-blue-600 font-medium">{appointment.doctorSpecialty}</p>
+                              <div className="flex items-center text-gray-600 mt-2">
+                                <ClockIcon className="h-4 w-4 mr-2" />
+                                <span className="font-medium">{formatDateTime(appointment.date, appointment.time)}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right space-y-2">
+                            {getStatusBadge(appointment.status)}
+                            <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
+                              {appointment.type}
+                            </p>
+                          </div>
+                        </div>
+                        {appointment.symptoms && (
+                          <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                            <p className="text-sm text-blue-900">
+                              <span className="font-semibold">Symptoms:</span> {appointment.symptoms}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

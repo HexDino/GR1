@@ -191,99 +191,57 @@ export default function PatientAppointments() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-        {/* Header */}
-        <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 rounded-3xl p-8 text-white overflow-hidden">
-          <div className="absolute inset-0 opacity-20">
-            <div className="w-full h-full bg-pattern-dots"></div>
-          </div>
-          
-          <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/20">
-                <CalendarIconSolid className="w-8 h-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl lg:text-4xl font-bold mb-2">My Appointments</h1>
-                <p className="text-blue-100 text-lg">
-                  Manage your medical appointments and view history
-                </p>
-                <div className="flex items-center gap-4 mt-3 text-white/90">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <span className="text-sm font-medium">{upcomingCount} upcoming appointments</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <ClockIcon className="w-4 h-4" />
-                    <span className="text-sm">Last updated: {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
-                  </div>
-                </div>
-              </div>
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                My Appointments
+              </h1>
+              <p className="text-gray-600 mt-1">
+                View and manage your appointments
+              </p>
             </div>
-            
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex items-center space-x-4">
               <button
                 onClick={handleRefresh}
-                className="group inline-flex items-center px-6 py-3 bg-white/10 backdrop-blur-sm text-white rounded-xl font-bold border-2 border-white/20 hover:bg-white/20 transition-all duration-300 transform hover:-translate-y-1"
+                className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
               >
-                <ArrowRightIcon className="w-5 h-5 mr-2 group-hover:animate-spin" />
                 Refresh
               </button>
               <Link
                 href="/doctors"
-                className="group inline-flex items-center px-8 py-3 bg-white text-blue-600 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
               >
-                <PlusIcon className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform duration-200" />
-                Book New Appointment
+                Book New
               </Link>
             </div>
           </div>
         </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                <CalendarDaysIcon className="w-6 h-6 text-blue-600" />
-              </div>
-              <span className="text-xs font-bold bg-blue-100 text-blue-700 px-3 py-1 rounded-full">Total</span>
-            </div>
-            <h3 className="text-3xl font-bold text-gray-900 mb-1">{stats.total}</h3>
-            <p className="text-gray-600 text-sm font-medium">All Appointments</p>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6 text-center">
+            <div className="text-3xl font-bold text-purple-600">{stats.total}</div>
+            <div className="text-sm text-gray-600">Total Appointments</div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <CheckCircleIconSolid className="w-6 h-6 text-green-600" />
-              </div>
-              <span className="text-xs font-bold bg-green-100 text-green-700 px-3 py-1 rounded-full">Active</span>
-            </div>
-            <h3 className="text-3xl font-bold text-gray-900 mb-1">{stats.upcoming}</h3>
-            <p className="text-gray-600 text-sm font-medium">Upcoming</p>
+          <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6 text-center">
+            <div className="text-3xl font-bold text-blue-600">{stats.upcoming}</div>
+            <div className="text-sm text-gray-600">Upcoming</div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                <CheckCircleIcon className="w-6 h-6 text-purple-600" />
-              </div>
-              <span className="text-xs font-bold bg-purple-100 text-purple-700 px-3 py-1 rounded-full">Done</span>
-            </div>
-            <h3 className="text-3xl font-bold text-gray-900 mb-1">{stats.completed}</h3>
-            <p className="text-gray-600 text-sm font-medium">Completed</p>
+          <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6 text-center">
+            <div className="text-3xl font-bold text-green-600">{stats.completed}</div>
+            <div className="text-sm text-gray-600">Completed</div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
-                <XCircleIconSolid className="w-6 h-6 text-red-600" />
-              </div>
-              <span className="text-xs font-bold bg-red-100 text-red-700 px-3 py-1 rounded-full">Cancelled</span>
-            </div>
-            <h3 className="text-3xl font-bold text-gray-900 mb-1">{stats.cancelled}</h3>
-            <p className="text-gray-600 text-sm font-medium">Cancelled</p>
+          <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6 text-center">
+            <div className="text-3xl font-bold text-red-600">{stats.cancelled}</div>
+            <div className="text-sm text-gray-600">Cancelled</div>
           </div>
         </div>
 
@@ -355,20 +313,13 @@ export default function PatientAppointments() {
         </div>
 
         {/* Appointments List/Grid */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
+          <div className="px-6 py-4 bg-gradient-to-r from-purple-500 to-purple-700 text-white">
+            <h2 className="text-xl font-bold">
+              Your Appointments ({filteredAppointments.length} appointments)
+            </h2>
+          </div>
           <div className="p-8">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center">
-                <CalendarIcon className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">Your Appointments</h2>
-                <p className="text-gray-600 text-sm">
-                  {filteredAppointments.length} appointment{filteredAppointments.length !== 1 ? 's' : ''} found
-                </p>
-              </div>
-            </div>
-
             {appointmentsLoading ? (
               <div className="flex justify-center items-center py-12">
                 <div className="relative">

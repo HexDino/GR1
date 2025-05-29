@@ -170,13 +170,13 @@ export default function AppointmentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
                 Manage Appointments
               </h1>
               <p className="text-gray-600 mt-1">
@@ -184,12 +184,7 @@ export default function AppointmentsPage() {
               </p>
             </div>
             <div className="flex items-center space-x-4">
-              <Link
-                href="/dashboard/doctor"
-                className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                Back to Dashboard
-              </Link>
+              {/* Removed Back to Dashboard button */}
             </div>
           </div>
         </div>
@@ -299,7 +294,7 @@ export default function AppointmentsPage() {
 
         {/* Appointments List */}
         <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
-          <div className="px-6 py-4 bg-gradient-to-r from-purple-500 to-purple-700 text-white">
+          <div className="px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
             <h2 className="text-xl font-bold">
               Appointment List ({pagination.total} appointments)
             </h2>
@@ -307,7 +302,7 @@ export default function AppointmentsPage() {
 
           {loading ? (
             <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-600"></div>
               <span className="ml-3 text-gray-600">Loading...</span>
             </div>
           ) : appointments.length === 0 ? (
@@ -319,11 +314,11 @@ export default function AppointmentsPage() {
           ) : (
             <div className="divide-y divide-gray-100">
               {appointments.map((appointment) => (
-                <div key={appointment.id} className="p-6 hover:bg-purple-25 transition-colors">
+                <div key={appointment.id} className="p-6 hover:bg-purple-50 transition-colors">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       {/* Patient Avatar */}
-                      <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-700 rounded-full flex items-center justify-center text-white font-bold shadow-md">
+                      <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold shadow-md">
                         {appointment.patient.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
                       </div>
 

@@ -140,7 +140,7 @@ export default function DoctorDashboard() {
 
   if (loading.user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
           <h2 className="text-xl font-semibold text-gray-800 mb-2">Loading Dashboard</h2>
@@ -162,34 +162,21 @@ export default function DoctorDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Modern Gradient Header */}
-      <div className="relative bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-600/90 to-purple-800/90"></div>
-        <div className="absolute inset-0" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='6' cy='6' r='6'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        }}></div>
-        
-        <div className="relative max-w-7xl mx-auto px-6 py-12">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-            <div className="mb-8 lg:mb-0">
-              <div className="flex items-center mb-4">
-                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mr-4 shadow-2xl">
-                  <span className="text-2xl">🩺</span>
-                </div>
-                <div>
-                  <h1 className="text-4xl lg:text-5xl font-bold text-white mb-2">
-                    Doctor Dashboard
-                  </h1>
-                  <p className="text-purple-100 text-lg">
-                    Welcome back, Dr. {user?.name || 'Doctor'}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex items-center text-white/90">
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                Doctor Dashboard
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Welcome back, Dr. {user?.name || 'Doctor'}
+              </p>
+              <div className="flex items-center text-gray-600 mt-2">
                 <div className="w-2 h-2 bg-green-400 rounded-full mr-3 animate-pulse"></div>
-                <span className="font-medium">
+                <span className="font-medium text-sm">
                   {new Date().toLocaleDateString('en-US', { 
                     weekday: 'long', 
                     year: 'numeric', 
@@ -197,8 +184,8 @@ export default function DoctorDashboard() {
                     day: 'numeric' 
                   })}
                 </span>
-                <span className="mx-3 text-white/70">•</span>
-                <span className="font-mono text-lg">
+                <span className="mx-3 text-gray-400">•</span>
+                <span className="font-mono">
                   {new Date().toLocaleTimeString('en-US', { 
                     hour: '2-digit', 
                     minute: '2-digit' 
@@ -206,15 +193,13 @@ export default function DoctorDashboard() {
                 </span>
               </div>
             </div>
-
-            {/* Profile Section */}
             <div className="flex items-center space-x-4">
               <div className="text-right">
-                <p className="text-white font-semibold text-lg">{user?.name || 'Doctor'}</p>
-                <p className="text-purple-100 text-sm">Real-time updates</p>
+                <p className="text-gray-900 font-semibold">{user?.name || 'Doctor'}</p>
+                <p className="text-gray-500 text-sm">Real-time updates</p>
               </div>
-              <div className="w-16 h-16 bg-gradient-to-br from-white/20 to-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-2xl border border-white/20">
-                <span className="text-2xl font-bold text-white">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+                <span className="text-lg font-bold">
                   {user?.name ? user.name.charAt(0).toUpperCase() : 'D'}
                 </span>
               </div>
@@ -224,126 +209,58 @@ export default function DoctorDashboard() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8 -mt-6 relative z-10">
-        {/* Modern Stats Grid with Gradient Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Today's Appointments */}
-          <div className="group bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl shadow-lg p-6 text-white transform hover:-translate-y-1 transition-all duration-300 hover:shadow-xl">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <span className="text-2xl">📅</span>
-              </div>
-              <span className="text-xs font-bold bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">Today</span>
-            </div>
-            <h3 className="text-3xl font-bold mb-1">
-              {loading.stats ? '...' : stats?.todayAppointments || 0}
-            </h3>
-            <p className="text-purple-100 text-sm font-medium">Today&apos;s Appointments</p>
-            <div className="mt-4 pt-4 border-t border-white/20">
-              <p className="text-xs text-purple-100">
-                {loading.stats ? 'Loading...' : `${stats?.pendingAppointments || 0} pending confirmation`}
-              </p>
-            </div>
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Stats Summary */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6 text-center">
+            <div className="text-3xl font-bold text-purple-600">{loading.stats ? '...' : stats?.todayAppointments || 0}</div>
+            <div className="text-sm text-gray-600">Today&apos;s Appointments</div>
+            <div className="text-xs text-gray-500 mt-1">{loading.stats ? 'Loading...' : `${stats?.pendingAppointments || 0} pending confirmation`}</div>
           </div>
 
-          {/* Total Patients */}
-          <div className="group bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg p-6 text-white transform hover:-translate-y-1 transition-all duration-300 hover:shadow-xl">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <span className="text-2xl">👥</span>
-              </div>
-              <span className="text-xs font-bold bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">Patients</span>
-            </div>
-            <h3 className="text-3xl font-bold mb-1">
-              {loading.stats ? '...' : stats?.totalPatients || 0}
-            </h3>
-            <p className="text-blue-100 text-sm font-medium">Total Patients</p>
-            <div className="mt-4 pt-4 border-t border-white/20">
-              <p className="text-xs text-blue-100">Under your care</p>
-            </div>
+          <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6 text-center">
+            <div className="text-3xl font-bold text-blue-600">{loading.stats ? '...' : stats?.totalPatients || 0}</div>
+            <div className="text-sm text-gray-600">Total Patients</div>
+            <div className="text-xs text-gray-500 mt-1">Under your care</div>
           </div>
 
-          {/* Prescriptions */}
-          <div className="group bg-gradient-to-br from-green-500 to-green-600 rounded-2xl shadow-lg p-6 text-white transform hover:-translate-y-1 transition-all duration-300 hover:shadow-xl">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <span className="text-2xl">📋</span>
-              </div>
-              <span className="text-xs font-bold bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">Total</span>
-            </div>
-            <h3 className="text-3xl font-bold mb-1">
-              {loading.stats ? '...' : stats?.totalPrescriptions || 0}
-            </h3>
-            <p className="text-green-100 text-sm font-medium">Prescriptions</p>
-            <div className="mt-4 pt-4 border-t border-white/20">
-              <p className="text-xs text-green-100">Issued prescriptions</p>
-            </div>
+          <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6 text-center">
+            <div className="text-3xl font-bold text-green-600">{loading.stats ? '...' : stats?.totalPrescriptions || 0}</div>
+            <div className="text-sm text-gray-600">Prescriptions</div>
+            <div className="text-xs text-gray-500 mt-1">Issued prescriptions</div>
           </div>
 
-          {/* Rating */}
-          <div className="group bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl shadow-lg p-6 text-white transform hover:-translate-y-1 transition-all duration-300 hover:shadow-xl">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <span className="text-2xl">⭐</span>
-              </div>
-              <span className="text-xs font-bold bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full">Rating</span>
-            </div>
-            <h3 className="text-3xl font-bold mb-1">
-              {loading.stats ? '...' : (stats?.averageRating?.toFixed(1) || '0.0')}
-            </h3>
-            <p className="text-orange-100 text-sm font-medium">Average Rating</p>
-            <div className="mt-4 pt-4 border-t border-white/20">
-              <p className="text-xs text-orange-100">
-                {loading.stats ? 'Loading...' : `${stats?.totalReviews || 0} total reviews`}
-              </p>
-            </div>
+          <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6 text-center">
+            <div className="text-3xl font-bold text-orange-600">{loading.stats ? '...' : (stats?.averageRating?.toFixed(1) || '0.0')}</div>
+            <div className="text-sm text-gray-600">Average Rating</div>
+            <div className="text-xs text-gray-500 mt-1">{loading.stats ? 'Loading...' : `${stats?.totalReviews || 0} total reviews`}</div>
           </div>
         </div>
 
         {/* Today's Schedule - Full Width */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden mb-8">
-          <div className="relative bg-gradient-to-r from-purple-600 via-purple-700 to-purple-800 text-white">
-            <div className="absolute inset-0" style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M0 0h20v20H0V0zm10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            }}></div>
-            
-            <div className="relative px-8 py-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mr-4 shadow-lg">
-                    <span className="text-2xl">📅</span>
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold mb-1">Today&apos;s Schedule</h2>
-                    <p className="text-purple-100">Manage today&apos;s patient appointments</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-3xl font-bold">
-                    {loading.stats ? '...' : stats?.todayAppointments || 0}
-                  </p>
-                  <p className="text-purple-100 text-sm">appointments</p>
-                </div>
-              </div>
-            </div>
+        <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden mb-8">
+          <div className="px-6 py-4 bg-gradient-to-r from-purple-500 to-purple-700 text-white">
+            <h2 className="text-xl font-bold">
+              Today&apos;s Schedule ({loading.stats ? '...' : stats?.todayAppointments || 0} appointments)
+            </h2>
           </div>
           
           <div className="p-8">
             {loading.todayAppointments ? (
               <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-3 border-b-3 border-purple-500"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-t-3 border-b-3 border-purple-600"></div>
                 <span className="ml-4 text-gray-600 text-lg">Loading appointments...</span>
               </div>
             ) : todayAppointments.length === 0 ? (
               <div className="text-center py-16">
-                <div className="w-24 h-24 bg-gradient-to-br from-purple-100 to-purple-200 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <div className="w-24 h-24 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
                   <span className="text-4xl">📅</span>
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">No appointments today</h3>
                 <p className="text-gray-600 mb-6 text-lg">You have no scheduled appointments for today. Enjoy your free time!</p>
                 <Link 
                   href="/dashboard/doctor/appointments"
-                  className="inline-flex items-center px-8 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl hover:from-purple-700 hover:to-purple-800 transition-all font-semibold shadow-lg transform hover:scale-105"
+                  className="inline-flex items-center px-8 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all font-semibold shadow-lg transform hover:scale-105"
                 >
                   <span className="mr-2">📋</span>
                   View All Appointments
@@ -352,10 +269,10 @@ export default function DoctorDashboard() {
             ) : (
               <div className="space-y-4">
                 {todayAppointments.map((appointment) => (
-                  <div key={appointment.id} className="relative bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-6 hover:from-purple-50 hover:to-purple-100 transition-all duration-300 border border-gray-200 shadow-sm hover:shadow-lg">
+                  <div key={appointment.id} className="relative bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-6 hover:from-purple-50 hover:to-indigo-50 transition-all duration-300 border border-gray-200 shadow-sm hover:shadow-lg">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl flex items-center justify-center text-white mr-6 shadow-lg">
+                        <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white mr-6 shadow-lg">
                           <span className="font-bold text-lg">
                             {appointment.patient.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
                           </span>
@@ -387,7 +304,7 @@ export default function DoctorDashboard() {
                 <div className="pt-6 border-t border-gray-200">
                   <Link 
                     href="/dashboard/doctor/appointments"
-                    className="w-full flex items-center justify-center py-4 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-2xl hover:from-purple-700 hover:to-purple-800 transition-all font-semibold text-lg shadow-lg transform hover:scale-[1.02]"
+                    className="w-full flex items-center justify-center py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-2xl hover:from-purple-700 hover:to-indigo-700 transition-all font-semibold text-lg shadow-lg transform hover:scale-[1.02]"
                   >
                     <span className="mr-2">📋</span>
                     View All Appointments
@@ -396,6 +313,84 @@ export default function DoctorDashboard() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Link 
+            href="/dashboard/doctor/appointments"
+            className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all border border-gray-100"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                <span className="text-2xl">📅</span>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-gray-900">
+                  {loading.stats ? '...' : stats?.todayAppointments || 0}
+                </p>
+                <p className="text-purple-600 text-sm font-medium">Today</p>
+              </div>
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Manage Appointments</h3>
+            <p className="text-gray-600 mb-4">View and manage all your appointments</p>
+            <div className="flex items-center text-purple-600 font-medium">
+              <span>View All</span>
+              <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </Link>
+
+          <Link 
+            href="/dashboard/doctor/patients"
+            className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all border border-gray-100"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                <span className="text-2xl">👥</span>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-gray-900">
+                  {loading.stats ? '...' : stats?.totalPatients || 0}
+                </p>
+                <p className="text-blue-600 text-sm font-medium">Total</p>
+              </div>
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Patient Records</h3>
+            <p className="text-gray-600 mb-4">Manage your patient database</p>
+            <div className="flex items-center text-blue-600 font-medium">
+              <span>View All</span>
+              <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </Link>
+
+          <Link 
+            href="/dashboard/doctor/prescriptions"
+            className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all border border-gray-100"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                <span className="text-2xl">📋</span>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-gray-900">
+                  {loading.stats ? '...' : stats?.totalPrescriptions || 0}
+                </p>
+                <p className="text-green-600 text-sm font-medium">Total</p>
+              </div>
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Prescriptions</h3>
+            <p className="text-gray-600 mb-4">Create and manage prescriptions</p>
+            <div className="flex items-center text-green-600 font-medium">
+              <span>View All</span>
+              <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </Link>
         </div>
       </div>
     </div>

@@ -29,7 +29,9 @@ import {
   FireIcon,
   Bars3Icon,
   ShieldCheckIcon,
-  SunIcon
+  SunIcon,
+  Squares2X2Icon,
+  DocumentMagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
 import { 
   StarIcon as StarIconSolid,
@@ -263,120 +265,70 @@ export default function HealthGoals() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-        {/* Header */}
-        <div className="relative bg-gradient-to-r from-purple-600 via-pink-600 to-red-700 rounded-3xl p-8 text-white overflow-hidden">
-          <div className="absolute inset-0 opacity-20">
-            <div className="w-full h-full bg-pattern-dots"></div>
-          </div>
-          
-          <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/20">
-                <StarIconSolid className="w-8 h-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl lg:text-4xl font-bold mb-2">Health Goals</h1>
-                <p className="text-purple-100 text-lg">
-                  Track and achieve your wellness objectives
-                </p>
-                <div className="flex items-center gap-4 mt-3 text-white/90">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <span className="text-sm font-medium">{stats.active} active goals</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <ChartBarIcon className="w-4 h-4" />
-                    <span className="text-sm">{stats.averageProgress}% average progress</span>
-                  </div>
-                </div>
-              </div>
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                Health Goals
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Track and achieve your wellness objectives
+              </p>
             </div>
-            
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex items-center space-x-4">
               <button
                 onClick={() => mutate()}
-                className="group inline-flex items-center px-6 py-3 bg-white/10 backdrop-blur-sm text-white rounded-xl font-bold border-2 border-white/20 hover:bg-white/20 transition-all duration-300 transform hover:-translate-y-1"
+                className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
               >
-                <ArrowTrendingUpIcon className="w-5 h-5 mr-2 group-hover:animate-bounce" />
                 Refresh Goals
               </button>
               <Link
                 href="/dashboard/patient/health-goals/create"
-                className="group inline-flex items-center px-8 py-3 bg-white text-purple-600 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
               >
-                <PlusIcon className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform duration-200" />
                 Create New Goal
               </Link>
             </div>
           </div>
         </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                <FlagIcon className="w-6 h-6 text-purple-600" />
-              </div>
-              <span className="text-xs font-bold bg-purple-100 text-purple-700 px-3 py-1 rounded-full">Total</span>
-            </div>
-            <h3 className="text-3xl font-bold text-gray-900 mb-1">{stats.total}</h3>
-            <p className="text-gray-600 text-sm font-medium">All Goals</p>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+          <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6 text-center">
+            <div className="text-3xl font-bold text-purple-600">{stats.total}</div>
+            <div className="text-sm text-gray-600">Total Goals</div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                <PlayIcon className="w-6 h-6 text-blue-600" />
-              </div>
-              <span className="text-xs font-bold bg-blue-100 text-blue-700 px-3 py-1 rounded-full">Active</span>
-            </div>
-            <h3 className="text-3xl font-bold text-gray-900 mb-1">{stats.active}</h3>
-            <p className="text-gray-600 text-sm font-medium">In Progress</p>
+          <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6 text-center">
+            <div className="text-3xl font-bold text-blue-600">{stats.active}</div>
+            <div className="text-sm text-gray-600">Active Goals</div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <CheckCircleIconSolid className="w-6 h-6 text-green-600" />
-              </div>
-              <span className="text-xs font-bold bg-green-100 text-green-700 px-3 py-1 rounded-full">Done</span>
-            </div>
-            <h3 className="text-3xl font-bold text-gray-900 mb-1">{stats.completed}</h3>
-            <p className="text-gray-600 text-sm font-medium">Completed</p>
+          <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6 text-center">
+            <div className="text-3xl font-bold text-green-600">{stats.completed}</div>
+            <div className="text-sm text-gray-600">Completed</div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
-                <ExclamationTriangleIcon className="w-6 h-6 text-red-600" />
-              </div>
-              {stats.overdue > 0 && (
-                <span className="text-xs font-bold bg-red-100 text-red-700 px-3 py-1 rounded-full animate-pulse">Alert</span>
-              )}
-            </div>
-            <h3 className="text-3xl font-bold text-gray-900 mb-1">{stats.overdue}</h3>
-            <p className="text-gray-600 text-sm font-medium">Overdue</p>
+          <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6 text-center">
+            <div className="text-3xl font-bold text-red-600">{stats.overdue}</div>
+            <div className="text-sm text-gray-600">Overdue</div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
-                <ChartBarIconSolid className="w-6 h-6 text-yellow-600" />
-              </div>
-              <span className="text-xs font-bold bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full">Avg</span>
-            </div>
-            <h3 className="text-3xl font-bold text-gray-900 mb-1">{stats.averageProgress}%</h3>
-            <p className="text-gray-600 text-sm font-medium">Progress</p>
+          <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6 text-center">
+            <div className="text-3xl font-bold text-yellow-600">{stats.averageProgress}%</div>
+            <div className="text-sm text-gray-600">Avg Progress</div>
           </div>
         </div>
 
         {/* Filters and Search */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
-          <div className="flex flex-col lg:flex-row gap-6">
+        <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
             {/* Search */}
-            <div className="flex-1">
+            <div className="flex-1 md:col-span-2">
               <label className="block text-sm font-bold text-gray-900 mb-2">Search Goals</label>
               <div className="relative">
                 <MagnifyingGlassIcon className="h-5 w-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -391,7 +343,7 @@ export default function HealthGoals() {
             </div>
 
             {/* Status Filter */}
-            <div className="lg:w-48">
+            <div>
               <label className="block text-sm font-bold text-gray-900 mb-2">Status</label>
               <div className="relative">
                 <FunnelIcon className="h-5 w-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -410,10 +362,10 @@ export default function HealthGoals() {
             </div>
 
             {/* Category Filter */}
-            <div className="lg:w-48">
+            <div>
               <label className="block text-sm font-bold text-gray-900 mb-2">Category</label>
               <div className="relative">
-                <FlagIcon className="h-5 w-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <DocumentMagnifyingGlassIcon className="h-5 w-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
@@ -432,7 +384,7 @@ export default function HealthGoals() {
             </div>
 
             {/* View Mode Toggle */}
-            <div className="lg:w-48">
+            <div>
               <label className="block text-sm font-bold text-gray-900 mb-2">View Mode</label>
               <div className="flex bg-gray-100 rounded-xl p-1">
                 <button
@@ -443,7 +395,7 @@ export default function HealthGoals() {
                       : 'text-gray-600 hover:text-gray-800'
                   }`}
                 >
-                  <StarIcon className="w-4 h-4 inline mr-1" />
+                  <Squares2X2Icon className="w-4 h-4 inline mr-1" />
                   Grid
                 </button>
                 <button
@@ -463,20 +415,13 @@ export default function HealthGoals() {
         </div>
 
         {/* Health Goals Display */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
+          <div className="px-6 py-4 bg-gradient-to-r from-purple-500 to-purple-700 text-white">
+            <h2 className="text-xl font-bold">
+              Health Goals ({filteredGoals.length} goals)
+            </h2>
+          </div>
           <div className="p-8">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl flex items-center justify-center">
-                <FlagIcon className="w-5 h-5 text-purple-600" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">Your Health Goals</h2>
-                <p className="text-gray-600 text-sm">
-                  {filteredGoals.length} goal{filteredGoals.length !== 1 ? 's' : ''} found
-                </p>
-              </div>
-            </div>
-
             {goalsLoading ? (
               <div className="flex justify-center items-center py-12">
                 <div className="relative">

@@ -201,10 +201,16 @@ export default function DoctorReviews() {
     return formatDate(dateString);
   };
   
-  if (userLoading || isLoading) {
+  if (userLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative">
+            <div className="w-20 h-20 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
+            <StarIconSolid className="w-8 h-8 text-purple-600 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-pulse" />
+          </div>
+          <p className="text-gray-600 font-medium">Loading your reviews...</p>
+        </div>
       </div>
     );
   }
@@ -248,47 +254,37 @@ export default function DoctorReviews() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">My Reviews</h1>
-          <p className="text-gray-600 mt-1">View and manage reviews from patients</p>
+      <div className="relative bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 rounded-b-3xl mx-4 mb-8 text-white overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <div className="w-full h-full bg-pattern-dots"></div>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3">
-          {/* Search Bar */}
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+        
+        <div className="relative px-8 py-12">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/20">
+                <StarIconSolid className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl lg:text-4xl font-bold mb-2">Patient Reviews</h1>
+                <p className="text-purple-100 text-lg">
+                  Your patient feedback and ratings
+                </p>
+              </div>
             </div>
-            <input
-              type="text"
-              placeholder="Search reviews..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-            />
+            
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button
+                onClick={exportReviews}
+                className="group inline-flex items-center px-8 py-3 bg-white text-purple-600 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+              >
+                <ArrowDownTrayIcon className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform duration-200" />
+                Export Reviews
+              </button>
+            </div>
           </div>
-          
-          {/* Export Button */}
-          {stats.totalReviews > 0 && (
-            <button 
-              onClick={exportReviews}
-              className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
-            >
-              <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
-              Export CSV
-            </button>
-          )}
-          
-          {/* Refresh Button */}
-          <button 
-            onClick={() => mutate()}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-          >
-            <ClockIcon className="h-4 w-4 mr-2" />
-            Refresh
-          </button>
         </div>
       </div>
 

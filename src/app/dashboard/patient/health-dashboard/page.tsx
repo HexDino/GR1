@@ -79,9 +79,9 @@ export default function HealthDashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  // Fetch health metrics
-  const { data: metricsData, error: metricsError, isLoading: metricsLoading } = useSWR<{metrics: HealthMetric[]}>(
-    `/api/patient/health-metrics?range=${selectedTimeRange}`,
+  // Fetch data using SWR for health metrics
+  const { data: metricsData, error: metricsError, isLoading: metricsLoading, mutate: metricsMutate } = useSWR<{metrics: HealthMetric[]}>(
+    `/api/patient/health-metrics?timeRange=${selectedTimeRange}`,
     fetcher,
     { 
       revalidateOnFocus: false,
@@ -89,23 +89,21 @@ export default function HealthDashboard() {
     }
   );
 
-  // Fetch health goals
-  const { data: goalsData, error: goalsError, isLoading: goalsLoading } = useSWR<{goals: HealthGoal[]}>(
-    '/api/patient/health-goals',
+  // Fetch data using SWR for health goals
+  const { data: goalsData, error: goalsError, isLoading: goalsLoading, mutate: goalsMutate } = useSWR<{goals: HealthGoal[]}>(
+    `/api/patient/health-goals?status=all`,
     fetcher,
     { 
       revalidateOnFocus: false,
-      refreshInterval: 300000,
     }
   );
 
-  // Fetch health alerts
-  const { data: alertsData, error: alertsError, isLoading: alertsLoading } = useSWR<{alerts: HealthAlert[]}>(
-    '/api/patient/health-alerts',
+  // Fetch data using SWR for health alerts
+  const { data: alertsData, error: alertsError, isLoading: alertsLoading, mutate: alertsMutate } = useSWR<{alerts: HealthAlert[]}>(
+    `/api/patient/health-alerts`,
     fetcher,
     { 
       revalidateOnFocus: false,
-      refreshInterval: 60000,
     }
   );
 
@@ -276,65 +274,41 @@ export default function HealthDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-        {/* Header */}
-        <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 rounded-3xl p-8 text-white overflow-hidden">
-          <div className="absolute inset-0 opacity-20">
-            <div className="w-full h-full bg-pattern-dots"></div>
-          </div>
-          
-          <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/20">
-                <ChartBarIconSolid className="w-8 h-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl lg:text-4xl font-bold mb-2">Health Dashboard</h1>
-                <p className="text-blue-100 text-lg">
-                  Monitor your wellness journey and track health metrics
-                </p>
-                <div className="flex items-center gap-4 mt-3 text-white/90">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <span className="text-sm font-medium">Health tracking active</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <ClockIcon className="w-4 h-4" />
-                    <span className="text-sm">
-                      Last updated: {currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </div>
-                </div>
-              </div>
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                Health Dashboard
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Monitor your wellness journey and track health metrics
+              </p>
             </div>
-            
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 p-1">
-                {['7d', '30d', '90d'].map((range) => (
-                  <button
-                    key={range}
-                    onClick={() => setSelectedTimeRange(range as any)}
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
-                      selectedTimeRange === range
-                        ? 'bg-white text-blue-600 shadow-lg'
-                        : 'text-white/80 hover:text-white hover:bg-white/10'
-                    }`}
-                  >
-                    {range === '7d' ? '7 Days' : range === '30d' ? '30 Days' : '90 Days'}
-                  </button>
-                ))}
-              </div>
+            <div className="flex items-center space-x-4">
+              <button 
+                onClick={() => {
+                  metricsMutate();
+                  goalsMutate();
+                  alertsMutate();
+                }}
+                className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Refresh
+              </button>
               <Link
                 href="/dashboard/patient/health-goals"
-                className="group inline-flex items-center px-6 py-3 bg-white text-blue-600 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
               >
-                <PlusIcon className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform duration-200" />
                 Add Health Data
               </Link>
             </div>
           </div>
         </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
         {/* Health Score Card */}
         <div className="bg-white rounded-3xl shadow-lg p-8 border border-gray-100">
           <div className="flex items-center justify-between mb-6">

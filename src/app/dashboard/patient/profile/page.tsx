@@ -217,65 +217,31 @@ export default function PatientProfile() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-        {/* Header */}
-        <div className="relative bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 rounded-3xl p-8 text-white overflow-hidden">
-          <div className="absolute inset-0 opacity-20">
-            <div className="w-full h-full bg-pattern-dots"></div>
-          </div>
-          
-          <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="flex items-center gap-6">
-              {/* Avatar */}
-              <div className="relative group">
-                <div className="w-24 h-24 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center border-2 border-white/20 group-hover:scale-105 transition-transform duration-300">
-                  {user && (user as any)?.avatar ? (
-                    <Image
-                      src={(user as any).avatar}
-                      alt={user.name || 'Profile'}
-                      width={96}
-                      height={96}
-                      className="w-24 h-24 rounded-2xl object-cover"
-                    />
-                  ) : (
-                    <UserSolidIcon className="w-12 h-12 text-white" />
-                  )}
-                </div>
-                <button className="absolute -bottom-2 -right-2 w-8 h-8 bg-white text-indigo-600 rounded-xl flex items-center justify-center shadow-lg hover:scale-110 transition-transform duration-200">
-                  <CameraIcon className="w-4 h-4" />
-                </button>
-              </div>
-              
-              <div>
-                <h1 className="text-3xl lg:text-4xl font-bold mb-2">My Profile</h1>
-                <p className="text-blue-100 text-lg mb-3">
-                  Manage your personal information and account settings
-                </p>
-                <div className="flex items-center gap-4 text-white/90">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <span className="text-sm font-medium">Account verified</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <ShieldCheckIcon className="w-4 h-4" />
-                    <span className="text-sm">Secure profile</span>
-                  </div>
-                </div>
-              </div>
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                My Profile
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Manage your personal information and account settings
+              </p>
             </div>
-            
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex items-center space-x-4">
               <button
                 onClick={() => setIsEditing(!isEditing)}
-                className="group inline-flex items-center px-6 py-3 bg-white/10 backdrop-blur-sm text-white rounded-xl font-bold border-2 border-white/20 hover:bg-white/20 transition-all duration-300 transform hover:-translate-y-1"
+                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
               >
-                <PencilIcon className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-200" />
                 {isEditing ? 'Cancel Edit' : 'Edit Profile'}
               </button>
             </div>
           </div>
         </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
         {/* Message */}
         {message && (
           <div className={`p-4 rounded-2xl border-2 ${
