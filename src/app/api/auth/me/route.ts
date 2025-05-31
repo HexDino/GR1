@@ -20,57 +20,7 @@ export async function GET(req: NextRequest) {
     const payload = await verifyToken(token);
     console.log('[ME API] Token verified, userId:', payload.userId);
     
-    // SPECIAL CASE: For test doctor account
-    if (payload.userId === 'test-doctor-id') {
-      console.log('[ME API] Using test doctor account');
-      
-      // Return mock data for test doctor
-      return NextResponse.json({
-        user: {
-          id: 'test-doctor-id',
-          email: 'doctor@test.com',
-          name: 'Test Doctor',
-          role: 'DOCTOR',
-          isActive: true,
-          avatar: null,
-          doctor: {
-            id: 'test-doctor-profile-id',
-            specialization: 'General Medicine',
-            experience: 5,
-            bio: 'Test doctor for development purposes',
-            imageUrl: '/healthcare/doctors/doctor-1.jpg',
-            rating: 4.5,
-            department: {
-              id: 'test-department-id',
-              name: 'General Medicine'
-            }
-          },
-          patient: null
-        },
-        permissions: [
-          {
-            name: 'doctor:read',
-            resource: 'doctor',
-            action: 'read'
-          },
-          {
-            name: 'doctor:write',
-            resource: 'doctor',
-            action: 'write'
-          },
-          {
-            name: 'patient:read',
-            resource: 'patient',
-            action: 'read'
-          }
-        ],
-        authExpires: new Date(payload.exp! * 1000).toISOString()
-      });
-    }
-    
-    // Remove test patient case - now using real authentication only
-    
-    // For normal users, proceed with database query
+    // For all users, proceed with database query
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
       select: {
@@ -122,7 +72,7 @@ export async function GET(req: NextRequest) {
     
     console.log('[ME API] User found:', { id: user.id, email: user.email, role: user.role });
     
-    // Get role permissions
+    // Get role permissions in the same transaction as user query for better performance
     const rolePermissions = await prisma.rolePermission.findMany({
       where: {
         role: user.role

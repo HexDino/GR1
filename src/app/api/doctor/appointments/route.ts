@@ -229,114 +229,15 @@ export async function GET(request: NextRequest) {
     } catch (dbError) {
       console.error('[DOCTOR APPOINTMENTS API] Database error:', dbError);
       
-      // Fallback to mock data if database fails
-      console.log('[DOCTOR APPOINTMENTS API] Using fallback mock data');
-      
-      let mockAppointments = [
-        { 
-          id: '1',
-          time: '09:00',
-          patient: {
-            name: 'Nguyễn Văn An',
-            email: 'an.nguyen@email.com',
-            avatar: null,
-            phone: '0912345678'
-          },
-          service: 'Khám tổng quát',
-          symptoms: 'Đau đầu, sốt nhẹ',
-          status: 'CONFIRMED',
-          statusText: 'Đã xác nhận',
-          date: new Date().toISOString(),
-          dateText: new Date().toLocaleDateString('vi-VN'),
-          notes: null,
-          diagnosis: null,
-          duration: 30,
-          priority: 'NORMAL',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+      // Return database error instead of using mock data
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Database error when fetching appointments',
+          error: process.env.NODE_ENV !== 'production' ? String(dbError) : undefined,
         },
-        { 
-          id: '2',
-          time: '10:30',
-          patient: {
-            name: 'Trần Thị Bình',
-            email: 'binh.tran@email.com',
-            avatar: null,
-            phone: '0987654321'
-          },
-          service: 'Tư vấn chuyên khoa',
-          symptoms: 'Đau bụng, khó tiêu',
-          status: 'PENDING',
-          statusText: 'Chờ xác nhận',
-          date: new Date().toISOString(),
-          dateText: new Date().toLocaleDateString('vi-VN'),
-          notes: null,
-          diagnosis: null,
-          duration: 45,
-          priority: 'HIGH',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        { 
-          id: '3',
-          time: '14:00',
-          patient: {
-            name: 'Lê Văn Cường',
-            email: 'cuong.le@email.com',
-            avatar: null,
-            phone: '0901234567'
-          },
-          service: 'Tái khám',
-          symptoms: 'Theo dõi huyết áp',
-          status: 'COMPLETED',
-          statusText: 'Hoàn thành',
-          date: new Date().toISOString(),
-          dateText: new Date().toLocaleDateString('vi-VN'),
-          notes: 'Bệnh nhân đã ổn định',
-          diagnosis: 'Tăng huyết áp nhẹ',
-          duration: 20,
-          priority: 'NORMAL',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }
-      ];
-      
-      // Apply filters to mock data
-      if (statusFilter && statusFilter !== 'all') {
-        mockAppointments = mockAppointments.filter(
-          appointment => appointment.status === statusFilter.toUpperCase()
-        );
-      }
-
-      if (patientSearch) {
-        mockAppointments = mockAppointments.filter(
-          appointment => appointment.patient.name.toLowerCase().includes(patientSearch.toLowerCase())
-        );
-      }
-
-      const limitedAppointments = mockAppointments.slice(offset, offset + limit);
-      
-      return NextResponse.json({
-        success: true,
-        appointments: limitedAppointments,
-        pagination: {
-          total: mockAppointments.length,
-          limit,
-          offset,
-          page: Math.floor(offset / limit) + 1,
-          totalPages: Math.ceil(mockAppointments.length / limit),
-          hasNext: offset + limit < mockAppointments.length,
-          hasPrev: offset > 0
-        },
-        summary: {
-          total: mockAppointments.length,
-          pending: mockAppointments.filter(a => a.status === 'PENDING').length,
-          confirmed: mockAppointments.filter(a => a.status === 'CONFIRMED').length,
-          completed: mockAppointments.filter(a => a.status === 'COMPLETED').length,
-          cancelled: mockAppointments.filter(a => a.status === 'CANCELLED').length
-        },
-        note: 'Using fallback data - database unavailable'
-      });
+        { status: 500 }
+      );
     }
 
   } catch (error) {

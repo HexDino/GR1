@@ -39,8 +39,22 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     { href: '/dashboard/patient/profile', label: 'My Profile', icon: '👤' },
   ];
 
+  // Sidebar links for admins
+  const adminLinks: SidebarLink[] = [
+    { href: '/dashboard/admin/users', label: 'User Management', icon: '👥' },
+    { href: '/dashboard/admin/doctors', label: 'Doctors', icon: '👨‍⚕️' },
+    { href: '/dashboard/admin/patients', label: 'Patients', icon: '🧑‍⚕️' },
+    { href: '/dashboard/admin/medicine', label: 'Medicine', icon: '💊' },
+  ];
+
   // Get current navigation links based on user role
-  const currentLinks = user?.role === 'PATIENT' ? patientLinks : doctorLinks;
+  const getCurrentLinks = () => {
+    if (user?.role === 'ADMIN') return adminLinks;
+    if (user?.role === 'PATIENT') return patientLinks;
+    return doctorLinks;
+  };
+  
+  const currentLinks = getCurrentLinks();
   
   useEffect(() => {
     const loadUser = async () => {
@@ -97,8 +111,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   {user?.name ? user.name.charAt(0).toUpperCase() : 'D'}
                 </span>
               </div>
-              <h3 className="text-sm font-semibold text-gray-900">{user?.name || (user?.role === 'PATIENT' ? 'Patient' : 'Doctor')}</h3>
-              <p className="text-xs text-gray-500 mt-1">{user?.role === 'PATIENT' ? 'Patient' : 'Medical Professional'}</p>
+              <h3 className="text-sm font-semibold text-gray-900">{user?.name || (user?.role === 'PATIENT' ? 'Patient' : user?.role === 'ADMIN' ? 'Administrator' : 'Doctor')}</h3>
+              <p className="text-xs text-gray-500 mt-1">
+                {user?.role === 'PATIENT' ? 'Patient' : user?.role === 'ADMIN' ? 'System Administrator' : 'Medical Professional'}
+              </p>
             </div>
             
             {/* Navigation Links */}
@@ -158,7 +174,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 </Link>
               </div>
               <div className="text-sm font-medium text-gray-700">
-                {user?.role === 'PATIENT' ? user?.name || 'Patient' : `Dr. ${user?.name || 'Doctor'}`}
+                {user?.role === 'PATIENT' ? user?.name || 'Patient' : user?.role === 'ADMIN' ? 'Administrator' : `Dr. ${user?.name || 'Doctor'}`}
               </div>
             </div>
           </header>
@@ -182,8 +198,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                       {user?.name ? user.name.charAt(0).toUpperCase() : 'D'}
                     </span>
                   </div>
-                  <h3 className="text-sm font-semibold text-gray-900">{user?.name || (user?.role === 'PATIENT' ? 'Patient' : 'Doctor')}</h3>
-                  <p className="text-xs text-gray-500 mt-1">{user?.role === 'PATIENT' ? 'Patient' : 'Medical Professional'}</p>
+                  <h3 className="text-sm font-semibold text-gray-900">{user?.name || (user?.role === 'PATIENT' ? 'Patient' : user?.role === 'ADMIN' ? 'Administrator' : 'Doctor')}</h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {user?.role === 'PATIENT' ? 'Patient' : user?.role === 'ADMIN' ? 'System Administrator' : 'Medical Professional'}
+                  </p>
                 </div>
                 
                 {/* Mobile Navigation */}

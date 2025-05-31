@@ -29,19 +29,17 @@ export default function Dashboard() {
         
         console.log('Dashboard: User role:', userRole);
         
-        // Redirect based on role
-        switch (userRole) {
-          case 'DOCTOR':
-            router.push('/dashboard/doctor');
-            break;
-          case 'PATIENT':
-            router.push('/dashboard/patient');
-            break;
-          case 'ADMIN':
-            router.push('/dashboard/admin');
-            break;
-          default:
-            throw new Error('Invalid user role');
+        // Redirect based on user role
+        if (userRole === 'DOCTOR') {
+          router.replace('/dashboard/doctor');
+        } else if (userRole === 'PATIENT') {
+          router.replace('/dashboard/patient');
+        } else if (userRole === 'ADMIN') {
+          router.replace('/dashboard/admin/users');
+        } else {
+          console.error('Unknown user role:', userRole);
+          setError('Unknown user role');
+          setLoading(false);
         }
       } catch (err) {
         console.error('Dashboard error:', err);

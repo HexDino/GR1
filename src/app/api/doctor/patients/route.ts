@@ -160,88 +160,15 @@ export async function GET(request: NextRequest) {
     } catch (dbError) {
       console.error('[DOCTOR PATIENTS API] Database error:', dbError);
       
-      // Fallback to mock data if database fails
-      console.log('[DOCTOR PATIENTS API] Using fallback mock data');
-      
-      let mockPatients = [
-        { 
-          id: '1',
-          name: 'Shyam Khanna',
-          email: 'shyam.khanna@example.com',
-          phone: '+1234567890',
-          avatar: null,
-          lastVisit: new Date().toISOString(),
-          lastVisitText: new Date().toLocaleDateString('en-US'),
-          lastDiagnosis: 'Heart Disease',
-          lastSymptoms: 'Chest pain, shortness of breath',
-          appointmentCount: 5,
-          lastStatus: 'COMPLETED',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+      // Return database error instead of using mock data
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Database error when fetching patients',
+          error: process.env.NODE_ENV !== 'production' ? String(dbError) : undefined,
         },
-        { 
-          id: '2',
-          name: 'James Cleveland',
-          email: 'james.cleveland@example.com',
-          phone: '+1987654321',
-          avatar: null,
-          lastVisit: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-          lastVisitText: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US'),
-          lastDiagnosis: 'Diabetes',
-          lastSymptoms: 'High blood sugar levels',
-          appointmentCount: 3,
-          lastStatus: 'COMPLETED',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        },
-        { 
-          id: '3',
-          name: 'Emma Wilson',
-          email: 'emma.wilson@example.com',
-          phone: '+1555666777',
-          avatar: null,
-          lastVisit: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-          lastVisitText: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US'),
-          lastDiagnosis: 'Asthma',
-          lastSymptoms: 'Breathing difficulties',
-          appointmentCount: 2,
-          lastStatus: 'COMPLETED',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }
-      ];
-      
-      // Apply search filter to mock data
-      if (search) {
-        mockPatients = mockPatients.filter(
-          patient => 
-            patient.name.toLowerCase().includes(search.toLowerCase()) ||
-            patient.email.toLowerCase().includes(search.toLowerCase()) ||
-            patient.phone.includes(search)
-        );
-      }
-
-      const limitedPatients = mockPatients.slice(offset, offset + limit);
-      
-      return NextResponse.json({
-        success: true,
-        patients: limitedPatients,
-        pagination: {
-          total: mockPatients.length,
-          limit,
-          offset,
-          page: Math.floor(offset / limit) + 1,
-          totalPages: Math.ceil(mockPatients.length / limit),
-          hasNext: offset + limit < mockPatients.length,
-          hasPrev: offset > 0
-        },
-        summary: {
-          total: mockPatients.length,
-          activePatients: mockPatients.filter(p => p.lastVisit && new Date(p.lastVisit) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length,
-          newPatients: mockPatients.filter(p => p.appointmentCount === 1).length
-        },
-        note: 'Using fallback data - database unavailable'
-      });
+        { status: 500 }
+      );
     }
 
   } catch (error) {
