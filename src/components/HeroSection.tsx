@@ -1,10 +1,27 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { AuthModal } from './AuthModal';
 
 export const HeroSection = () => {
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  
+  // Danh sách các chuyên khoa
+  const specialities = [
+    "Cardiology",
+    "Neurology",
+    "Orthopedics",
+    "Pediatrics",
+    "Dermatology",
+    "Ophthalmology",
+    "Gynecology",
+    "Urology",
+    "Psychiatry",
+    "Endocrinology"
+  ];
+
   return (
     <section className="relative py-16 md:pt-24 md:pb-20 overflow-hidden">
       <div className="container mx-auto px-4">
@@ -22,15 +39,15 @@ export const HeroSection = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-5">
-              <Link 
-                href="/appointment"
+              <button 
+                onClick={() => setIsAuthModalOpen(true)}
                 className="bg-purple-600 hover:bg-purple-700 text-white font-medium px-6 py-3 rounded-full inline-flex items-center transition duration-300"
               >
                 Book an appointment
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
-              </Link>
+              </button>
               
               <button 
                 className="bg-white hover:bg-gray-100 text-gray-800 font-medium px-6 py-3 rounded-full inline-flex items-center border border-gray-300 transition duration-300"
@@ -65,11 +82,21 @@ export const HeroSection = () => {
                   />
                 </div>
                 <div>
-                  <input
-                    type="text"
-                    placeholder="Speciality"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
+                  <div className="relative">
+                    <select
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white appearance-none"
+                    >
+                      <option value="">Select Speciality</option>
+                      {specialities.map((speciality) => (
+                        <option key={speciality} value={speciality}>{speciality}</option>
+                      ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
+                      <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                      </svg>
+                    </div>
+                  </div>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center mr-4">
@@ -173,6 +200,13 @@ export const HeroSection = () => {
           </div>
         </div>
       </div>
+      
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+        initialMode="signin" 
+      />
     </section>
   );
 }; 
