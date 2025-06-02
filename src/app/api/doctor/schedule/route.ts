@@ -98,11 +98,7 @@ export async function GET(req: NextRequest) {
         }
       },
       include: {
-        patientRelation: {
-          include: {
-            user: true
-          }
-        }
+        patient: true
       },
       orderBy: {
         date: 'asc'
@@ -112,7 +108,7 @@ export async function GET(req: NextRequest) {
     // Format the response
     const schedule = appointments.map(appointment => {
       // Get patient initials from name
-      const patientName = appointment.patientRelation?.user.name || 'Unknown Patient';
+      const patientName = appointment.patient?.name || 'Unknown Patient';
       const initials = patientName
         .split(' ')
         .map(part => part[0])

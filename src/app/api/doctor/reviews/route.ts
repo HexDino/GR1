@@ -60,17 +60,6 @@ export async function GET(request: NextRequest) {
             name: true,
             avatar: true,
           }
-        },
-        appointment: {
-          select: {
-            id: true,
-            date: true,
-          }
-        },
-        likedBy: {
-          select: {
-            userId: true,
-          }
         }
       }
     });
@@ -121,13 +110,8 @@ export async function GET(request: NextRequest) {
       isPinned: review.isPinned,
       createdAt: review.createdAt.toISOString(),
       patientId: review.userId,
-      patientName: review.user.name,
-      patientAvatar: review.user.avatar,
-      appointmentId: review.appointmentId,
-      appointmentDate: review.appointment?.date 
-        ? review.appointment.date.toISOString() 
-        : null,
-      likesCount: review.likedBy.length
+      patientName: review.user?.name || 'Anonymous',
+      patientAvatar: review.user?.avatar
     }));
     
     return NextResponse.json({

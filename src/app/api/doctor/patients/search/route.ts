@@ -91,18 +91,29 @@ export async function GET(req: NextRequest) {
             phone: true,
             avatar: true
           }
-        },
-        appointments: {
+        }
+      }
+    });
+    
+    // Get last appointment for each patient
+    const patientLastAppointments = await Promise.all(
+      patients.map(async (patient) => {
+        const lastAppointment = await prisma.appointment.findFirst({
           where: {
+            patientId: patient.id,
             doctorId: doctor.id
           },
           orderBy: {
             date: 'desc'
-          },
-          take: 1
-        }
-      }
-    });
+          }
+        });
+        
+        return {
+          ...patient,
+          lastAppointment
+        };
+      })
+    );
     
     // Get next upcoming appointment for each patient
     const patientNextAppointments = await prisma.appointment.findMany({
@@ -125,9 +136,9 @@ export async function GET(req: NextRequest) {
     });
     
     // Format response
-    const formattedPatients = patients.map(patient => {
-      // Find the last appointment to get the condition
-      const lastAppointment = patient.appointments[0];
+    const formattedPatients = patientLastAppointments.map(patient => {
+      // Get the condition from last appointment
+      const lastAppointment = patient.lastAppointment;
       const condition = lastAppointment 
         ? lastAppointment.diagnosis || lastAppointment.symptoms || 'General Checkup'
         : 'Unknown';

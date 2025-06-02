@@ -78,7 +78,13 @@ export default function LoginPage() {
         console.log('Login successful, user role:', data.data.user.role);
         
         // Redirect based on user role
-        const redirectPath = `/dashboard/${data.data.user.role.toLowerCase()}`;
+        let redirectPath = `/dashboard/${data.data.user.role.toLowerCase()}`;
+        
+        // For admin users, redirect to doctors page
+        if (data.data.user.role === 'ADMIN') {
+          redirectPath = '/dashboard/admin/doctors';
+        }
+        
         console.log('Redirecting to:', redirectPath);
         
         // Add a small delay to ensure cookies are set

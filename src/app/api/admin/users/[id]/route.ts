@@ -117,12 +117,7 @@ export async function GET(
         createdAt: true,
         updatedAt: true,
         avatar: true,
-        doctor: {
-          include: {
-            department: true,
-            hospital: true,
-          }
-        },
+        doctor: true,
         patient: true,
         profile: true,
         sessions: {

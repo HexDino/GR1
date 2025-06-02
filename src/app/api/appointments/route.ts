@@ -72,29 +72,8 @@ export async function GET(req: NextRequest) {
     const appointments = await prisma.appointment.findMany({
       where: filter,
       include: {
-        patientRelation: {
-          include: {
-            user: {
-              select: {
-                name: true,
-                email: true,
-                avatar: true
-              }
-            }
-          }
-        },
-        doctorRelation: {
-          include: {
-            user: {
-              select: {
-                name: true,
-                email: true,
-                avatar: true
-              }
-            },
-            department: true
-          }
-        }
+        patient: true,
+        doctor: true
       },
       orderBy: {
         date: 'desc'
@@ -102,15 +81,18 @@ export async function GET(req: NextRequest) {
     });
     
     // Format appointments
-    const formattedAppointments = appointments.map(appointment => ({
+    const formattedAppointments = appointments.map(appointment => {
+      const patientDetails = appointment.patient;
+      const doctorDetails = appointment.doctor;
+      
+      return {
       id: appointment.id,
-      patientName: appointment.patientRelation?.user.name,
-      patientEmail: appointment.patientRelation?.user.email,
-      patientAvatar: appointment.patientRelation?.user.avatar,
-      doctorName: appointment.doctorRelation?.user.name,
-      doctorSpecialty: appointment.doctorRelation?.specialization,
-      doctorDepartment: appointment.doctorRelation?.department?.name || null,
-      doctorAvatar: appointment.doctorRelation?.user.avatar,
+        patientName: patientDetails?.name,
+        patientEmail: patientDetails?.email,
+        patientAvatar: patientDetails?.avatar,
+        doctorName: doctorDetails?.name,
+        doctorSpecialty: "Specialist", // Fixed value since we can't get specialization directly
+        doctorAvatar: doctorDetails?.avatar,
       date: appointment.date.toISOString(),
       formattedDate: appointment.date.toLocaleDateString(),
       formattedTime: appointment.date.toLocaleTimeString([], { 
@@ -123,7 +105,8 @@ export async function GET(req: NextRequest) {
       symptoms: appointment.symptoms,
       diagnosis: appointment.diagnosis,
       notes: appointment.notes
-    }));
+      };
+    });
     
     return NextResponse.json(formattedAppointments);
   } catch (error) {
@@ -247,6 +230,14 @@ export async function POST(req: NextRequest) {
       );
     }
     
+    // Kiểm tra doctor có available không
+    if (!doctor.isAvailable) {
+      return NextResponse.json(
+        { error: 'Doctor is not available for appointments' },
+        { status: 400 }
+      );
+    }
+    
     // Check if patient exists
     const patient = await prisma.patient.findUnique({
       where: { id: patientId }
@@ -259,32 +250,8 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Check doctor availability at the requested time
-    // Get the day of week (0-6)
-    const dayOfWeek = appointmentDate.getDay();
-    
-    // Get the time in HH:MM format
-    const hours = appointmentDate.getHours().toString().padStart(2, '0');
-    const minutes = appointmentDate.getMinutes().toString().padStart(2, '0');
-    const appointmentTime = `${hours}:${minutes}`;
-    
-    // Check if doctor has a schedule for this day
-    const doctorSchedule = await prisma.doctorSchedule.findFirst({
-      where: {
-        doctorId: doctorId,
-        weekday: dayOfWeek,
-        isAvailable: true,
-        startTime: { lte: appointmentTime },
-        endTime: { gte: appointmentTime }
-      }
-    });
-    
-    if (!doctorSchedule) {
-      return NextResponse.json(
-        { error: 'Doctor is not available at the requested time' },
-        { status: 400 }
-      );
-    }
+    // Đơn giản hóa logic kiểm tra lịch - chỉ kiểm tra xung đột lịch hẹn
+    // thay vì kiểm tra doctorSchedule
     
     // Check for scheduling conflicts
     // Get start and end time of the appointment (assuming 1 hour duration)
@@ -330,7 +297,11 @@ export async function POST(req: NextRequest) {
         userId: doctor.userId,
         type: 'APPOINTMENT_CONFIRMATION',
         title: 'New Appointment Request',
-        message: `You have a new appointment request on ${appointmentDate.toLocaleDateString()} at ${appointmentTime}.`,
+        message: `You have a new appointment request on ${appointmentDate.toLocaleDateString()} at ${appointmentDate.toLocaleTimeString([], { 
+          hour: 'numeric', 
+          minute: '2-digit',
+          hour12: true
+        })}.`,
         isRead: false
       }
     });
@@ -341,7 +312,11 @@ export async function POST(req: NextRequest) {
         userId: patient.userId,
         type: 'APPOINTMENT_CONFIRMATION',
         title: 'Appointment Requested',
-        message: `Your appointment request for ${appointmentDate.toLocaleDateString()} at ${appointmentTime} has been submitted and is awaiting confirmation.`,
+        message: `Your appointment request for ${appointmentDate.toLocaleDateString()} at ${appointmentDate.toLocaleTimeString([], { 
+          hour: 'numeric', 
+          minute: '2-digit',
+          hour12: true
+        })} has been submitted and is awaiting confirmation.`,
         isRead: false
       }
     });

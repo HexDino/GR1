@@ -24,23 +24,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         patientId: userId
       },
       include: {
-        doctorRelation: {
-          include: {
-            user: {
-              select: {
-                name: true,
-                avatar: true,
-                email: true,
-                phone: true
-              }
-            },
-            department: {
-              select: {
-                name: true
-              }
-            }
-          }
-        }
+        doctor: true
       }
     });
 
@@ -58,11 +42,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     
     const formattedAppointment = {
       id: appointment.id,
-      doctorName: appointment.doctorRelation?.user?.name || 'Unknown Doctor',
-      doctorSpecialty: appointment.doctorRelation?.specialization || appointment.doctorRelation?.department?.name || 'General',
-      doctorAvatar: appointment.doctorRelation?.user?.avatar,
-      doctorEmail: appointment.doctorRelation?.user?.email,
-      doctorPhone: appointment.doctorRelation?.user?.phone,
+      doctorName: appointment.doctor?.name || 'Unknown Doctor',
+      doctorSpecialty: "Specialist", // Fixed value as we can't get specialization directly
+      doctorAvatar: appointment.doctor?.avatar,
+      doctorEmail: appointment.doctor?.email,
+      doctorPhone: appointment.doctor?.phone,
       date: appointment.date.toISOString(),
       time: timeString,
       status: appointment.status,

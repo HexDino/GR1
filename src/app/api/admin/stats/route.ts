@@ -12,71 +12,75 @@ export async function GET(req: NextRequest) {
       throw ApiError.unauthorized('Not authenticated');
     }
     
-    // For now, allow any authenticated user to access admin stats
-    // In production you should check: if (userRole !== 'ADMIN')
-    
-    // Get today's date at midnight for filtering today's data
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    // Get tomorrow's date at midnight
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    
-    // Count total users by role
-    const totalUsers = await prisma.user.count();
-    const totalDoctors = await prisma.user.count({
-      where: { role: 'DOCTOR' }
-    });
-    const totalPatients = await prisma.user.count({
-      where: { role: 'PATIENT' }
-    });
-    const totalAdmins = await prisma.user.count({
-      where: { role: 'ADMIN' }
-    });
-    
-    // Count appointments
-    const totalAppointments = await prisma.appointment.count();
-    const todayAppointments = await prisma.appointment.count({
-      where: {
-        date: {
-          gte: today,
-          lt: tomorrow
-        }
-      }
-    });
-    
-    // Count departments
-    const totalDepartments = await prisma.department.count();
-    
-    // Count hospitals/clinics
-    const totalHospitals = await prisma.hospital.count();
-    
-    // Count total prescriptions
-    const totalPrescriptions = await prisma.prescription.count();
-    
-    // Count total reviews
-    const totalReviews = await prisma.doctorReview.count();
-    
-    // Count notifications
-    const totalNotifications = await prisma.notification.count();
-    const unreadNotifications = await prisma.notification.count({
-      where: { isRead: false }
-    });
-    
+    // Only allow ADMIN users to access this endpoint
+    if (userRole !== 'ADMIN') {
+      throw ApiError.forbidden('You do not have permission to access this resource');
+    }
+
+    // Get basic stats counts in parallel
+    const [
+      totalUsers,
+      totalDoctors,
+      totalPatients,
+      totalAppointments,
+      completedAppointments,
+      pendingAppointments,
+      cancelledAppointments,
+      totalPrescriptions,
+      // Removed department count as it doesn't exist
+    ] = await Promise.all([
+      // Count users
+      prisma.user.count(),
+      
+      // Count doctors
+      prisma.doctor.count(),
+      
+      // Count patients
+      prisma.patient.count(),
+      
+      // Count appointments
+      prisma.appointment.count(),
+      
+      // Count completed appointments
+      prisma.appointment.count({
+        where: { status: 'COMPLETED' }
+      }),
+      
+      // Count pending appointments
+      prisma.appointment.count({
+        where: { status: 'PENDING' }
+      }),
+      
+      // Count cancelled appointments
+      prisma.appointment.count({
+        where: { status: 'CANCELLED' }
+      }),
+      
+      // Count prescriptions
+      prisma.prescription.count(),
+      
+      // Count departments - removed as Department model doesn't exist
+      // prisma.department.count(),
+    ]);
+
     return NextResponse.json({
-      users: totalUsers,
-      doctors: totalDoctors,
-      patients: totalPatients,
-      admins: totalAdmins,
-      appointments: totalAppointments,
-      todayAppointments,
-      departments: totalDepartments,
-      hospitals: totalHospitals,
-      prescriptions: totalPrescriptions,
-      reviews: totalReviews,
-      notifications: totalNotifications,
-      unreadNotifications
+      success: true,
+      stats: {
+        users: {
+          total: totalUsers,
+          doctors: totalDoctors,
+          patients: totalPatients
+        },
+        appointments: {
+          total: totalAppointments,
+          completed: completedAppointments,
+          pending: pendingAppointments,
+          cancelled: cancelledAppointments
+        },
+        prescriptions: totalPrescriptions,
+        // Removed departments count
+        // departments: totalDepartments,
+      }
     });
     
   } catch (error) {
@@ -96,7 +100,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        message: 'Failed to fetch admin statistics',
+        message: 'Failed to fetch admin stats',
         error: process.env.NODE_ENV !== 'production' ? String(error) : undefined,
       },
       { status: 500 }

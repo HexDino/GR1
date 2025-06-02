@@ -85,11 +85,6 @@ export async function GET(req: NextRequest) {
           avatar: true,
           doctor: {
             select: {
-              department: {
-                select: {
-                  name: true
-                }
-              }
             }
           },
           sessions: {
@@ -121,7 +116,6 @@ export async function GET(req: NextRequest) {
         createdAt: user.createdAt,
         phone: user.phone,
         lastActive: user.sessions[0]?.updatedAt,
-        department: user.doctor?.department?.name,
         profileImage: user.avatar
       };
     });

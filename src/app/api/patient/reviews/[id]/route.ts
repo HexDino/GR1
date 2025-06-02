@@ -23,40 +23,29 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       where: {
         id: reviewId,
         userId: userId
-      },
-      include: {
-        doctor: {
-          include: {
-            user: {
-              select: {
-                name: true,
-                avatar: true
-              }
-            }
-          }
-        },
-        appointment: {
-          select: {
-            id: true,
-            date: true
-          }
-        }
       }
     });
 
     if (!review) {
       throw ApiError.notFound('Review not found');
     }
+    
+    // Fetch doctor information separately
+    const doctor = await prisma.doctor.findUnique({
+      where: { id: review.doctorId },
+      include: {
+        user: true
+      }
+    });
 
     // Format the response
     const formattedReview = {
       id: review.id,
       rating: review.rating,
       reviewText: review.comment,
-      doctorName: review.doctor.user.name,
-      doctorSpecialty: review.doctor.specialization,
-      doctorAvatar: review.doctor.user.avatar,
-      appointmentDate: review.appointment?.date?.toISOString(),
+      doctorName: doctor?.user?.name || 'Unknown Doctor',
+      doctorSpecialty: doctor?.specialization || 'Specialist',
+      doctorAvatar: doctor?.user?.avatar,
       createdAt: review.createdAt.toISOString(),
       likes: 0, // Placeholder for future feature
       isHelpful: false, // Placeholder for future feature
@@ -106,7 +95,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 
     const { id: reviewId } = await params;
-    const { rating, comment } = await req.json();
+    const { rating, comment, images } = await req.json();
 
     // Validate input
     if (!rating || rating < 1 || rating > 5) {
@@ -134,19 +123,32 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       where: { id: reviewId },
       data: {
         rating: parseInt(rating),
-        comment: comment.trim()
-      },
+        comment: comment.trim(),
+        images: images || existingReview.images // Keep existing images if not provided
+      }
+    });
+    
+    // Update doctor's average rating
+    const doctorId = existingReview.doctorId;
+    const avgRating = await prisma.doctorReview.aggregate({
+      where: { doctorId },
+      _avg: { rating: true },
+      _count: { rating: true }
+    });
+    
+    await prisma.doctor.update({
+      where: { id: doctorId },
+      data: {
+        rating: avgRating._avg.rating || 0,
+        totalReviews: avgRating._count.rating
+      }
+    });
+    
+    // Get doctor information
+    const doctor = await prisma.doctor.findUnique({
+      where: { id: updatedReview.doctorId },
       include: {
-        doctor: {
-          include: {
-            user: {
-              select: {
-                name: true,
-                avatar: true
-              }
-            }
-          }
-        }
+        user: true
       }
     });
 
@@ -157,7 +159,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         id: updatedReview.id,
         rating: updatedReview.rating,
         comment: updatedReview.comment,
-        doctorName: updatedReview.doctor.user.name,
+        images: updatedReview.images,
+        doctorName: doctor?.user?.name || 'Unknown Doctor',
         updatedAt: updatedReview.updatedAt.toISOString()
       }
     });
@@ -214,10 +217,28 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     if (!existingReview) {
       throw ApiError.notFound('Review not found');
     }
+    
+    // Store doctorId before deleting the review
+    const doctorId = existingReview.doctorId;
 
     // Delete the review
     await prisma.doctorReview.delete({
       where: { id: reviewId }
+    });
+    
+    // Update doctor's average rating
+    const avgRating = await prisma.doctorReview.aggregate({
+      where: { doctorId },
+      _avg: { rating: true },
+      _count: { rating: true }
+    });
+    
+    await prisma.doctor.update({
+      where: { id: doctorId },
+      data: {
+        rating: avgRating._avg.rating || 0,
+        totalReviews: avgRating._count.rating
+      }
     });
 
     return NextResponse.json({

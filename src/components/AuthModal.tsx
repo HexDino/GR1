@@ -140,7 +140,13 @@ export const AuthModal = ({ isOpen, onClose, initialMode }: AuthModalProps) => {
         setTimeout(() => {
           // Chuyển hướng dựa theo role
           const userRole = data.data.user.role.toLowerCase();
-          const dashboardUrl = `/dashboard/${userRole}`;
+          let dashboardUrl = `/dashboard/${userRole}`;
+          
+          // For admin users, redirect to doctors page
+          if (data.data.user.role === 'ADMIN') {
+            dashboardUrl = '/dashboard/admin/doctors';
+          }
+          
           console.log('Redirecting to dashboard:', dashboardUrl);
           
           // Thực hiện chuyển hướng

@@ -35,7 +35,7 @@ export default function Dashboard() {
         } else if (userRole === 'PATIENT') {
           router.replace('/dashboard/patient');
         } else if (userRole === 'ADMIN') {
-          router.replace('/dashboard/admin/users');
+          router.replace('/dashboard/admin/doctors');
         } else {
           console.error('Unknown user role:', userRole);
           setError('Unknown user role');

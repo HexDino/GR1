@@ -122,4 +122,5 @@ export const createReviewSchema = z.object({
   rating: z.number().min(1).max(5),
   comment: z.string().optional(),
   isAnonymous: z.boolean().optional(),
+  images: z.array(z.string()).optional(),
 }); 

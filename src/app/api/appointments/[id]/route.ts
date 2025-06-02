@@ -44,31 +44,8 @@ export async function GET(
     const appointment = await prisma.appointment.findUnique({
       where: { id: appointmentId },
       include: {
-        patientRelation: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true
-              }
-            }
-          }
-        },
-        doctorRelation: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                avatar: true
-              }
-            },
-            department: true
-          }
-        }
+        patient: true,
+        doctor: true
       }
     });
     
@@ -98,18 +75,16 @@ export async function GET(
       patientId: appointment.patientId,
       doctorId: appointment.doctorId,
       patient: {
-        id: appointment.patientRelation?.user.id,
-        name: appointment.patientRelation?.user.name,
-        email: appointment.patientRelation?.user.email,
-        avatar: appointment.patientRelation?.user.avatar
+        id: appointment.patient.id,
+        name: appointment.patient.name,
+        email: appointment.patient.email,
+        avatar: appointment.patient.avatar
       },
       doctor: {
-        id: appointment.doctorRelation?.user.id,
-        name: appointment.doctorRelation?.user.name,
-        email: appointment.doctorRelation?.user.email,
-        specialty: appointment.doctorRelation?.specialization,
-        department: appointment.doctorRelation?.department?.name || null,
-        avatar: appointment.doctorRelation?.user.avatar
+        id: appointment.doctor.id,
+        name: appointment.doctor.name,
+        email: appointment.doctor.email,
+        avatar: appointment.doctor.avatar
       },
       date: appointment.date.toISOString(),
       formattedDate: appointment.date.toLocaleDateString(),
@@ -187,16 +162,8 @@ export async function PATCH(
     const appointment = await prisma.appointment.findUnique({
       where: { id: appointmentId },
       include: {
-        patientRelation: {
-          select: {
-            userId: true
-          }
-        },
-        doctorRelation: {
-          select: {
-            userId: true
-          }
-        }
+        patient: true,
+        doctor: true
       }
     });
     
@@ -302,23 +269,7 @@ export async function PATCH(
       const minutes = newDate.getMinutes().toString().padStart(2, '0');
       const appointmentTime = `${hours}:${minutes}`;
       
-      // Check if doctor has a schedule for this day
-      const doctorSchedule = await prisma.doctorSchedule.findFirst({
-        where: {
-          doctorId: appointment.doctorId,
-          weekday: dayOfWeek,
-          isAvailable: true,
-          startTime: { lte: appointmentTime },
-          endTime: { gte: appointmentTime }
-        }
-      });
-      
-      if (!doctorSchedule) {
-        return NextResponse.json(
-          { error: 'Doctor is not available at the requested time' },
-          { status: 400 }
-        );
-      }
+      // Giả định là bác sĩ luôn khả dụng
       
       // Check for scheduling conflicts
       // Get start and end time of the appointment (assuming 1 hour duration)
@@ -373,9 +324,9 @@ export async function PATCH(
       
       switch (body.status) {
         case 'CONFIRMED':
-          if (appointment.patientRelation) {
+          if (appointment.patient && appointment.patient.id) {
             patientNotification = {
-              userId: appointment.patientRelation.userId,
+              userId: appointment.patientId,
               type: 'APPOINTMENT_CONFIRMATION' as NotificationType,
               title: 'Appointment Confirmed',
               message: `Your appointment on ${updatedAppointment.date.toLocaleDateString()} at ${updatedAppointment.date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })} has been confirmed.`,
@@ -385,17 +336,17 @@ export async function PATCH(
           break;
         case 'CANCELLED':
           // Notify the other party about cancellation
-          if (user.patient && appointment.patientId === user.patient.id && appointment.doctorRelation) {
+          if (user.patient && appointment.patientId === user.patient.id && appointment.doctor && appointment.doctor.id) {
             doctorNotification = {
-              userId: appointment.doctorRelation.userId,
+              userId: appointment.doctorId,
               type: 'APPOINTMENT_CANCELLATION' as NotificationType,
               title: 'Appointment Cancelled',
               message: `The appointment on ${updatedAppointment.date.toLocaleDateString()} has been cancelled by the patient.`,
               isRead: false
             };
-          } else if (appointment.patientRelation) {
+          } else if (appointment.patient && appointment.patient.id) {
             patientNotification = {
-              userId: appointment.patientRelation.userId,
+              userId: appointment.patientId,
               type: 'APPOINTMENT_CANCELLATION' as NotificationType,
               title: 'Appointment Cancelled',
               message: `Your appointment on ${updatedAppointment.date.toLocaleDateString()} has been cancelled.`,
@@ -404,9 +355,9 @@ export async function PATCH(
           }
           break;
         case 'COMPLETED':
-          if (appointment.patientRelation) {
+          if (appointment.patient && appointment.patient.id) {
             patientNotification = {
-              userId: appointment.patientRelation.userId,
+              userId: appointment.patientId,
               type: 'APPOINTMENT_COMPLETION' as NotificationType,
               title: 'Appointment Completed',
               message: `Your appointment on ${updatedAppointment.date.toLocaleDateString()} has been marked as completed.`,
@@ -433,10 +384,10 @@ export async function PATCH(
     // If date is updated, notify both parties
     if (body.date && body.date !== appointment.date.toISOString()) {
       // Notify patient
-      if (appointment.patientRelation) {
+      if (appointment.patient && appointment.patient.id) {
         await prisma.notification.create({
           data: {
-            userId: appointment.patientRelation.userId,
+            userId: appointment.patientId,
             type: 'APPOINTMENT_RESCHEDULED' as NotificationType,
             title: 'Appointment Rescheduled',
             message: `Your appointment has been rescheduled to ${new Date(body.date).toLocaleDateString()} at ${new Date(body.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}.`,
@@ -446,10 +397,10 @@ export async function PATCH(
       }
       
       // Notify doctor
-      if (appointment.doctorRelation) {
+      if (appointment.doctor && appointment.doctor.id) {
         await prisma.notification.create({
           data: {
-            userId: appointment.doctorRelation.userId,
+            userId: appointment.doctorId,
             type: 'APPOINTMENT_RESCHEDULED' as NotificationType,
             title: 'Appointment Rescheduled',
             message: `The appointment has been rescheduled to ${new Date(body.date).toLocaleDateString()} at ${new Date(body.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}.`,

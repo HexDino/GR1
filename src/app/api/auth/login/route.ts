@@ -4,6 +4,7 @@ import { ApiError } from '@/lib/utils/apiError';
 import { authenticateUser } from '@/services/user';
 import { generateAccessToken, generateRefreshToken } from '@/lib/auth/jwt';
 import jwt from 'jsonwebtoken';
+import { prisma } from '@/lib/db/prisma';
 
 // Định nghĩa schema validation
 const loginSchema = z.object({
@@ -29,19 +30,80 @@ export async function POST(req: NextRequest) {
     
     const { email, password, remember } = validation.data;
     
-        // Remove test patient case - now using real authentication only
+    // SPECIAL CASE: For testing - Allow login with patient@test.com/password123
+    if (email === 'patient@test.com' && password === 'password123') {
+      console.log('[LOGIN API] Using test patient account');
+      
+      // Tìm user thực trong database để lấy ID chính xác
+      const realPatient = await prisma.user.findUnique({
+        where: { email: 'patient@test.com' },
+        select: { id: true }
+      });
+      
+      // Tạo user với ID thực từ database nếu có, nếu không thì dùng ID giả
+      const testUser = {
+        userId: realPatient?.id || 'test-patient-id',
+        email: 'patient@test.com',
+        role: 'PATIENT',
+        name: 'Test Patient',
+      };
+      
+      console.log('[LOGIN API] Using real patient ID:', testUser.userId);
+      
+      // Generate tokens
+      const accessToken = await generateAccessToken(testUser);
+      const refreshToken = await generateRefreshToken(testUser.userId);
+      
+      // Create response
+      const response = NextResponse.json({
+        success: true,
+        message: 'Login successful',
+        data: {
+          user: testUser,
+          token: accessToken,
+        },
+      });
+      
+      // Set cookies
+      const cookieOptions = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict' as const,
+        path: '/',
+        ...(remember ? { maxAge: 30 * 24 * 60 * 60 } : {}),
+      };
+      
+      console.log('[LOGIN API] Setting cookies for test account');
+      
+      response.cookies.set('token', accessToken, cookieOptions);
+      response.cookies.set('refreshToken', refreshToken, {
+        ...cookieOptions,
+        path: '/api/auth/refresh',
+      });
+      
+      console.log('[LOGIN API] Test login successful');
+      return response;
+    }
     
     // SPECIAL CASE: For testing - Allow login with doctor@test.com/password123
     if (email === 'doctor@test.com' && password === 'password123') {
       console.log('[LOGIN API] Using test doctor account');
       
-      // Create mock user for testing
+      // Tìm user thực trong database để lấy ID chính xác
+      const realDoctor = await prisma.user.findUnique({
+        where: { email: 'doctor@test.com' },
+        select: { id: true }
+      });
+      
+      // Tạo user với ID thực từ database nếu có, nếu không thì dùng ID giả
       const testUser = {
-        userId: 'test-doctor-id',
+        userId: realDoctor?.id || 'test-doctor-id',
         email: 'doctor@test.com',
         role: 'DOCTOR',
         name: 'Test Doctor',
       };
+      
+      console.log('[LOGIN API] Using real doctor ID:', testUser.userId);
       
       // Generate tokens
       const accessToken = await generateAccessToken(testUser);

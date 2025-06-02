@@ -7,74 +7,176 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User model
 model User {
-  id                  String    @id @default(cuid())
-  email               String    @unique
-  password            String? // Nullable for social login
+  id                  String              @id @default(cuid())
+  email               String              @unique
+  password            String?
   name                String
   phone               String?
-  role                UserRole  @default(PATIENT)
-  isActive            Boolean   @default(true)
-  isEmailVerified     Boolean   @default(false)
-  isPhoneVerified     Boolean   @default(false)
-  failedLoginAttempts Int       @default(0)
+  role                UserRole            @default(PATIENT)
+  isActive            Boolean             @default(true)
+  isEmailVerified     Boolean             @default(false)
+  isPhoneVerified     Boolean             @default(false)
+  failedLoginAttempts Int                 @default(0)
   lastFailedLogin     DateTime?
-  accountLocked       Boolean   @default(false)
+  accountLocked       Boolean             @default(false)
   lockUntil           DateTime?
-  twoFactorEnabled    Boolean   @default(false)
+  twoFactorEnabled    Boolean             @default(false)
   twoFactorSecret     String?
-  avatar              String? // Profile picture URL
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-
-  // Social login info
-  socialLogins SocialLogin[]
-
-  // Relations
-  profile             Profile?
-  doctor              Doctor?
-  patient             Patient?
-  appointments        Appointment[]       @relation("PatientAppointments")
-  doctorAppointments  Appointment[]       @relation("DoctorAppointments")
-  medicalRecords      MedicalRecord[]
-  healthMetrics       HealthMetric[]
-  healthGoals         HealthGoal[]
+  avatar              String?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  doctorAppointments  Appointment[]       @relation("UserDoctorAppointments")
+  appointments        Appointment[]       @relation("UserPatientAppointments")
   chats               Chat[]
+  doctor              Doctor?
   doctorReviews       DoctorReview[]      @relation("UserReviews")
-  receivedReviews     DoctorReview[]      @relation("DoctorReviews")
-  notifications       Notification[]
+  healthGoals         HealthGoal[]
+  healthMetrics       HealthMetric[]
   healthReports       HealthReport[]
-  sessions            Session[]
   loginHistory        LoginHistory[]
+  medicalRecords      MedicalRecord[]
+  notifications       Notification[]
+  patient             Patient?
+  issuedPrescriptions Prescription[]      @relation("DoctorPrescriptions")
+  prescriptions       Prescription[]      @relation("PatientPrescriptions")
+  profile             Profile?
+  sessions            Session[]
   permissions         UserPermission[]
   verificationTokens  VerificationToken[]
-  prescriptions       Prescription[]      @relation("PatientPrescriptions")
-  issuedPrescriptions Prescription[]      @relation("DoctorPrescriptions")
+  reviewReports       ReviewReport[]      @relation("UserReports")
 }
 
-// Social Login model
-model SocialLogin {
-  id           String         @id @default(cuid())
-  userId       String
-  user         User           @relation(fields: [userId], references: [id])
-  provider     SocialProvider
-  providerId   String // ID from the provider
-  email        String
-  accessToken  String?
-  refreshToken String?
-  expiresAt    DateTime?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-
-  @@unique([provider, providerId])
+model Medicine {
+  id                   String             @id @default(cuid())
+  name                 String
+  genericName          String?
+  description          String?
+  dosageForm           String
+  strength             String
+  manufacturer         String?
+  prescriptionRequired Boolean            @default(true)
+  sideEffects          String?
+  warnings             String?
+  interactions         String?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  prescriptionItems    PrescriptionItem[]
 }
 
-// Session model for managing user sessions
+model Prescription {
+  id            String             @id @default(cuid())
+  patientId     String
+  doctorId      String
+  appointmentId String?
+  diagnosis     String
+  notes         String?
+  validUntil    DateTime?
+  status        PrescriptionStatus @default(ACTIVE)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  appointment   Appointment?       @relation(fields: [appointmentId], references: [id])
+  doctor        User               @relation("DoctorPrescriptions", fields: [doctorId], references: [id])
+  patient       User               @relation("PatientPrescriptions", fields: [patientId], references: [id])
+  items         PrescriptionItem[]
+}
+
+model PrescriptionItem {
+  id             String       @id @default(cuid())
+  prescriptionId String
+  medicineId     String
+  dosage         String
+  frequency      String
+  duration       String
+  instructions   String?
+  quantity       Int
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  medicine       Medicine     @relation(fields: [medicineId], references: [id])
+  prescription   Prescription @relation(fields: [prescriptionId], references: [id])
+}
+
+model Appointment {
+  id            String            @id @default(cuid())
+  patientId     String
+  doctorId      String
+  date          DateTime
+  status        AppointmentStatus @default(PENDING)
+  type          AppointmentType   @default(IN_PERSON)
+  symptoms      String?
+  diagnosis     String?
+  notes         String?
+  followUpDate  DateTime?
+  cancelReason  String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  doctor        User              @relation("UserDoctorAppointments", fields: [doctorId], references: [id])
+  patient       User              @relation("UserPatientAppointments", fields: [patientId], references: [id])
+  prescriptions Prescription[]
+  reviews       DoctorReview[]
+}
+
+model Doctor {
+  id                 String             @id @default(cuid())
+  userId             String             @unique
+  specialization     String
+  license            String
+  licenseExpiry      DateTime
+  verificationStatus VerificationStatus @default(PENDING)
+  hospitalId         String?
+  departmentId       String?
+  experience         Int?
+  bio                String?
+  education          Json?
+  certificates       Json?
+  rating             Float?
+  totalReviews       Int                @default(0)
+  consultationFee    Decimal?
+  isAvailable        Boolean            @default(true)
+  imageUrl           String?
+  galleryImages      String[]
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  user               User               @relation(fields: [userId], references: [id])
+  reviews            DoctorReview[]
+}
+
+model Patient {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  dateOfBirth  DateTime?
+  gender       String?
+  bloodType    String?
+  allergies    String?
+  profileImage String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model DoctorReview {
+  id          String   @id @default(cuid())
+  rating      Int
+  comment     String?
+  isAnonymous Boolean  @default(false)
+  isPinned    Boolean  @default(false)
+  images      String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String
+  doctorId    String
+  appointmentId String?
+  user        User     @relation("UserReviews", fields: [userId], references: [id], onDelete: Cascade)
+  doctor      Doctor   @relation(fields: [doctorId], references: [id])
+  appointment Appointment? @relation(fields: [appointmentId], references: [id])
+  reports     ReviewReport[]
+
+  @@unique([userId, doctorId])
+}
+
 model Session {
   id           String   @id @default(cuid())
   userId       String
-  user         User     @relation(fields: [userId], references: [id])
   token        String   @unique
   refreshToken String?  @unique
   expiresAt    DateTime
@@ -83,74 +185,12 @@ model Session {
   userAgent    String?
   ipAddress    String?
   isValid      Boolean  @default(true)
+  user         User     @relation(fields: [userId], references: [id])
 }
 
-// Login History model
-model LoginHistory {
-  id           String      @id @default(cuid())
-  userId       String
-  user         User        @relation(fields: [userId], references: [id])
-  ipAddress    String
-  userAgent    String
-  status       LoginStatus
-  failedReason String?
-  createdAt    DateTime    @default(now())
-}
-
-// Verification Token model for email/phone verification
-model VerificationToken {
-  id        String    @id @default(cuid())
-  userId    String
-  user      User      @relation(fields: [userId], references: [id])
-  token     String    @unique
-  type      TokenType
-  expiresAt DateTime
-  createdAt DateTime  @default(now())
-}
-
-// Permission model for fine-grained access control
-model Permission {
-  id              String            @id @default(cuid())
-  name            String            @unique
-  description     String?
-  action          String            @unique // e.g., "read:users", "create:appointment"
-  resource        String            // e.g., "users", "appointments"
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  userPermissions UserPermission[]
-  rolePermissions RolePermission[]
-}
-
-// User Permission mapping
-model UserPermission {
-  id           String     @id @default(cuid())
-  userId       String
-  permissionId String
-  user         User       @relation(fields: [userId], references: [id])
-  permission   Permission @relation(fields: [permissionId], references: [id])
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-
-  @@unique([userId, permissionId])
-}
-
-// Add RolePermission model
-model RolePermission {
-  id           String     @id @default(cuid())
-  role         UserRole
-  permissionId String
-  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-
-  @@unique([role, permissionId])
-}
-
-// Profile model
 model Profile {
   id             String    @id @default(cuid())
   userId         String    @unique
-  user           User      @relation(fields: [userId], references: [id])
   dateOfBirth    DateTime?
   gender         Gender?
   address        String?
@@ -163,292 +203,166 @@ model Profile {
   bio            String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+  user           User      @relation(fields: [userId], references: [id])
 }
 
-// Doctor model enhanced
-model Doctor {
-  id                 String             @id @default(cuid())
-  userId             String             @unique
-  user               User               @relation(fields: [userId], references: [id])
-  specialization     String
-  license            String
-  licenseExpiry      DateTime
-  verificationStatus VerificationStatus @default(PENDING)
-  hospital           Hospital?          @relation(fields: [hospitalId], references: [id])
-  hospitalId         String?
-  department         Department?        @relation(fields: [departmentId], references: [id])
-  departmentId       String?
-  experience         Int?
-  bio                String?
-  education          Json? // Array of education history
-  certificates       Json? // Array of certificates
-  workingHours       WorkingHours[]
-  rating             Float? // Average rating
-  totalReviews       Int                @default(0)
-  consultationFee    Decimal?
-  isAvailable        Boolean            @default(true)
-  schedule           DoctorSchedule[]
-  appointments       Appointment[]      @relation("Appointment_doctorId_Doctor_fkey")
-  imageUrl           String? // Main profile image
-  galleryImages      String[] // Array of additional images
-  reviews            DoctorReview[]     @relation("Doctor_reviews")
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+model LoginHistory {
+  id           String      @id @default(cuid())
+  userId       String
+  ipAddress    String
+  userAgent    String
+  status       LoginStatus
+  failedReason String?
+  createdAt    DateTime    @default(now())
+  user         User        @relation(fields: [userId], references: [id])
 }
 
-// Hospital/Clinic model
-model Hospital {
-  id          String       @id @default(cuid())
-  name        String
-  address     String
-  phone       String
-  email       String?
-  website     String?
-  description String?
-  type        HospitalType
-  departments Department[]
-  doctors     Doctor[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-}
-
-// Department/Specialty model
-model Department {
-  id          String    @id @default(cuid())
-  name        String
-  description String?
-  hospitalId  String
-  hospital    Hospital  @relation(fields: [hospitalId], references: [id])
-  doctors     Doctor[]
-  symptoms    Symptom[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-}
-
-// Symptom model
-model Symptom {
-  id            String          @id @default(cuid())
-  name          String
-  description   String?
-  severity      SymptomSeverity @default(MODERATE)
-  departments   Department[] // Related specialties
-  firstAidSteps String? // Basic first aid instructions
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-}
-
-// Medicine model
-model Medicine {
-  id                   String             @id @default(cuid())
-  name                 String
-  genericName          String?
-  description          String?
-  dosageForm           String // tablet, syrup, etc.
-  strength             String // e.g., "500mg"
-  manufacturer         String?
-  prescriptionRequired Boolean            @default(true)
-  sideEffects          String?
-  warnings             String?
-  interactions         String?
-  prescriptionItems    PrescriptionItem[]
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
-}
-
-// Prescription model
-model Prescription {
-  id            String             @id @default(cuid())
-  patientId     String
-  doctorId      String
-  patient       User               @relation("PatientPrescriptions", fields: [patientId], references: [id])
-  doctor        User               @relation("DoctorPrescriptions", fields: [doctorId], references: [id])
-  appointmentId String?
-  appointment   Appointment?       @relation(fields: [appointmentId], references: [id])
-  diagnosis     String
-  notes         String?
-  validUntil    DateTime?
-  items         PrescriptionItem[]
-  status        PrescriptionStatus @default(ACTIVE)
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
-}
-
-// Prescription Item model
-model PrescriptionItem {
-  id             String       @id @default(cuid())
-  prescriptionId String
-  prescription   Prescription @relation(fields: [prescriptionId], references: [id])
-  medicineId     String
-  medicine       Medicine     @relation(fields: [medicineId], references: [id])
-  dosage         String // e.g., "1 tablet"
-  frequency      String // e.g., "twice daily"
-  duration       String // e.g., "7 days"
-  instructions   String? // e.g., "take after meals"
-  quantity       Int
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-}
-
-// Medical Guidelines model
-model MedicalGuideline {
-  id           String   @id @default(cuid())
-  title        String
-  content      String
-  category     String
-  source       String?
-  lastReviewed DateTime
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-}
-
-// Working Hours model
-model WorkingHours {
-  id          String  @id @default(cuid())
-  doctorId    String
-  doctor      Doctor  @relation(fields: [doctorId], references: [id])
-  dayOfWeek   Int // 0-6 for Sunday-Saturday
-  startTime   String // Format: "HH:mm"
-  endTime     String // Format: "HH:mm"
-  isAvailable Boolean @default(true)
-}
-
-// Appointment model
-model Appointment {
-  id              String            @id @default(cuid())
-  patientId       String
-  doctorId        String
-  patient         User              @relation("PatientAppointments", fields: [patientId], references: [id])
-  doctor          User              @relation("DoctorAppointments", fields: [doctorId], references: [id])
-  date            DateTime
-  status          AppointmentStatus @default(PENDING)
-  type            AppointmentType   @default(IN_PERSON)
-  symptoms        String?
-  diagnosis       String?
-  notes           String?
-  review          DoctorReview?     @relation("AppointmentReview")
-  aiAnalysis      AIAnalysis?
-  prescriptions   Prescription[]
-  followUpDate    DateTime?
-  cancelReason    String?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  patientRelation Patient?          @relation("Appointment_patientId_Patient_fkey", fields: [patientId], references: [id], map: "appointment_patient_fkey")
-  doctorRelation  Doctor?           @relation("Appointment_doctorId_Doctor_fkey", fields: [doctorId], references: [id], map: "appointment_doctor_fkey")
-
-  // Relation to doctor review
-  doctorReviewId String?       @unique
-  doctorReview   DoctorReview? @relation("AppointmentDoctorReview", fields: [doctorReviewId], references: [id])
-}
-
-// Medical Record model
-model MedicalRecord {
-  id         String      @id @default(cuid())
-  patientId  String
-  patient    User        @relation(fields: [patientId], references: [id])
-  type       RecordType
-  content    String
-  fileUrl    String?
-  aiAnalysis AIAnalysis?
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-}
-
-// Health Metric model (for tracking health indicators)
 model HealthMetric {
   id        String     @id @default(cuid())
   userId    String
-  user      User       @relation(fields: [userId], references: [id])
   type      MetricType
   value     Float
   notes     String?
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
+  user      User       @relation(fields: [userId], references: [id])
 }
 
-// Health Goal model
 model HealthGoal {
-  id          String           @id @default(cuid())
-  userId      String
-  user        User             @relation(fields: [userId], references: [id])
-  title       String
-  description String
-  category    HealthGoalCategory
-  target      String
-  current     String
-  unit        String
-  startDate   DateTime
-  deadline    DateTime
-  progress    Int
-  status      HealthGoalStatus @default(ACTIVE)
-  priority    HealthGoalPriority @default(MEDIUM)
-  notes       String?
-  milestones  Json?           // Array of milestone objects
-  reminder    Boolean         @default(false)
+  id           String             @id @default(cuid())
+  userId       String
+  title        String
+  description  String
+  category     HealthGoalCategory
+  target       String
+  current      String
+  unit         String
+  startDate    DateTime
+  deadline     DateTime
+  progress     Int
+  status       HealthGoalStatus   @default(ACTIVE)
+  priority     HealthGoalPriority @default(MEDIUM)
+  notes        String?
+  milestones   Json?
+  reminder     Boolean            @default(false)
   reminderTime String?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  user         User               @relation(fields: [userId], references: [id])
 }
 
-// AI Analysis model
-model AIAnalysis {
-  id             String         @id @default(cuid())
-  appointmentId  String?        @unique
-  appointment    Appointment?   @relation(fields: [appointmentId], references: [id])
-  recordId       String?        @unique
-  record         MedicalRecord? @relation(fields: [recordId], references: [id])
-  analysis       Json // Stored as JSON for flexibility
-  recommendation String?
-  createdAt      DateTime       @default(now())
+model MedicalRecord {
+  id        String     @id @default(cuid())
+  patientId String
+  type      RecordType
+  content   String
+  fileUrl   String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  patient   User       @relation(fields: [patientId], references: [id])
 }
 
-// Health Report model
 model HealthReport {
   id              String       @id @default(cuid())
   userId          String
-  user            User         @relation(fields: [userId], references: [id])
   period          ReportPeriod
   startDate       DateTime
   endDate         DateTime
   summary         String
-  metrics         Json // Health metrics summary
-  recommendations Json // AI recommendations
+  metrics         Json
+  recommendations Json
   createdAt       DateTime     @default(now())
+  user            User         @relation(fields: [userId], references: [id])
 }
 
-// Notification model
 model Notification {
   id        String           @id @default(cuid())
   userId    String
-  user      User             @relation(fields: [userId], references: [id])
   type      NotificationType
   title     String
   message   String
   isRead    Boolean          @default(false)
   createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id])
 }
 
-// Chat model
+model VerificationToken {
+  id        String    @id @default(cuid())
+  userId    String
+  token     String    @unique
+  type      TokenType
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id])
+}
+
 model Chat {
   id          String        @id @default(cuid())
   userId      String
-  user        User          @relation(fields: [userId], references: [id])
-  messages    ChatMessage[]
-  aiDiagnosis Json? // AI's preliminary diagnosis
+  aiDiagnosis Json?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+  user        User          @relation(fields: [userId], references: [id])
+  messages    ChatMessage[]
 }
 
-// Chat Message model
 model ChatMessage {
   id        String      @id @default(cuid())
   chatId    String
-  chat      Chat        @relation(fields: [chatId], references: [id])
   content   String
   role      MessageRole
   createdAt DateTime    @default(now())
+  chat      Chat        @relation(fields: [chatId], references: [id])
 }
 
-// Enums
+model Permission {
+  id              String           @id @default(cuid())
+  name            String           @unique
+  description     String?
+  action          String           @unique
+  resource        String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  rolePermissions RolePermission[]
+  userPermissions UserPermission[]
+}
+
+model UserPermission {
+  id           String     @id @default(cuid())
+  userId       String
+  permissionId String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  permission   Permission @relation(fields: [permissionId], references: [id])
+  user         User       @relation(fields: [userId], references: [id])
+
+  @@unique([userId, permissionId])
+}
+
+model RolePermission {
+  id           String     @id @default(cuid())
+  role         UserRole
+  permissionId String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([role, permissionId])
+}
+
+model ReviewReport {
+  id          String           @id @default(cuid())
+  reviewId    String
+  reportedBy  String
+  reason      String
+  details     String?
+  status      ReportStatus     @default(PENDING)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  review      DoctorReview     @relation(fields: [reviewId], references: [id])
+  reporter    User             @relation("UserReports", fields: [reportedBy], references: [id])
+}
+
 enum UserRole {
   PATIENT
   DOCTOR
@@ -509,7 +423,6 @@ enum ReportPeriod {
   YEARLY
 }
 
-// Additional enums for authentication
 enum LoginStatus {
   SUCCESS
   FAILED
@@ -525,29 +438,10 @@ enum TokenType {
   TWO_FACTOR
 }
 
-// Additional enums
-enum SocialProvider {
-  GOOGLE
-  FACEBOOK
-}
-
 enum VerificationStatus {
   PENDING
   VERIFIED
   REJECTED
-}
-
-enum HospitalType {
-  PUBLIC
-  PRIVATE
-  CLINIC
-}
-
-enum SymptomSeverity {
-  MILD
-  MODERATE
-  SEVERE
-  EMERGENCY
 }
 
 enum PrescriptionStatus {
@@ -563,104 +457,6 @@ enum AppointmentType {
   HOME_VISIT
 }
 
-// New models for doctor's schedule and appointments
-model DoctorSchedule {
-  id              String   @id @default(cuid())
-  doctorId        String
-  doctor          Doctor   @relation(fields: [doctorId], references: [id])
-  weekday         Int // 0 = Sunday, 6 = Saturday
-  startTime       String // HH:mm format
-  endTime         String // HH:mm format
-  isAvailable     Boolean  @default(true)
-  maxAppointments Int      @default(1)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-}
-
-model Patient {
-  id           String        @id @default(cuid())
-  userId       String        @unique
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  dateOfBirth  DateTime?
-  gender       String?
-  bloodType    String?
-  allergies    String?
-  appointments Appointment[] @relation("Appointment_patientId_Patient_fkey")
-  profileImage String? // Profile picture
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-}
-
-// For storing uploaded files and images
-model Media {
-  id         String       @id @default(cuid())
-  fileName   String
-  fileType   String // MIME type
-  fileSize   Int
-  url        String
-  publicId   String? // For cloud storage service like Cloudinary
-  purpose    MediaPurpose
-  entityId   String // Related entity ID (doctor, patient, review, etc.)
-  uploadedBy String // User ID who uploaded
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
-
-  @@index([entityId])
-  @@index([uploadedBy])
-  @@index([purpose])
-}
-
-enum MediaPurpose {
-  DOCTOR_PROFILE
-  DOCTOR_GALLERY
-  PATIENT_PROFILE
-  REVIEW_IMAGE
-  HEALTH_METRIC
-  OTHER
-}
-
-// Doctor Review model
-model DoctorReview {
-  id          String   @id @default(cuid())
-  rating      Int // 1-5 star rating
-  comment     String?  @db.Text
-  isAnonymous Boolean  @default(false)
-  isPinned    Boolean  @default(false)
-  images      String[] // Array of image URLs for review
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  userId       String
-  user         User   @relation("UserReviews", fields: [userId], references: [id], onDelete: Cascade)
-  doctorId     String
-  doctor       Doctor @relation("Doctor_reviews", fields: [doctorId], references: [id], onDelete: Cascade, map: "doctorreview_doctor_fkey")
-  doctorasuser User?  @relation("DoctorReviews", fields: [doctorId], references: [id], onDelete: Cascade, map: "doctorreview_user_fkey")
-
-  // Optional link to appointment this review is for
-  appointmentId String?      @unique
-  appointment   Appointment? @relation("AppointmentReview", fields: [appointmentId], references: [id])
-
-  // Relation from appointment.doctorReview
-  appointmentReview Appointment? @relation("AppointmentDoctorReview")
-
-  likedBy ReviewLike[]
-
-  @@unique([userId, doctorId, appointmentId])
-  @@index([doctorId, rating])
-  @@index([userId])
-}
-
-model ReviewLike {
-  id        String       @id @default(cuid())
-  userId    String
-  reviewId  String
-  review    DoctorReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-  createdAt DateTime     @default(now())
-
-  @@unique([userId, reviewId])
-}
-
-// Add new enums for HealthGoal
 enum HealthGoalCategory {
   WEIGHT
   EXERCISE
@@ -682,4 +478,11 @@ enum HealthGoalPriority {
   LOW
   MEDIUM
   HIGH
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  REJECTED
+  ACCEPTED
 }

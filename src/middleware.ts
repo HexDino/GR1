@@ -74,7 +74,13 @@ export async function middleware(request: NextRequest) {
         ) {
           console.log('Middleware: Redirecting to correct dashboard for role:', role);
           // Redirect to the appropriate dashboard
-          const correctDashboard = `/dashboard/${role.toLowerCase()}`;
+          let correctDashboard = `/dashboard/${role.toLowerCase()}`;
+          
+          // For admin users, redirect to doctors page
+          if (role === 'ADMIN') {
+            correctDashboard = '/dashboard/admin/doctors';
+          }
+          
           return NextResponse.redirect(new URL(correctDashboard, request.url));
         }
       }

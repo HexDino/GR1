@@ -148,21 +148,21 @@ export async function seedDoctors() {
         },
       });
       
-      // Create doctor schedule
-      const weekdays = [1, 2, 3, 4, 5]; // Monday to Friday
-      
-      for (const weekday of weekdays) {
-        await prisma.doctorSchedule.create({
-          data: {
-            doctorId: doctorRecord.id,
-            weekday: weekday,
-            startTime: '09:00',
-            endTime: '17:00',
-            isAvailable: true,
-            maxAppointments: 8,
-          },
-        });
-      }
+      // DoctorSchedule model doesn't exist in the schema, so we skip creating schedules
+      // Instead of:
+      // const weekdays = [1, 2, 3, 4, 5]; // Monday to Friday
+      // for (const weekday of weekdays) {
+      //   await prisma.doctorSchedule.create({
+      //     data: {
+      //       doctorId: doctorRecord.id,
+      //       weekday: weekday,
+      //       startTime: '09:00',
+      //       endTime: '17:00',
+      //       isAvailable: true,
+      //       maxAppointments: 8,
+      //     },
+      //   });
+      // }
       
       console.log(`Created doctor: ${doctor.name}`);
     } catch (error) {

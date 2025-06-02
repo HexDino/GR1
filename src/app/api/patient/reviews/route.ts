@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 import { ApiError } from '@/lib/utils/apiError';
 import { createReviewSchema } from '@/lib/utils/validation';
+import { reviewRateLimit } from '@/lib/middleware/rateLimit';
 
 // GET /api/patient/reviews - Get patient's reviews
 export async function GET(request: NextRequest) {
@@ -23,46 +24,50 @@ export async function GET(request: NextRequest) {
       where: { userId },
       orderBy: { createdAt: 'desc' },
       include: {
-        doctor: {
-          select: {
-            id: true,
-            specialization: true,
-            user: {
-              select: {
-                name: true,
-                avatar: true,
-              }
-            }
-          }
-        },
         appointment: {
           select: {
             id: true,
             date: true,
+            type: true
           }
         }
       }
     });
     
+    // Get doctor information for all reviews
+    const doctorIds = reviews.map(review => review.doctorId);
+    const doctors = await prisma.doctor.findMany({
+      where: { id: { in: doctorIds } },
+      include: {
+        user: true
+      }
+    });
+    
     // Format response
-    const formattedReviews = reviews.map(review => ({
-      id: review.id,
-      rating: review.rating,
-      comment: review.comment,
-      createdAt: review.createdAt.toISOString(),
-      doctorId: review.doctorId,
-      doctorName: review.doctor.user.name,
-      doctorSpecialty: review.doctor.specialization,
-      doctorAvatar: review.doctor.user.avatar,
-      appointmentId: review.appointmentId,
-      appointmentDate: review.appointment?.date 
-        ? review.appointment.date.toISOString() 
-        : null,
-      likes: 0, // Placeholder for future feature
-      isHelpful: false, // Placeholder for future feature
-      canEdit: true,
-      canDelete: true
-    }));
+    const formattedReviews = reviews.map(review => {
+      const doctor = doctors.find(d => d.id === review.doctorId);
+      
+      return {
+        id: review.id,
+        rating: review.rating,
+        comment: review.comment,
+        images: review.images || [],
+        createdAt: review.createdAt.toISOString(),
+        doctorId: review.doctorId,
+        doctorName: doctor?.user?.name || 'Unknown Doctor',
+        doctorSpecialty: doctor?.specialization || 'Specialist',
+        doctorAvatar: doctor?.user?.avatar,
+        appointmentInfo: review.appointment ? {
+          id: review.appointment.id,
+          date: review.appointment.date.toISOString(),
+          type: review.appointment.type
+        } : null,
+        likes: 0, // Placeholder for future feature
+        isHelpful: false, // Placeholder for future feature
+        canEdit: true,
+        canDelete: true
+      };
+    });
     
     return NextResponse.json({
       success: true,
@@ -97,6 +102,9 @@ export async function GET(request: NextRequest) {
 // POST /api/patient/reviews - Create a new review
 export async function POST(request: NextRequest) {
   try {
+    // Apply rate limiting
+    await reviewRateLimit(request);
+    
     // Get the user ID from the headers (set by middleware)
     const userId = request.headers.get('x-user-id');
     const userRole = request.headers.get('x-user-role');
@@ -135,6 +143,18 @@ export async function POST(request: NextRequest) {
       throw ApiError.notFound('Doctor not found');
     }
     
+    // Check if patient already reviewed this doctor
+    const existingReview = await prisma.doctorReview.findFirst({
+      where: {
+        userId,
+        doctorId: reviewData.doctorId
+      }
+    });
+    
+    if (existingReview) {
+      throw ApiError.badRequest('You have already reviewed this doctor. Please edit your existing review instead.');
+    }
+    
     // If appointment ID is provided, check if appointment exists and belongs to patient
     if (reviewData.appointmentId) {
       const appointment = await prisma.appointment.findFirst({
@@ -149,18 +169,18 @@ export async function POST(request: NextRequest) {
       if (!appointment) {
         throw ApiError.badRequest('Appointment not found or not completed');
       }
-      
-      // Check if review already exists for this appointment
-      const existingReview = await prisma.doctorReview.findFirst({
+    } else {
+      // If no appointment ID is provided, check if the patient has had any completed appointment with this doctor
+      const hasCompletedAppointment = await prisma.appointment.findFirst({
         where: {
-          appointmentId: reviewData.appointmentId,
-          userId,
-          doctorId: reviewData.doctorId
+          patientId: userId,
+          doctorId: reviewData.doctorId,
+          status: 'COMPLETED'
         }
       });
       
-      if (existingReview) {
-        throw ApiError.badRequest('Review already exists for this appointment');
+      if (!hasCompletedAppointment) {
+        throw ApiError.badRequest('You can only review doctors you have had completed appointments with');
       }
     }
     
@@ -169,25 +189,35 @@ export async function POST(request: NextRequest) {
       data: {
         userId,
         doctorId: reviewData.doctorId,
+        appointmentId: reviewData.appointmentId,
         rating: reviewData.rating,
         comment: reviewData.comment,
-        appointmentId: reviewData.appointmentId,
         isAnonymous: reviewData.isAnonymous || false,
-        isPinned: false
-      },
+        isPinned: false,
+        images: reviewData.images || []
+      }
+    });
+    
+    // Update doctor's average rating and total reviews count
+    const avgRating = await prisma.doctorReview.aggregate({
+      where: { doctorId: reviewData.doctorId },
+      _avg: { rating: true },
+      _count: { rating: true }
+    });
+    
+    await prisma.doctor.update({
+      where: { id: reviewData.doctorId },
+      data: {
+        rating: avgRating._avg.rating || 0,
+        totalReviews: avgRating._count.rating
+      }
+    });
+    
+    // Get doctor information
+    const doctorInfo = await prisma.doctor.findUnique({
+      where: { id: review.doctorId },
       include: {
-        doctor: {
-          select: {
-            id: true,
-            specialization: true,
-            user: {
-              select: {
-                name: true,
-                avatar: true,
-              }
-            }
-          }
-        }
+        user: true
       }
     });
     
@@ -199,8 +229,8 @@ export async function POST(request: NextRequest) {
         rating: review.rating,
         comment: review.comment,
         createdAt: review.createdAt.toISOString(),
-        doctorName: review.doctor.user.name,
-        doctorSpecialization: review.doctor.specialization
+        doctorName: doctorInfo?.user?.name || 'Unknown Doctor',
+        doctorSpecialization: doctorInfo?.specialization || 'Specialist'
       }
     });
     

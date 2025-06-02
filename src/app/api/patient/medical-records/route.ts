@@ -49,20 +49,7 @@ export async function GET(req: NextRequest) {
           ...(dateFilter && { date: { gte: dateFilter } })
         },
         include: {
-          doctorRelation: {
-            include: {
-              user: {
-                select: {
-                  name: true
-                }
-              },
-              department: {
-                select: {
-                  name: true
-                }
-              }
-            }
-          }
+          doctor: true
         },
         orderBy: { date: 'desc' },
         take: type === 'appointment' ? limit : Math.floor(limit / 3)
@@ -72,9 +59,9 @@ export async function GET(req: NextRequest) {
         const record = {
           id: `apt_${appointment.id}`,
           type: 'appointment' as const,
-          title: `Appointment with Dr. ${appointment.doctorRelation?.user?.name || 'Unknown'}`,
-          doctorName: appointment.doctorRelation?.user?.name || 'Unknown Doctor',
-          doctorSpecialty: appointment.doctorRelation?.specialization || appointment.doctorRelation?.department?.name || 'General',
+          title: `Appointment with Dr. ${appointment.doctor?.name || 'Unknown'}`,
+          doctorName: appointment.doctor?.name || 'Unknown Doctor',
+          doctorSpecialty: 'Specialist',
           date: appointment.date.toISOString(),
           content: `${appointment.symptoms ? `Symptoms: ${appointment.symptoms}. ` : ''}${appointment.diagnosis ? `Diagnosis: ${appointment.diagnosis}. ` : ''}${appointment.notes ? `Notes: ${appointment.notes}` : 'General consultation.'}`,
           status: appointment.status,

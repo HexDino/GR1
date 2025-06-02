@@ -74,11 +74,7 @@ export async function GET(req: NextRequest) {
         doctorId: doctor.id
       },
       include: {
-        patientRelation: {
-          include: {
-            user: true
-          }
-        }
+        patient: true
       },
       orderBy: {
         updatedAt: 'desc'
@@ -88,7 +84,7 @@ export async function GET(req: NextRequest) {
     
     // Format the response
     const activities = recentAppointments.map(appointment => {
-      const patientName = appointment.patientRelation?.user.name || 'Unknown Patient';
+      const patientName = appointment.patient?.name || 'Unknown Patient';
       let action = 'had an update';
       const now = new Date();
       const updateDate = new Date(appointment.updatedAt);

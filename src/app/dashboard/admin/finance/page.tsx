@@ -437,7 +437,7 @@ export default function FinanceManagement() {
                       </td>
                     </tr>
                   ) : (
-                    currentTransactions.map((transaction) => (
+                    currentTransactions.map((transaction: Transaction) => (
                       <tr key={transaction.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {formatDate(transaction.date)}

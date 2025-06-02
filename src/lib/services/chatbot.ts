@@ -256,11 +256,7 @@ export async function generateResponse(
               date: 'asc'
             },
             include: {
-              doctorRelation: {
-                select: {
-                  specialization: true
-                }
-              }
+              doctor: true
             },
             take: 5
           });

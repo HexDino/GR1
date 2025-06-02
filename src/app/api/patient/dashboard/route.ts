@@ -36,19 +36,10 @@ export async function GET(req: NextRequest) {
         }
       },
       include: {
-        doctorRelation: {
-          include: {
-            user: {
-              select: {
-                name: true,
-                avatar: true
-              }
-            },
-            department: {
-              select: {
-                name: true
-              }
-            }
+        doctor: {
+          select: {
+            name: true,
+            avatar: true
           }
         }
       },
@@ -170,9 +161,9 @@ export async function GET(req: NextRequest) {
       
       return {
         id: appointment.id,
-        doctorName: appointment.doctorRelation?.user?.name || 'Unknown Doctor',
-        doctorSpecialty: appointment.doctorRelation?.specialization || appointment.doctorRelation?.department?.name || 'General',
-        doctorAvatar: appointment.doctorRelation?.user?.avatar,
+        doctorName: appointment.doctor?.name || 'Unknown Doctor',
+        doctorSpecialty: 'Specialist', // We don't have specialization directly available
+        doctorAvatar: appointment.doctor?.avatar,
         date: appointment.date.toISOString(),
         time: timeString,
         status: appointment.status,

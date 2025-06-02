@@ -98,6 +98,7 @@ export async function GET(req: NextRequest) {
     // Get patient details for these frequent visitors
     const patientIds = patientVisits.map(visit => visit.patientId);
     
+    // First get patients
     const patients = await prisma.patient.findMany({
       where: {
         id: {
@@ -105,28 +106,39 @@ export async function GET(req: NextRequest) {
         }
       },
       include: {
-        user: true,
-        appointments: {
+        user: true
+      }
+    });
+    
+    // Get the latest appointment for each patient separately
+    const patientAppointments = await Promise.all(
+      patients.map(async (patient) => {
+        const latestAppointment = await prisma.appointment.findFirst({
           where: {
+            patientId: patient.id,
             doctorId: doctor.id
           },
           orderBy: {
             date: 'desc'
-          },
-          take: 1
-        }
-      }
-    });
+          }
+        });
+        
+        return {
+          ...patient,
+          latestAppointment
+        };
+      })
+    );
     
     // Format the response
-    const formattedPatients = patients.map(patient => {
+    const formattedPatients = patientAppointments.map(patient => {
       // Find the visit count from the patientVisits array
       const visitInfo = patientVisits.find(visit => visit.patientId === patient.id);
       const visitCount = visitInfo ? visitInfo._count.patientId : 0;
       
       // Get the most recent condition/diagnosis from last appointment
-      const lastCondition = patient.appointments.length > 0 
-        ? patient.appointments[0].diagnosis || patient.appointments[0].symptoms || 'General Checkup' 
+      const lastCondition = patient.latestAppointment 
+        ? patient.latestAppointment.diagnosis || patient.latestAppointment.symptoms || 'General Checkup' 
         : 'Unknown';
       
       return {

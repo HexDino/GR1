@@ -12,53 +12,56 @@ export async function GET(req: NextRequest) {
       throw ApiError.unauthorized('Not authenticated');
     }
     
-    // Get query parameters
-    const { searchParams } = new URL(req.url);
-    const status = searchParams.get('status'); // 'upcoming', 'completed', 'cancelled'
-    const limit = parseInt(searchParams.get('limit') || '10');
+    if (userRole !== 'PATIENT') {
+      throw ApiError.forbidden('Only patients can access this resource');
+    }
     
-    // Build where clause
-    let whereClause: any = {
+    // Get query parameters
+    const url = new URL(req.url);
+    const statusParam = url.searchParams.get('status') || 'all';
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '10');
+    
+    // Calculate pagination
+    const skip = (page - 1) * limit;
+    
+    // Build the filter conditions
+    const where: any = {
       patientId: userId
     };
     
-    // Filter by status if provided
-    if (status === 'upcoming') {
-      whereClause.date = { gte: new Date() };
-      whereClause.status = { in: ['PENDING', 'CONFIRMED'] };
-    } else if (status === 'completed') {
-      whereClause.status = 'COMPLETED';
-    } else if (status === 'cancelled') {
-      whereClause.status = 'CANCELLED';
+    // Filter by status if provided and not 'all'
+    if (statusParam !== 'all') {
+      where.status = statusParam.toUpperCase();
     }
     
-    // Fetch appointments with doctor information
-    const appointments = await prisma.appointment.findMany({
-      where: whereClause,
-      include: {
-        doctorRelation: {
-          include: {
-            user: {
-              select: {
-                name: true,
-                avatar: true
-              }
-            },
-            department: {
-              select: {
-                name: true
+    // Use transaction to get appointments and count in a single database operation
+    const [appointments, totalAppointments] = await prisma.$transaction([
+      prisma.appointment.findMany({
+        where,
+        include: {
+          doctor: {
+            select: {
+              name: true,
+              avatar: true,
+              doctor: {
+                select: {
+                  specialization: true,
+                }
               }
             }
           }
-        }
-      },
-      orderBy: {
-        date: status === 'upcoming' ? 'asc' : 'desc'
-      },
-      take: limit
-    });
-    
-    // Format the response
+        },
+        orderBy: {
+          date: 'desc'
+        },
+        skip,
+        take: limit
+      }),
+      prisma.appointment.count({ where })
+    ]);
+
+    // Format appointment data
     const formattedAppointments = appointments.map(appointment => {
       const appointmentDate = new Date(appointment.date);
       const timeString = appointmentDate.toLocaleTimeString('en-US', { 
@@ -69,28 +72,34 @@ export async function GET(req: NextRequest) {
       
       return {
         id: appointment.id,
-        doctorName: appointment.doctorRelation?.user?.name || 'Unknown Doctor',
-        doctorSpecialty: appointment.doctorRelation?.specialization || appointment.doctorRelation?.department?.name || 'General',
-        doctorAvatar: appointment.doctorRelation?.user?.avatar,
+        doctorName: appointment.doctor?.name || 'Unknown Doctor',
+        doctorSpecialty: appointment.doctor?.doctor?.specialization || 'Specialist',
+        doctorAvatar: appointment.doctor?.avatar,
         date: appointment.date.toISOString(),
         time: timeString,
         status: appointment.status,
-        type: appointment.type || 'In-person',
-        symptoms: appointment.symptoms,
-        diagnosis: appointment.diagnosis,
-        notes: appointment.notes,
-        createdAt: appointment.createdAt.toISOString()
+        type: appointment.type || 'IN_PERSON',
+        symptoms: appointment.symptoms || '',
+        formattedDate: appointmentDate.toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric' 
+        })
       };
     });
-    
+
     return NextResponse.json({
       success: true,
       appointments: formattedAppointments,
-      total: appointments.length
+      pagination: {
+        page,
+        limit,
+        totalAppointments,
+        totalPages: Math.ceil(totalAppointments / limit)
+      }
     });
     
   } catch (error) {
-    console.error('Error fetching patient appointments:', error);
+    console.error('Error fetching appointments:', error);
     
     if (error instanceof ApiError) {
       return NextResponse.json(

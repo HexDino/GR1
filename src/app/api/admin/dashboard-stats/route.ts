@@ -30,180 +30,178 @@ export async function GET(req: NextRequest) {
       throw ApiError.forbidden('You do not have permission to access this resource');
     }
     
-    // Get today's date at midnight for filtering today's data
+    // Get today's date at midnight for filtering
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // Get last month's date
-    const lastMonth = new Date();
-    lastMonth.setMonth(lastMonth.getMonth() - 1);
+    // Get current month start and end
+    const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const nextMonthStart = new Date(today.getFullYear(), today.getMonth() + 1, 1);
     
-    // Use transaction to execute all queries in a single database operation
+    // Get date range for time period stats
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    // Get counts for main metrics
     const [
       totalUsers,
-      totalDoctors, 
+      totalDoctors,
       totalPatients,
-      activeUsers,
       totalAppointments,
+      appointmentsToday,
+      appointmentsThisMonth,
       pendingAppointments,
-      totalDepartments,
-      recentLogins,
+      completedAppointments,
+      totalPrescriptions,
+      recentUsers,
+      recentDoctors,
       recentAppointments
-    ] = await prisma.$transaction([
-      // Count total users by role
+    ] = await Promise.all([
+      // Total counts
       prisma.user.count(),
-      prisma.user.count({
-        where: { role: 'DOCTOR' }
-      }),
-      prisma.user.count({
-        where: { role: 'PATIENT' }
-      }),
+      prisma.doctor.count(),
+      prisma.patient.count(),
+      prisma.appointment.count(),
       
-      // Count active users (users who have logged in recently)
-      prisma.user.count({
+      // Today's appointments
+      prisma.appointment.count({
         where: {
-          sessions: {
-            some: {
-              updatedAt: {
-                gte: lastMonth
-              }
-            }
+          date: {
+            gte: today,
+            lt: new Date(today.getTime() + 24 * 60 * 60 * 1000)
           }
         }
       }),
       
-      // Count appointments
-      prisma.appointment.count(),
+      // This month's appointments
+      prisma.appointment.count({
+        where: {
+          date: {
+            gte: currentMonthStart,
+            lt: nextMonthStart
+          }
+        }
+      }),
       
-      // Count pending appointments
+      // Pending appointments
       prisma.appointment.count({
         where: {
           status: 'PENDING'
         }
       }),
       
-      // Count departments
-      prisma.department.count(),
-      
-      // Get recent user activity (recent logins, registrations, etc.)
-      prisma.loginHistory.findMany({
+      // Completed appointments
+      prisma.appointment.count({
         where: {
-          status: 'SUCCESS',
-          createdAt: {
-            gte: lastMonth
-          }
-        },
+          status: 'COMPLETED'
+        }
+      }),
+      
+      // Total prescriptions
+      prisma.prescription.count(),
+      
+      // Recent users
+      prisma.user.findMany({
         orderBy: {
           createdAt: 'desc'
         },
-        take: 10,
+        take: 5,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          avatar: true,
+          createdAt: true
+        }
+      }),
+      
+      // Recent doctors
+      prisma.doctor.findMany({
+        orderBy: {
+          createdAt: 'desc'
+        },
+        take: 5,
         include: {
           user: {
             select: {
-              id: true,
               name: true,
               email: true,
-              role: true,
+              avatar: true
             }
           }
         }
       }),
       
-      // Get recent appointments
+      // Recent appointments
       prisma.appointment.findMany({
         orderBy: {
           createdAt: 'desc'
         },
-        take: 10,
+        take: 5,
         include: {
           patient: {
-            include: {
-              user: {
-                select: {
-                  name: true,
-                }
-              }
+            select: {
+              name: true
             }
           },
           doctor: {
-            include: {
-              user: {
-                select: {
-                  name: true,
-                }
-              }
+            select: {
+              name: true
             }
           }
         }
       })
     ]);
-
-    // Get payment data for revenue calculation (use a default value if Payment table doesn't exist)
-    let totalRevenue = 0;
-    try {
-      // Check if the Payment table exists in the database schema
-      const tableExists = await prisma.$queryRaw`
-        SELECT EXISTS (
-          SELECT FROM information_schema.tables 
-          WHERE table_schema = 'public' 
-          AND table_name = 'Payment'
-        );
-      `;
-      
-      // If table exists, query it
-      if (tableExists) {
-        const payments = await prisma.$queryRaw<PaymentData[]>`
-          SELECT SUM(amount) as amount FROM "Payment" 
-          WHERE status = 'COMPLETED' 
-          AND "createdAt" >= ${new Date(new Date().setMonth(new Date().getMonth() - 12))}
-        `;
-        totalRevenue = payments[0]?.amount || 0;
-      } else {
-        console.log('[DASHBOARD STATS] Payment table does not exist, using default revenue value');
-        // Use a mock value if Payment table doesn't exist
-        totalRevenue = 0;
-      }
-    } catch (error) {
-      console.error('[DASHBOARD STATS] Error querying payments:', error);
-      // Use a default value if there's an error
-      totalRevenue = 0;
-    }
-
-    // Format activities
-    const recentActivities: Activity[] = [
-      ...recentLogins.map(login => ({
-        id: login.id,
-        type: 'user_login',
-        user: login.user.name,
-        time: login.createdAt,
-        role: login.user.role
-      })),
-      ...recentAppointments.map(appointment => ({
-        id: appointment.id,
-        type: 'appointment_created',
-        user: appointment.doctor.user.name,
-        patient: appointment.patient.user.name,
-        time: appointment.createdAt
-      }))
-    ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 7);
+    
+    // Format the doctor data
+    const formattedDoctors = recentDoctors.map(doctor => ({
+      id: doctor.id,
+      name: doctor.user.name,
+      email: doctor.user.email,
+      avatar: doctor.user.avatar,
+      specialization: doctor.specialization,
+      createdAt: doctor.createdAt
+    }));
+    
+    // Format the appointment data
+    const formattedAppointments = recentAppointments.map(appointment => ({
+      id: appointment.id,
+      patientName: appointment.patient.name,
+      doctorName: appointment.doctor.name,
+      date: appointment.date.toISOString(),
+      status: appointment.status,
+      createdAt: appointment.createdAt.toISOString()
+    }));
     
     return NextResponse.json({
       success: true,
       stats: {
-        totalUsers,
-        totalDoctors,
-        totalPatients,
-        totalAppointments,
-        pendingAppointments,
-        totalRevenue,
-        activeUsers,
-        totalDepartments
+        counts: {
+          users: totalUsers,
+          doctors: totalDoctors,
+          patients: totalPatients,
+          appointments: totalAppointments,
+          pendingAppointments,
+          completedAppointments,
+          prescriptions: totalPrescriptions,
+        },
+        today: {
+          appointments: appointmentsToday
+        },
+        thisMonth: {
+          appointments: appointmentsThisMonth
+        }
       },
-      recentActivities
+      recentData: {
+        users: recentUsers,
+        doctors: formattedDoctors,
+        appointments: formattedAppointments
+      }
     });
     
   } catch (error) {
-    console.error('Error fetching admin dashboard stats:', error);
+    console.error('Error fetching dashboard stats:', error);
     
     if (error instanceof ApiError) {
       return NextResponse.json(
@@ -219,7 +217,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        message: 'Failed to fetch admin dashboard statistics',
+        message: 'Failed to fetch dashboard statistics',
         error: process.env.NODE_ENV !== 'production' ? String(error) : undefined,
       },
       { status: 500 }

@@ -43,12 +43,6 @@ export async function GET(req: NextRequest) {
             bio: true,
             imageUrl: true,
             rating: true,
-            department: {
-              select: {
-                id: true,
-                name: true
-              }
-            }
           }
         },
         patient: {

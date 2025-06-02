@@ -283,7 +283,7 @@ export default function AppointmentsManagement() {
                       </td>
                     </tr>
                   ) : (
-                    currentAppointments.map((appointment) => (
+                    currentAppointments.map((appointment: Appointment) => (
                       <tr key={appointment.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex flex-col">
