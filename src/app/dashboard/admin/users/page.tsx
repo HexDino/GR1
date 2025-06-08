@@ -22,6 +22,7 @@ import {
   StarIcon,
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
+import { UserViewModal, UserEditModal, UserDeleteModal } from '@/components/UserModals';
 
 // User interface
 interface User {
@@ -50,6 +51,13 @@ export default function UserManagement() {
   const [sortField, setSortField] = useState('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Modal states
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // API URL with filters
   const apiUrl = `/api/admin/users?role=${roleFilter}&status=${statusFilter}&page=${currentPage}&limit=${itemsPerPage}&sort=${sortField}&direction=${sortDirection}&search=${searchTerm}`;
@@ -132,24 +140,76 @@ export default function UserManagement() {
     });
   };
 
-  const handleDeleteUser = async (userId: string, userName: string) => {
-    if (!confirm(`Are you sure you want to delete the user ${userName}?`)) return;
+  // Modal handlers
+  const handleViewUser = (user: any) => {
+    setSelectedUser(user);
+    setViewModalOpen(true);
+  };
 
+  const handleEditUser = (user: any) => {
+    setSelectedUser(user);
+    setEditModalOpen(true);
+  };
+
+  const handleDeleteUser = (user: any) => {
+    setSelectedUser(user);
+    setDeleteModalOpen(true);
+  };
+
+  const handleSaveUser = async (updatedUser: any) => {
     try {
-      const response = await fetch(`/api/admin/users/${userId}`, {
+      const response = await fetch(`/api/admin/users/${updatedUser.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedUser),
+      });
+
+      if (response.ok) {
+        mutate();
+        setEditModalOpen(false);
+        setSelectedUser(null);
+        alert('Cập nhật thông tin người dùng thành công!');
+      } else {
+        throw new Error('Failed to update user');
+      }
+    } catch (error) {
+      console.error('Error updating user:', error);
+      alert('Lỗi khi cập nhật thông tin. Vui lòng thử lại.');
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedUser) return;
+    
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/admin/users/${selectedUser.id}`, {
         method: 'DELETE',
       });
 
       if (response.ok) {
         mutate();
-        alert(`User ${userName} was deleted successfully`);
+        setDeleteModalOpen(false);
+        setSelectedUser(null);
+        alert(`Đã xóa người dùng ${selectedUser.name} thành công!`);
       } else {
         throw new Error('Failed to delete user');
       }
     } catch (error) {
       console.error('Error deleting user:', error);
-      alert('Error deleting user. Please try again.');
+      alert('Lỗi khi xóa người dùng. Vui lòng thử lại.');
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  const closeAllModals = () => {
+    setViewModalOpen(false);
+    setEditModalOpen(false);
+    setDeleteModalOpen(false);
+    setSelectedUser(null);
   };
 
   return (
@@ -404,19 +464,24 @@ export default function UserManagement() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex justify-end space-x-1.5">
-                            <Link href={`/dashboard/admin/users/${user.id}`}>
-                              <span className="text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 p-2 rounded-md transition-colors">
-                                <EyeIcon className="h-5 w-5" />
-                              </span>
-                            </Link>
-                            <Link href={`/dashboard/admin/users/edit/${user.id}`}>
-                              <span className="text-blue-600 hover:text-blue-900 hover:bg-blue-50 p-2 rounded-md transition-colors">
-                                <PencilIcon className="h-5 w-5" />
-                              </span>
-                            </Link>
+                            <button
+                              onClick={() => handleViewUser(user)}
+                              className="text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 p-2 rounded-md transition-colors"
+                              title="Xem chi tiết"
+                            >
+                              <EyeIcon className="h-5 w-5" />
+                            </button>
+                            <button
+                              onClick={() => handleEditUser(user)}
+                              className="text-blue-600 hover:text-blue-900 hover:bg-blue-50 p-2 rounded-md transition-colors"
+                              title="Chỉnh sửa"
+                            >
+                              <PencilIcon className="h-5 w-5" />
+                            </button>
                             <button 
-                              onClick={() => handleDeleteUser(user.id, user.name)}
+                              onClick={() => handleDeleteUser(user)}
                               className="text-red-600 hover:text-red-900 hover:bg-red-50 p-2 rounded-md transition-colors"
+                              title="Xóa"
                             >
                               <TrashIcon className="h-5 w-5" />
                             </button>
@@ -493,6 +558,28 @@ export default function UserManagement() {
           </div>
         </>
       )}
+
+      {/* Modals */}
+      <UserViewModal
+        isOpen={viewModalOpen}
+        onClose={closeAllModals}
+        user={selectedUser}
+      />
+
+      <UserEditModal
+        isOpen={editModalOpen}
+        onClose={closeAllModals}
+        user={selectedUser}
+        onSave={handleSaveUser}
+      />
+
+      <UserDeleteModal
+        isOpen={deleteModalOpen}
+        onClose={closeAllModals}
+        user={selectedUser}
+        onConfirm={handleConfirmDelete}
+        isDeleting={isDeleting}
+      />
     </div>
   );
 } 

@@ -22,6 +22,7 @@ import {
   StarIcon,
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
+import { DoctorViewModal, DoctorEditModal, DoctorDeleteModal } from '@/components/DoctorModals';
 
 // Fetcher function for SWR
 const fetcher = (url: string) => fetch(url).then(res => {
@@ -37,6 +38,13 @@ export default function DoctorsManagement() {
   const [sortField, setSortField] = useState('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Modal states
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Temporarily use the users API with role=DOCTOR filter
   const apiUrl = `/api/admin/users?role=DOCTOR&status=${statusFilter}&page=${currentPage}&limit=${itemsPerPage}&sort=${sortField}&direction=${sortDirection}&search=${searchTerm}`;
@@ -106,24 +114,76 @@ export default function DoctorsManagement() {
     });
   };
 
-  const handleDeleteDoctor = async (doctorId: string, doctorName: string) => {
-    if (!confirm(`Are you sure you want to delete doctor ${doctorName}?`)) return;
+  // Modal handlers
+  const handleViewDoctor = (doctor: any) => {
+    setSelectedDoctor(doctor);
+    setViewModalOpen(true);
+  };
 
+  const handleEditDoctor = (doctor: any) => {
+    setSelectedDoctor(doctor);
+    setEditModalOpen(true);
+  };
+
+  const handleDeleteDoctor = (doctor: any) => {
+    setSelectedDoctor(doctor);
+    setDeleteModalOpen(true);
+  };
+
+  const handleSaveDoctor = async (updatedDoctor: any) => {
     try {
-      const response = await fetch(`/api/admin/users/${doctorId}`, {
+      const response = await fetch(`/api/admin/users/${updatedDoctor.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedDoctor),
+      });
+
+      if (response.ok) {
+        mutate();
+        setEditModalOpen(false);
+        setSelectedDoctor(null);
+        alert('Cập nhật thông tin bác sĩ thành công!');
+      } else {
+        throw new Error('Failed to update doctor');
+      }
+    } catch (error) {
+      console.error('Error updating doctor:', error);
+      alert('Lỗi khi cập nhật thông tin. Vui lòng thử lại.');
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedDoctor) return;
+    
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/admin/users/${selectedDoctor.id}`, {
         method: 'DELETE',
       });
 
       if (response.ok) {
         mutate();
-        alert(`Doctor ${doctorName} was deleted successfully`);
+        setDeleteModalOpen(false);
+        setSelectedDoctor(null);
+        alert(`Đã xóa bác sĩ ${selectedDoctor.name} thành công!`);
       } else {
         throw new Error('Failed to delete doctor');
       }
     } catch (error) {
       console.error('Error deleting doctor:', error);
-      alert('Error deleting doctor. Please try again.');
+      alert('Lỗi khi xóa bác sĩ. Vui lòng thử lại.');
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  const closeAllModals = () => {
+    setViewModalOpen(false);
+    setEditModalOpen(false);
+    setDeleteModalOpen(false);
+    setSelectedDoctor(null);
   };
 
   return (
@@ -357,19 +417,24 @@ export default function DoctorsManagement() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex justify-end space-x-1.5">
-                            <Link href={`/dashboard/admin/doctors/${doctor.id}`}>
-                              <span className="text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 p-2 rounded-md transition-colors">
-                                <EyeIcon className="h-5 w-5" />
-                              </span>
-                            </Link>
-                            <Link href={`/dashboard/admin/doctors/edit/${doctor.id}`}>
-                              <span className="text-blue-600 hover:text-blue-900 hover:bg-blue-50 p-2 rounded-md transition-colors">
-                                <PencilIcon className="h-5 w-5" />
-                              </span>
-                            </Link>
+                            <button
+                              onClick={() => handleViewDoctor(doctor)}
+                              className="text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 p-2 rounded-md transition-colors"
+                              title="Xem chi tiết"
+                            >
+                              <EyeIcon className="h-5 w-5" />
+                            </button>
+                            <button
+                              onClick={() => handleEditDoctor(doctor)}
+                              className="text-blue-600 hover:text-blue-900 hover:bg-blue-50 p-2 rounded-md transition-colors"
+                              title="Chỉnh sửa"
+                            >
+                              <PencilIcon className="h-5 w-5" />
+                            </button>
                             <button 
-                              onClick={() => handleDeleteDoctor(doctor.id, doctor.name)}
+                              onClick={() => handleDeleteDoctor(doctor)}
                               className="text-red-600 hover:text-red-900 hover:bg-red-50 p-2 rounded-md transition-colors"
+                              title="Xóa"
                             >
                               <TrashIcon className="h-5 w-5" />
                             </button>
@@ -446,6 +511,28 @@ export default function DoctorsManagement() {
           </div>
         </>
       )}
+
+      {/* Modals */}
+      <DoctorViewModal
+        isOpen={viewModalOpen}
+        onClose={closeAllModals}
+        doctor={selectedDoctor}
+      />
+
+      <DoctorEditModal
+        isOpen={editModalOpen}
+        onClose={closeAllModals}
+        doctor={selectedDoctor}
+        onSave={handleSaveDoctor}
+      />
+
+      <DoctorDeleteModal
+        isOpen={deleteModalOpen}
+        onClose={closeAllModals}
+        doctor={selectedDoctor}
+        onConfirm={handleConfirmDelete}
+        isDeleting={isDeleting}
+      />
     </div>
   );
 } 

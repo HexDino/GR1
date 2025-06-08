@@ -1,12 +1,14 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { AuthModal } from './AuthModal';
 
 // Doctor card component
 const DoctorCard = ({ 
-  doctor
+  doctor,
+  onBookAppointment
 }: {
   doctor: {
     id: string;
@@ -16,7 +18,8 @@ const DoctorCard = ({
     rating: number;
     reviewCount: number;
     available: boolean;
-  }
+  },
+  onBookAppointment: () => void;
 }) => {
   // Function to render star rating
   const renderRating = (rating: number) => {
@@ -75,18 +78,24 @@ const DoctorCard = ({
           {renderRating(doctor.rating)}
         </div>
         
-        <Link 
-          href={`/doctors/${doctor.id}`}
-          className="inline-block border border-purple-600 text-purple-600 rounded-full px-5 py-2 text-sm font-medium transition hover:bg-purple-600 hover:text-white w-full"
+        <button 
+          onClick={onBookAppointment}
+          className="border border-purple-600 text-purple-600 rounded-full px-5 py-2 text-sm font-medium transition hover:bg-purple-600 hover:text-white w-full"
         >
           Book an Appointment
-        </Link>
+        </button>
       </div>
     </div>
   );
 };
 
 export const DoctorSection = () => {
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  
+  const handleBookAppointment = () => {
+    setIsAuthModalOpen(true);
+  };
+
   // Mẫu dữ liệu, sau này sẽ được lấy từ cơ sở dữ liệu
   const doctors = [
     {
@@ -140,7 +149,7 @@ export const DoctorSection = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
           {doctors.slice(0, 4).map((doctor) => (
             <div key={doctor.id} className="col-span-1 sm:col-span-1">
-              <DoctorCard doctor={doctor} />
+              <DoctorCard doctor={doctor} onBookAppointment={handleBookAppointment} />
             </div>
           ))}
         </div>
@@ -153,6 +162,12 @@ export const DoctorSection = () => {
             See more
           </Link>
         </div>
+        
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
+          initialMode="signup"
+        />
       </div>
     </section>
   );

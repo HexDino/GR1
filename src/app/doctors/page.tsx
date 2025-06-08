@@ -1,12 +1,14 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { AuthModal } from '@/components/AuthModal';
 
 // Doctor card component
 const DoctorCard = ({ 
-  doctor
+  doctor,
+  onBookAppointment
 }: {
   doctor: {
     id: string;
@@ -16,7 +18,8 @@ const DoctorCard = ({
     rating: number;
     reviewCount: number;
     available: boolean;
-  }
+  },
+  onBookAppointment: () => void;
 }) => {
   // Function to render star rating
   const renderRating = (rating: number) => {
@@ -62,6 +65,10 @@ const DoctorCard = ({
               width={160}
               height={160}
               className="object-cover w-[160px] h-[160px]"
+              style={{
+                objectPosition: 'center 20%',
+                filter: 'contrast(1.05) brightness(1.02)'
+              }}
             />
           </div>
         </div>
@@ -75,25 +82,31 @@ const DoctorCard = ({
           {renderRating(doctor.rating)}
         </div>
         
-        <Link 
-          href={`/doctors/${doctor.id}`}
-          className="inline-block border border-purple-600 text-purple-600 rounded-full px-5 py-2 text-sm font-medium transition hover:bg-purple-600 hover:text-white w-full"
+        <button 
+          onClick={onBookAppointment}
+          className="border border-purple-600 text-purple-600 rounded-full px-5 py-2 text-sm font-medium transition hover:bg-purple-600 hover:text-white w-full"
         >
           Book an Appointment
-        </Link>
+        </button>
       </div>
     </div>
   );
 };
 
 const DoctorsPage = () => {
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  
+  const handleBookAppointment = () => {
+    setIsAuthModalOpen(true);
+  };
+  
   // Mẫu dữ liệu, sau này sẽ được lấy từ cơ sở dữ liệu
   const doctors = [
     {
       id: "dr-robert-henry",
       name: "Dr. Robert Henry",
       specialty: "Cardiologist",
-      image: "/doctors/doctor1.jpg",
+      image: "/doctors/handsome-doctor-portrait-isolated-transparent-background_812472-1772-removebg-preview.png",
       rating: 4.5,
       reviewCount: 102,
       available: true
@@ -102,7 +115,7 @@ const DoctorsPage = () => {
       id: "dr-harry-littleton",
       name: "Dr. Harry Littleton",
       specialty: "Neurologist",
-      image: "/doctors/doctor2.jpg",
+      image: "/doctors/2836935-png-shot-of-a-young-male-doctor--fit_400_400-removebg-preview.png",
       rating: 4.5,
       reviewCount: 97,
       available: true
@@ -111,7 +124,7 @@ const DoctorsPage = () => {
       id: "dr-sharina-khan",
       name: "Dr. Sharina Khan",
       specialty: "Gynologist",
-      image: "/doctors/doctor3.jpg",
+      image: "/doctors/female-doctor-portrait-isolated-transparent-background_1300605-3982-removebg-preview.png",
       rating: 4.5,
       reviewCount: 116,
       available: true
@@ -120,7 +133,7 @@ const DoctorsPage = () => {
       id: "dr-sanjeev-kapoor",
       name: "Dr. Sanjeev Kapoor",
       specialty: "Child Specialist",
-      image: "/doctors/doctor4.jpg",
+      image: "/doctors/pngtree-portrait-happy-male-doctor-isolated-on-transparent-background-png-image_13458207-removebg-preview.png",
       rating: 4.5,
       reviewCount: 72,
       available: true
@@ -129,7 +142,7 @@ const DoctorsPage = () => {
       id: "dr-emily-johnson",
       name: "Dr. Emily Johnson",
       specialty: "Dermatologist",
-      image: "/doctors/doctor1.jpg", // Reused image as placeholder
+      image: "/doctors/pexels-tima-miroshnichenko-5407249-removebg-preview.png",
       rating: 4.8,
       reviewCount: 89,
       available: true
@@ -138,7 +151,7 @@ const DoctorsPage = () => {
       id: "dr-michael-williams",
       name: "Dr. Michael Williams",
       specialty: "Ophthalmologist",
-      image: "/doctors/doctor2.jpg", // Reused image as placeholder
+      image: "/doctors/doctor-png-11553965735yehesibskv-removebg-preview.png",
       rating: 4.6,
       reviewCount: 65,
       available: false
@@ -147,7 +160,7 @@ const DoctorsPage = () => {
       id: "dr-sarah-rodriguez",
       name: "Dr. Sarah Rodriguez",
       specialty: "Endocrinologist",
-      image: "/doctors/doctor3.jpg", // Reused image as placeholder
+      image: "/doctors/2834942-png-portrait-of-a-beautiful-young-doctor-standing-with-arms-folded--fit_400_400-removebg-preview.png",
       rating: 4.7,
       reviewCount: 103,
       available: true
@@ -156,7 +169,7 @@ const DoctorsPage = () => {
       id: "dr-james-brown",
       name: "Dr. James Brown",
       specialty: "Gastroenterologist",
-      image: "/doctors/doctor4.jpg", // Reused image as placeholder
+      image: "/doctors/2834931-png-portrait-of-a-young-doctor-using-a-tablet-and-wearing-a-stethoscope--fit_400_400-removebg-preview.png",
       rating: 4.4,
       reviewCount: 78,
       available: true
@@ -176,10 +189,16 @@ const DoctorsPage = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 max-w-7xl mx-auto">
           {doctors.map((doctor) => (
             <div key={doctor.id} className="col-span-1">
-              <DoctorCard doctor={doctor} />
+              <DoctorCard doctor={doctor} onBookAppointment={handleBookAppointment} />
             </div>
           ))}
         </div>
+        
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
+          initialMode="signup"
+        />
       </div>
     </div>
   );

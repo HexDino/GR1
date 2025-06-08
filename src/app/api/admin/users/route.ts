@@ -85,6 +85,10 @@ export async function GET(req: NextRequest) {
           avatar: true,
           doctor: {
             select: {
+              id: true,
+              specialization: true,
+              license: true,
+              verificationStatus: true
             }
           },
           sessions: {

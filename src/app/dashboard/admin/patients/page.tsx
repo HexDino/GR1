@@ -17,8 +17,10 @@ import {
   ArrowDownIcon,
   ExclamationTriangleIcon,
   StarIcon,
+  TrashIcon,
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
+import { PatientViewModal, PatientEditModal, PatientDeleteModal } from '@/components/PatientModals';
 
 // Fetcher function for SWR
 const fetcher = (url: string) => fetch(url).then(res => {
@@ -46,6 +48,13 @@ export default function PatientsManagement() {
   const [sortField, setSortField] = useState('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Modal states
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState<any>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Temporarily use the users API with role=PATIENT filter
   const apiUrl = `/api/admin/users?role=PATIENT&status=${statusFilter}&page=${currentPage}&limit=${itemsPerPage}&sort=${sortField}&direction=${sortDirection}&search=${searchTerm}`;
@@ -113,6 +122,78 @@ export default function PatientsManagement() {
       month: 'short',
       day: 'numeric',
     });
+  };
+
+  // Modal handlers
+  const handleViewPatient = (patient: any) => {
+    setSelectedPatient(patient);
+    setViewModalOpen(true);
+  };
+
+  const handleEditPatient = (patient: any) => {
+    setSelectedPatient(patient);
+    setEditModalOpen(true);
+  };
+
+  const handleDeletePatient = (patient: any) => {
+    setSelectedPatient(patient);
+    setDeleteModalOpen(true);
+  };
+
+  const handleSavePatient = async (updatedPatient: any) => {
+    try {
+      const response = await fetch(`/api/admin/users/${updatedPatient.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedPatient),
+      });
+
+      if (response.ok) {
+        mutate();
+        setEditModalOpen(false);
+        setSelectedPatient(null);
+        alert('Cập nhật thông tin bệnh nhân thành công!');
+      } else {
+        throw new Error('Failed to update patient');
+      }
+    } catch (error) {
+      console.error('Error updating patient:', error);
+      alert('Lỗi khi cập nhật thông tin. Vui lòng thử lại.');
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedPatient) return;
+    
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/admin/users/${selectedPatient.id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        mutate();
+        setDeleteModalOpen(false);
+        setSelectedPatient(null);
+        alert(`Đã xóa bệnh nhân ${selectedPatient.name} thành công!`);
+      } else {
+        throw new Error('Failed to delete patient');
+      }
+    } catch (error) {
+      console.error('Error deleting patient:', error);
+      alert('Lỗi khi xóa bệnh nhân. Vui lòng thử lại.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const closeAllModals = () => {
+    setViewModalOpen(false);
+    setEditModalOpen(false);
+    setDeleteModalOpen(false);
+    setSelectedPatient(null);
   };
 
   return (
@@ -323,16 +404,27 @@ export default function PatientsManagement() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex justify-end space-x-1.5">
-                            <Link href={`/dashboard/admin/patients/${patient.id}`}>
-                              <span className="text-green-600 hover:text-green-900 hover:bg-green-50 p-2 rounded-md transition-colors">
-                                <EyeIcon className="h-5 w-5" />
-                              </span>
-                            </Link>
-                            <Link href={`/dashboard/admin/patients/edit/${patient.id}`}>
-                              <span className="text-blue-600 hover:text-blue-900 hover:bg-blue-50 p-2 rounded-md transition-colors">
-                                <PencilIcon className="h-5 w-5" />
-                              </span>
-                            </Link>
+                            <button
+                              onClick={() => handleViewPatient(patient)}
+                              className="text-green-600 hover:text-green-900 hover:bg-green-50 p-2 rounded-md transition-colors"
+                              title="Xem chi tiết"
+                            >
+                              <EyeIcon className="h-5 w-5" />
+                            </button>
+                            <button
+                              onClick={() => handleEditPatient(patient)}
+                              className="text-blue-600 hover:text-blue-900 hover:bg-blue-50 p-2 rounded-md transition-colors"
+                              title="Chỉnh sửa"
+                            >
+                              <PencilIcon className="h-5 w-5" />
+                            </button>
+                            <button 
+                              onClick={() => handleDeletePatient(patient)}
+                              className="text-red-600 hover:text-red-900 hover:bg-red-50 p-2 rounded-md transition-colors"
+                              title="Xóa"
+                            >
+                              <TrashIcon className="h-5 w-5" />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -406,6 +498,28 @@ export default function PatientsManagement() {
           </div>
         </>
       )}
+
+      {/* Modals */}
+      <PatientViewModal
+        isOpen={viewModalOpen}
+        onClose={closeAllModals}
+        patient={selectedPatient}
+      />
+
+      <PatientEditModal
+        isOpen={editModalOpen}
+        onClose={closeAllModals}
+        patient={selectedPatient}
+        onSave={handleSavePatient}
+      />
+
+      <PatientDeleteModal
+        isOpen={deleteModalOpen}
+        onClose={closeAllModals}
+        patient={selectedPatient}
+        onConfirm={handleConfirmDelete}
+        isDeleting={isDeleting}
+      />
     </div>
   );
 } 

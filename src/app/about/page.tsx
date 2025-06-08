@@ -31,19 +31,19 @@ export default function About() {
     {
       name: "Dr. Alexander Mitchell",
       role: "Chief Executive Officer",
-      image: "/healthcare/hospital-building-new.jpg",
+      image: "/doctors/doctor-png-11553965735yehesibskv-removebg-preview.png",
       description: "With over 25 years of healthcare leadership experience, Dr. Mitchell oversees the strategic direction and operations of our hospital."
     },
     {
       name: "Dr. Maria Reynolds",
       role: "Chief Medical Officer",
-      image: "/healthcare/hospital-building-new.jpg",
+      image: "/doctors/2834942-png-portrait-of-a-beautiful-young-doctor-standing-with-arms-folded--fit_400_400-removebg-preview.png",
       description: "Dr. Reynolds ensures the highest quality medical care across all departments and leads our continuous quality improvement initiatives."
     },
     {
       name: "Jennifer Parker",
       role: "Chief Nursing Officer",
-      image: "/healthcare/hospital-building-new.jpg",
+      image: "/doctors/pexels-tima-miroshnichenko-5407249-removebg-preview.png",
       description: "Jennifer leads our nursing staff, focusing on excellent patient care, professional development, and innovative nursing practices."
     }
   ];
@@ -142,19 +142,26 @@ export default function About() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {leaders.map((leader, index) => (
-              <div key={index} className="bg-white rounded-xl shadow-md overflow-hidden">
-                <div className="relative h-64 w-full">
+              <div key={index} className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300">
+                <div className="relative h-72 w-full bg-white overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-100 to-blue-100"></div>
+                  <div className="relative h-full flex items-center justify-center p-4">
                   <Image
                     src={leader.image}
                     alt={leader.name}
-                    fill
-                    className="object-cover"
+                      width={200}
+                      height={200}
+                      className="object-contain max-h-full max-w-full"
+                      style={{ 
+                        filter: 'contrast(1.1) brightness(1.05) saturate(1.1)'
+                      }}
                   />
+                  </div>
                 </div>
                 <div className="p-6">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-1">{leader.name}</h3>
-                  <p className="text-purple-600 font-medium mb-3">{leader.role}</p>
-                  <p className="text-gray-600">{leader.description}</p>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{leader.name}</h3>
+                  <p className="text-purple-600 font-semibold mb-4">{leader.role}</p>
+                  <p className="text-gray-600 leading-relaxed text-sm">{leader.description}</p>
                 </div>
               </div>
             ))}
