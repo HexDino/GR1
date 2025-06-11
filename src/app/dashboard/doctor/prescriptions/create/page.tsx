@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -66,7 +66,7 @@ export default function CreatePrescription() {
   ];
 
   // Filter patients based on search term
-  useEffect(() => {
+  const filterPatients = useCallback(() => {
     if (patientSearchTerm) {
       const filtered = mockPatients.filter(patient =>
         patient.name.toLowerCase().includes(patientSearchTerm.toLowerCase()) ||
@@ -76,7 +76,11 @@ export default function CreatePrescription() {
     } else {
       setPatients(mockPatients);
     }
-  }, [patientSearchTerm]);
+  }, [patientSearchTerm, mockPatients]);
+
+  useEffect(() => {
+    filterPatients();
+  }, [filterPatients]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));

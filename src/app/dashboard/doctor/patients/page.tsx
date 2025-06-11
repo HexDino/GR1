@@ -226,10 +226,6 @@ export default function PatientsPage() {
     }
   ];
 
-  useEffect(() => {
-    loadPatients();
-  }, [filters, pagination.offset]);
-
   const loadPatients = async () => {
     try {
       setLoading(true);
@@ -259,6 +255,10 @@ export default function PatientsPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadPatients();
+  }, [filters, pagination.offset]);
 
   const handleFilterChange = (key: keyof PatientFilters, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));

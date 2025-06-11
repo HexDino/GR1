@@ -309,7 +309,7 @@ export async function updateUser(
         },
       });
       
-      // Create profile if it doesn't exist
+      // Tạo profile nếu chưa tồn tại
       if (!updatedUser.profile) {
         await tx.profile.create({
           data: {
@@ -362,16 +362,16 @@ export async function changePassword(
       throw ApiError.notFound('User not found');
     }
     
-    // Verify current password
+    // Xác minh mật khẩu hiện tại
     const passwordValid = await verifyPassword(currentPassword, user.password);
     if (!passwordValid) {
       throw ApiError.unauthorized('Current password is incorrect');
     }
     
-    // Hash new password
+    // Hash mật khẩu mới
     const hashedPassword = await hashPassword(newPassword);
     
-    // Update password
+    // Cập nhật mật khẩu
     await prisma.user.update({
       where: { id: userId },
       data: { password: hashedPassword },
@@ -388,13 +388,13 @@ export async function changePassword(
 }
 
 /**
- * Refresh token
+ * Làm mới token
  */
 export async function refreshUserToken(
   refreshToken: string
 ): Promise<{ token: string; refreshToken: string }> {
   try {
-    // Verify refresh token
+    // Xác minh refresh token
     const payload = await verifyToken(refreshToken);
     
     if (payload.tokenType !== 'refresh') {

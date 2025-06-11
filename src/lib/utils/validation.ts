@@ -36,7 +36,7 @@ export function validateQuery<T>(schema: z.ZodType<T>, req: NextApiRequest): T {
   }
 }
 
-// Common schemas
+// Các schema chung
 export const emailSchema = z
   .string()
   .min(1, 'Email is required')
@@ -69,7 +69,7 @@ export const idSchema = z
   .string()
   .min(1, 'ID is required');
 
-// User schemas
+// Các schema User
 export const loginSchema = z.object({
   email: emailSchema,
   password: z.string().min(1, 'Password is required'),
@@ -83,7 +83,7 @@ export const registerSchema = z.object({
   role: z.enum(['PATIENT', 'DOCTOR', 'ADMIN']).optional(),
 });
 
-// Appointment schemas
+// Các schema Lịch hẹn
 export const createAppointmentSchema = z.object({
   doctorId: idSchema,
   date: dateSchema,
@@ -92,7 +92,7 @@ export const createAppointmentSchema = z.object({
   notes: z.string().optional(),
 });
 
-// Doctor schemas
+// Các schema Bác sĩ
 export const updateDoctorProfileSchema = z.object({
   specialization: z.string().optional(),
   bio: z.string().optional(),
@@ -107,7 +107,7 @@ export const updateDoctorProfileSchema = z.object({
   isAvailable: z.boolean().optional(),
 });
 
-// Patient schemas
+// Các schema Bệnh nhân
 export const updatePatientProfileSchema = z.object({
   dateOfBirth: dateSchema.optional(),
   gender: z.enum(['MALE', 'FEMALE', 'OTHER']).optional(),
@@ -115,7 +115,7 @@ export const updatePatientProfileSchema = z.object({
   allergies: z.string().optional(),
 });
 
-// Review schemas
+// Các schema Đánh giá
 export const createReviewSchema = z.object({
   doctorId: idSchema,
   appointmentId: idSchema.optional(),

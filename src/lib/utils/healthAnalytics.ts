@@ -1,14 +1,14 @@
 import { prisma } from '@/lib/db/prisma'
 
 /**
- * Analyze blood pressure readings and provide recommendations
+ * Phân tích chỉ số huyết áp và đưa ra khuyến nghị
  */
 export async function analyzeBloodPressure(userId: string, period = 30) {
   try {
     const cutoffDate = new Date()
     cutoffDate.setDate(cutoffDate.getDate() - period)
     
-    // Get blood pressure readings from the specified period
+    // Lấy các chỉ số huyết áp từ khoảng thời gian đã chỉ định
     const readings = await prisma.healthMetric.findMany({
       where: {
         userId,
@@ -29,7 +29,7 @@ export async function analyzeBloodPressure(userId: string, period = 30) {
       }
     }
     
-    // Parse values and calculate averages
+    // Phân tích các giá trị và tính trung bình
     const systolicValues: number[] = []
     const diastolicValues: number[] = []
     
@@ -44,7 +44,7 @@ export async function analyzeBloodPressure(userId: string, period = 30) {
     const avgSystolic = systolicValues.reduce((sum, val) => sum + val, 0) / systolicValues.length
     const avgDiastolic = diastolicValues.reduce((sum, val) => sum + val, 0) / diastolicValues.length
     
-    // Analyze the blood pressure values
+    // Phân tích các giá trị huyết áp
     let status = 'NORMAL'
     let message = 'Your blood pressure is within the normal range.'
     
@@ -61,7 +61,7 @@ export async function analyzeBloodPressure(userId: string, period = 30) {
       message = 'Your blood pressure is lower than normal. Consider consulting a healthcare professional.'
     }
     
-    // Check for trends
+    // Kiểm tra xu hướng
     let trend = 'STABLE'
     if (systolicValues.length >= 3) {
       const firstHalf = systolicValues.slice(0, Math.floor(systolicValues.length / 2))
@@ -98,7 +98,7 @@ export async function analyzeBloodPressure(userId: string, period = 30) {
 }
 
 /**
- * Calculate BMI based on height and weight
+ * Tính BMI dựa trên chiều cao và cân nặng
  */
 export function calculateBMI(heightCm: number, weightKg: number) {
   const heightM = heightCm / 100
@@ -129,11 +129,11 @@ export function calculateBMI(heightCm: number, weightKg: number) {
 }
 
 /**
- * Generate health insights based on user data
+ * Tạo thông tin sức khỏe dựa trên dữ liệu người dùng
  */
 export async function generateHealthInsights(userId: string) {
   try {
-    // Get user profile data
+    // Lấy dữ liệu hồ sơ người dùng
     const profile = await prisma.profile.findUnique({
       where: { userId },
       select: {
@@ -155,7 +155,7 @@ export async function generateHealthInsights(userId: string) {
     
     const insights = []
     
-    // Calculate BMI if height and weight are available
+    // Tính BMI nếu có chiều cao và cân nặng
     if (profile.height && profile.weight) {
       const bmiResult = calculateBMI(profile.height, profile.weight)
       insights.push({
@@ -166,12 +166,12 @@ export async function generateHealthInsights(userId: string) {
       })
     }
     
-    // Get recent health metrics
+    // Lấy các chỉ số sức khỏe gần đây
     const recentMetrics = await prisma.healthMetric.findMany({
       where: {
         userId,
         createdAt: {
-          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
+          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 ngày gần đây
         },
       },
       orderBy: {
@@ -179,7 +179,7 @@ export async function generateHealthInsights(userId: string) {
       },
     })
     
-    // Analyze blood pressure if available
+    // Phân tích huyết áp nếu có sẵn
     const bloodPressureMetrics = recentMetrics.filter(m => m.type === 'BLOOD_PRESSURE')
     if (bloodPressureMetrics.length > 0) {
       const bpAnalysis = await analyzeBloodPressure(userId)
@@ -191,7 +191,7 @@ export async function generateHealthInsights(userId: string) {
       })
     }
     
-    // Add general recommendations based on profile data
+    // Thêm khuyến nghị chung dựa trên dữ liệu hồ sơ
     if (profile.medicalHistory) {
       insights.push({
         type: 'MEDICAL_HISTORY',
@@ -200,7 +200,7 @@ export async function generateHealthInsights(userId: string) {
       })
     }
     
-    // Age-based recommendations
+    // Khuyến nghị dựa trên tuổi
     if (profile.dateOfBirth) {
       const age = new Date().getFullYear() - new Date(profile.dateOfBirth).getFullYear()
       

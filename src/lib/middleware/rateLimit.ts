@@ -1,28 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApiError } from '../utils/apiError';
 
-// Simple in-memory store for rate limiting
-// In production, this should be replaced with Redis or similar
+// Lưu trữ đơn giản trong memory cho rate limiting
+// Trong production, nên thay thế bằng Redis hoặc tương tự
 const rateLimitStore = new Map<string, { count: number, resetTime: number }>();
 
 /**
- * Rate limiting middleware for API routes
- * @param req The Next.js request object
- * @param windowMs Time window in milliseconds
- * @param maxRequests Maximum number of requests allowed in the window
- * @param identifier Function to extract identifier from request (defaults to IP)
- * @returns NextResponse or throws ApiError if limit exceeded
+ * Middleware rate limiting cho API routes
+ * @param req Đối tượng request của Next.js
+ * @param windowMs Cửa sổ thời gian tính bằng milliseconds
+ * @param maxRequests Số lượng request tối đa được phép trong cửa sổ thời gian
+ * @param identifier Hàm để trích xuất identifier từ request (mặc định là IP)
+ * @returns NextResponse hoặc throw ApiError nếu vượt quá giới hạn
  */
 export async function rateLimit(
   req: NextRequest,
-  windowMs: number = 60 * 60 * 1000, // 1 hour by default
-  maxRequests: number = 10, // 10 requests per window by default
+  windowMs: number = 60 * 60 * 1000, // 1 giờ theo mặc định
+  maxRequests: number = 10, // 10 requests mỗi cửa sổ thời gian theo mặc định
   identifier: (req: NextRequest) => string = (req) => req.ip || 'unknown'
 ) {
   const id = identifier(req);
   const now = Date.now();
   
-  // Clean up expired entries
+  // Dọn dẹp các entries đã hết hạn
   Array.from(rateLimitStore.keys()).forEach(key => {
     const value = rateLimitStore.get(key);
     if (value && value.resetTime < now) {
@@ -30,7 +30,7 @@ export async function rateLimit(
     }
   });
   
-  // Get or create rate limit entry
+  // Lấy hoặc tạo rate limit entry
   let rateLimit = rateLimitStore.get(id);
   
   if (!rateLimit) {
@@ -41,15 +41,15 @@ export async function rateLimit(
     rateLimitStore.set(id, rateLimit);
   }
   
-  // Check if limit exceeded
+  // Kiểm tra có vượt quá giới hạn không
   if (rateLimit.count >= maxRequests) {
     throw ApiError.tooManyRequests(`Rate limit exceeded. Try again after ${new Date(rateLimit.resetTime).toLocaleTimeString()}`);
   }
   
-  // Increment counter
+  // Tăng bộ đếm
   rateLimit.count++;
   
-  // Add rate limit headers to response
+  // Thêm rate limit headers vào response
   const response = NextResponse.next();
   response.headers.set('X-RateLimit-Limit', maxRequests.toString());
   response.headers.set('X-RateLimit-Remaining', (maxRequests - rateLimit.count).toString());
@@ -59,15 +59,15 @@ export async function rateLimit(
 }
 
 /**
- * Review rate limiting - specific for doctor reviews
- * Limits to 5 reviews per 24 hours
+ * Rate limiting cho đánh giá - dành riêng cho đánh giá bác sĩ
+ * Giới hạn 5 đánh giá mỗi 24 giờ
  */
 export async function reviewRateLimit(req: NextRequest) {
   const userId = req.headers.get('x-user-id');
   return rateLimit(
     req,
-    24 * 60 * 60 * 1000, // 24 hours
-    5, // 5 reviews per 24 hours
+    24 * 60 * 60 * 1000, // 24 giờ
+    5, // 5 đánh giá mỗi 24 giờ
     () => `review_${userId || req.ip || 'unknown'}`
   );
 } 

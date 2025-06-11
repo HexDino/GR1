@@ -6,22 +6,22 @@ import { createReadStream } from 'fs';
 
 const prisma = new PrismaClient();
 
-// Configure Cloudinary
+// Cấu hình Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Configure multer for memory storage
+// Cấu hình multer cho memory storage
 const storage = multer.memoryStorage();
 const upload = multer({ 
   storage,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+    fileSize: 5 * 1024 * 1024, // Giới hạn 5MB
   },
   fileFilter: (req, file, cb) => {
-    // Accept images only
+    // Chỉ chấp nhận file hình ảnh
     if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
       return cb(new Error('Only image files are allowed!'), false);
     }
@@ -30,10 +30,10 @@ const upload = multer({
 });
 
 /**
- * Upload file to Cloudinary
- * @param {File} file - File to upload
- * @param {string} folder - Cloudinary folder to upload to
- * @returns {Promise<Object>} - Cloudinary upload response
+ * Tải file lên Cloudinary
+ * @param {File} file - File cần tải lên
+ * @param {string} folder - Thư mục Cloudinary để tải lên
+ * @returns {Promise<Object>} - Phản hồi từ Cloudinary upload
  */
 const uploadToCloudinary = async (file, folder = 'default') => {
   try {
@@ -49,11 +49,11 @@ const uploadToCloudinary = async (file, folder = 'default') => {
         }
       );
       
-      // If file is buffer (from multer memory storage)
+      // Nếu file là buffer (từ multer memory storage)
       if (Buffer.isBuffer(file)) {
         uploadStream.end(file);
       } else {
-        // If file is from fs.createReadStream
+        // Nếu file từ fs.createReadStream
         createReadStream(file.path).pipe(uploadStream);
       }
     });
@@ -71,9 +71,9 @@ const uploadToCloudinary = async (file, folder = 'default') => {
 };
 
 /**
- * Delete file from Cloudinary
- * @param {string} publicId - Cloudinary public ID of the file
- * @returns {Promise<Object>} - Cloudinary deletion response
+ * Xóa file từ Cloudinary
+ * @param {string} publicId - Public ID của file trên Cloudinary
+ * @returns {Promise<Object>} - Phản hồi xóa từ Cloudinary
  */
 const deleteFromCloudinary = async (publicId) => {
   try {
@@ -86,13 +86,13 @@ const deleteFromCloudinary = async (publicId) => {
 };
 
 /**
- * Save uploaded file details to the database
- * @param {Object} fileData - File data including url, publicId, etc.
- * @param {string} fileName - Original file name
- * @param {string} purpose - Purpose of the file (e.g., DOCTOR_PROFILE)
- * @param {string} entityId - ID of the related entity (e.g., doctorId)
- * @param {string} uploadedBy - User ID who uploaded the file
- * @returns {Promise<Object>} - Created Media record
+ * Lưu thông tin file đã tải lên vào cơ sở dữ liệu
+ * @param {Object} fileData - Dữ liệu file bao gồm url, publicId, v.v.
+ * @param {string} fileName - Tên file gốc
+ * @param {string} purpose - Mục đích của file (ví dụ: DOCTOR_PROFILE)
+ * @param {string} entityId - ID của thực thể liên quan (ví dụ: doctorId)
+ * @param {string} uploadedBy - ID người dùng đã tải lên file
+ * @returns {Promise<Object>} - Bản ghi Media đã tạo
  */
 const saveFileToDatabase = async (fileData, fileName, purpose, entityId, uploadedBy) => {
   try {
@@ -111,7 +111,7 @@ const saveFileToDatabase = async (fileData, fileName, purpose, entityId, uploade
     return media;
   } catch (error) {
     console.error('Error saving file to database:', error);
-    // If there's an error saving to the database, delete the file from Cloudinary
+    // Nếu có lỗi khi lưu vào cơ sở dữ liệu, xóa file từ Cloudinary
     if (fileData.publicId) {
       await deleteFromCloudinary(fileData.publicId);
     }
@@ -120,12 +120,12 @@ const saveFileToDatabase = async (fileData, fileName, purpose, entityId, uploade
 };
 
 /**
- * Upload an image for a doctor
- * @param {File} file - File to upload
- * @param {string} doctorId - Doctor ID
- * @param {string} userId - User ID who is uploading
- * @param {string} purpose - Purpose of the image (profile or gallery)
- * @returns {Promise<Object>} - Uploaded file data
+ * Tải lên hình ảnh cho bác sĩ
+ * @param {File} file - File cần tải lên
+ * @param {string} doctorId - ID bác sĩ
+ * @param {string} userId - ID người dùng đang tải lên
+ * @param {string} purpose - Mục đích của hình ảnh (profile hoặc gallery)
+ * @returns {Promise<Object>} - Dữ liệu file đã tải lên
  */
 const uploadDoctorImage = async (file, doctorId, userId, purpose = 'DOCTOR_PROFILE') => {
   const fileData = await uploadToCloudinary(file, 'doctors');
@@ -137,14 +137,14 @@ const uploadDoctorImage = async (file, doctorId, userId, purpose = 'DOCTOR_PROFI
     userId
   );
   
-  // Update doctor with the new image URL if it's a profile image
+  // Cập nhật bác sĩ với URL hình ảnh mới nếu là hình ảnh profile
   if (purpose === 'DOCTOR_PROFILE') {
     await prisma.doctor.update({
       where: { id: doctorId },
       data: { imageUrl: fileData.url },
     });
   } else if (purpose === 'DOCTOR_GALLERY') {
-    // Add image to doctor's gallery
+    // Thêm hình ảnh vào gallery của bác sĩ
     await prisma.doctor.update({
       where: { id: doctorId },
       data: {
@@ -159,11 +159,11 @@ const uploadDoctorImage = async (file, doctorId, userId, purpose = 'DOCTOR_PROFI
 };
 
 /**
- * Upload an image for a patient
- * @param {File} file - File to upload
- * @param {string} patientId - Patient ID
- * @param {string} userId - User ID who is uploading
- * @returns {Promise<Object>} - Uploaded file data
+ * Tải lên hình ảnh cho bệnh nhân
+ * @param {File} file - File cần tải lên
+ * @param {string} patientId - ID bệnh nhân
+ * @param {string} userId - ID người dùng đang tải lên
+ * @returns {Promise<Object>} - Dữ liệu file đã tải lên
  */
 const uploadPatientImage = async (file, patientId, userId) => {
   const fileData = await uploadToCloudinary(file, 'patients');
@@ -175,7 +175,7 @@ const uploadPatientImage = async (file, patientId, userId) => {
     userId
   );
   
-  // Update patient with the new image URL
+  // Cập nhật bệnh nhân với URL hình ảnh mới
   await prisma.patient.update({
     where: { id: patientId },
     data: { profileImage: fileData.url },
@@ -185,11 +185,11 @@ const uploadPatientImage = async (file, patientId, userId) => {
 };
 
 /**
- * Upload images for a review
- * @param {File[]} files - Files to upload
- * @param {string} reviewId - Review ID
- * @param {string} userId - User ID who is uploading
- * @returns {Promise<Object[]>} - Uploaded files data
+ * Tải lên hình ảnh cho đánh giá
+ * @param {File[]} files - Các file cần tải lên
+ * @param {string} reviewId - ID đánh giá
+ * @param {string} userId - ID người dùng đang tải lên
+ * @returns {Promise<Object[]>} - Dữ liệu các file đã tải lên
  */
 const uploadReviewImages = async (files, reviewId, userId) => {
   const uploadPromises = files.map(file => uploadToCloudinary(file, 'reviews'));
@@ -197,13 +197,13 @@ const uploadReviewImages = async (files, reviewId, userId) => {
   
   const imageUrls = fileDataArray.map(data => data.url);
   
-  // Update review with image URLs
+  // Cập nhật đánh giá với URL hình ảnh
   await prisma.doctorReview.update({
     where: { id: reviewId },
     data: { images: imageUrls },
   });
   
-  // Save file details to database
+  // Lưu chi tiết file vào cơ sở dữ liệu
   const savePromises = fileDataArray.map((fileData, index) => 
     saveFileToDatabase(
       fileData,

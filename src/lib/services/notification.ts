@@ -26,8 +26,8 @@ export async function createNotification({
       },
     })
     
-    // Here you would typically trigger real-time notifications
-    // through WebSockets or a similar technology
+    // Ở đây thường sẽ kích hoạt thông báo real-time
+    // thông qua WebSockets hoặc công nghệ tương tự
     await triggerRealTimeNotification(notification)
     
     return notification
@@ -89,14 +89,14 @@ export async function getUserNotifications(userId: string, limit = 10, offset = 
   }
 }
 
-// This function would be implemented with a real-time messaging service
-// like Socket.io, Pusher, or similar
+// Hàm này sẽ được implement với dịch vụ nhắn tin real-time
+// như Socket.io, Pusher, hoặc tương tự
 async function triggerRealTimeNotification(notification: any) {
-  // Implementation depends on your real-time solution
-  // This is a placeholder
+  // Implementation phụ thuộc vào giải pháp real-time của bạn
+  // Đây là placeholder
   console.log('Would send real-time notification:', notification)
   
-  // Example implementation with a hypothetical websocket service:
+  // Ví dụ implementation với websocket service giả định:
   // await websocketService.sendToUser(notification.userId, {
   //   type: 'NEW_NOTIFICATION',
   //   data: notification,

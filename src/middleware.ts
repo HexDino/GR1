@@ -4,18 +4,18 @@ import { verifyToken } from '@/lib/auth/jwt';
 
 export const config = {
   matcher: [
-    // Match all paths except _next, static files, favicon.ico
+    // Khớp tất cả đường dẫn trừ _next, static files, favicon.ico
     '/((?!_next/static|_next/image|favicon.ico).*)',
   ]
 };
 
 export async function middleware(request: NextRequest) {
-  // Public routes that don't require authentication
+  // Các route công khai không cần xác thực
   const publicRoutes = ['/login', '/register', '/', '/departments', '/doctors', '/about', '/contact'];
   const publicPaths = ['/icons', '/images', '/healthcare'];
   const apiPaths = ['/api/'];
   
-  // Skip middleware for public routes and assets
+  // Bỏ qua middleware cho các route công khai và tài nguyên
   if (
     publicRoutes.some(route => request.nextUrl.pathname === route || 
                                request.nextUrl.pathname.startsWith(route + '/')) ||
@@ -24,17 +24,17 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   
-  // API routes for authentication don't need authentication
+  // Các API route cho xác thực không cần xác thực
   if (request.nextUrl.pathname.startsWith('/api/auth/')) {
     return NextResponse.next();
   }
   
-  // Check for token cookie
+  // Kiểm tra token cookie
   const tokenCookie = request.cookies.get('token');
   
   if (!tokenCookie || !tokenCookie.value) {
     console.log('Middleware: No token found, redirect to home');
-    // Redirect to login if accessing protected routes
+    // Chuyển hướng đến đăng nhập nếu truy cập route được bảo vệ
     if (request.nextUrl.pathname.startsWith('/dashboard') ||
         (request.nextUrl.pathname.startsWith('/api/') && !request.nextUrl.pathname.startsWith('/api/auth/'))) {
       const loginUrl = new URL('/', request.url);
@@ -45,7 +45,7 @@ export async function middleware(request: NextRequest) {
   }
   
   try {
-    // Verify the token
+    // Xác minh token
     console.log('Middleware: Verifying token');
     const payload = await verifyToken(tokenCookie.value);
     
@@ -55,28 +55,28 @@ export async function middleware(request: NextRequest) {
     
     console.log('Middleware: Token verified for user:', payload.userId, 'role:', payload.role);
     
-    // Role-based access control
+    // Kiểm soát truy cập dựa trên vai trò
     if (payload && payload.role) {
       const { role } = payload;
       
-      // Check access for dashboard routes
+      // Kiểm tra quyền truy cập cho các route dashboard
       if (request.nextUrl.pathname.startsWith('/dashboard/')) {
-        // Extract the role from the URL
+        // Trích xuất vai trò từ URL
         const urlRole = request.nextUrl.pathname.split('/')[2]; // dashboard/{role}/*
         
         console.log('Middleware: Checking role access', { userRole: role, urlRole });
         
-        // If user trying to access dashboard for different role
+        // Nếu người dùng cố gắng truy cập dashboard của vai trò khác
         if (
           (role === 'DOCTOR' && urlRole !== 'doctor') ||
           (role === 'PATIENT' && urlRole !== 'patient') ||
           (role === 'ADMIN' && urlRole !== 'admin')
         ) {
           console.log('Middleware: Redirecting to correct dashboard for role:', role);
-          // Redirect to the appropriate dashboard
+          // Chuyển hướng đến dashboard phù hợp
           let correctDashboard = `/dashboard/${role.toLowerCase()}`;
           
-          // For admin users, redirect to doctors page
+          // Đối với admin, chuyển hướng đến trang doctors
           if (role === 'ADMIN') {
             correctDashboard = '/dashboard/admin/doctors';
           }
@@ -86,7 +86,7 @@ export async function middleware(request: NextRequest) {
       }
     }
     
-    // Set user info in request headers for API routes
+    // Thiết lập thông tin người dùng trong request headers cho API routes
     if (request.nextUrl.pathname.startsWith('/api/')) {
       const requestHeaders = new Headers(request.headers);
       requestHeaders.set('x-user-id', payload.userId);
@@ -103,10 +103,10 @@ export async function middleware(request: NextRequest) {
   } catch (error) {
     console.error('Middleware: Token validation error:', error);
     
-    // Invalid token, redirect to login
+    // Token không hợp lệ, chuyển hướng đến đăng nhập
     if (request.nextUrl.pathname.startsWith('/dashboard') ||
         request.nextUrl.pathname.startsWith('/api/')) {
-      // Clear the invalid token
+      // Xóa token không hợp lệ
       const response = NextResponse.redirect(new URL('/', request.url));
       response.cookies.delete('token');
       response.cookies.delete('refreshToken');

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { 
   XMarkIcon, 
   EnvelopeIcon, 
@@ -121,10 +122,12 @@ export const UserViewModal = ({ isOpen, onClose, user }: UserViewModalProps) => 
             <div className="flex items-center mb-6">
               <div className="flex-shrink-0">
                 {user.profileImage ? (
-                  <img 
+                  <Image 
                     className="h-20 w-20 rounded-full object-cover border-4 border-gray-100" 
                     src={user.profileImage} 
-                    alt={user.name} 
+                    alt={user.name}
+                    width={80}
+                    height={80}
                   />
                 ) : (
                   <div className="h-20 w-20 rounded-full bg-purple-100 flex items-center justify-center border-4 border-gray-100">

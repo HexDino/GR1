@@ -1,0 +1,493 @@
+\documentclass[../DoAn.tex]{subfiles}
+\begin{document}
+
+\label{chapter:3}
+
+Chương này trình bày các công nghệ, nền tảng và thư viện được lựa chọn để phát triển hệ thống đặt lịch khám bệnh trực tuyến. Mỗi công nghệ được phân tích về mặt kỹ thuật và lý do lựa chọn dựa trên các yêu cầu chức năng và phi chức năng đã được xác định trong chương 2.
+
+\section{Nền tảng phát triển Frontend}
+\label{section:3.1}
+
+\subsection{Next.js Framework}
+\label{subsection:3.1.1}
+
+\textbf{Mô tả và đặc điểm:}
+
+Next.js là một React framework được phát triển bởi Vercel, cung cấp các tính năng như Server-Side Rendering (SSR), Static Site Generation (SSG), và API Routes \cite{nextjs}. Framework này được thiết kế để tối ưu hóa hiệu năng và trải nghiệm phát triển.
+
+Các tính năng chính của Next.js:
+\begin{itemize}
+    \item \textbf{Server-Side Rendering (SSR):} Render trang tại server để tối ưu SEO và loading time
+    \item \textbf{Static Site Generation (SSG):} Pre-build các trang tĩnh để tăng hiệu năng
+    \item \textbf{API Routes:} Tích hợp backend API trực tiếp trong framework
+    \item \textbf{Automatic Code Splitting:} Tự động chia nhỏ code để tối ưu loading
+    \item \textbf{Built-in CSS Support:} Hỗ trợ CSS Modules và Styled Components
+\end{itemize}
+
+\textbf{Giải quyết yêu cầu từ Chương 2:}
+
+Next.js được chọn để đáp ứng các yêu cầu đã nêu tại mục 2.4.1 về hiệu năng hệ thống:
+\begin{itemize}
+    \item \textbf{Thời gian phản hồi < 3 giây:} SSR và SSG giúp giảm thời gian tải trang ban đầu
+    \item \textbf{Hỗ trợ 1000+ concurrent users:} Architecture được tối ưu cho scalability
+    \item \textbf{SEO-friendly:} Server-side rendering cải thiện khả năng index của search engines
+\end{itemize}
+
+\textbf{So sánh với các lựa chọn thay thế:}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{3cm}|p{3cm}|p{4cm}|}
+\hline
+\textbf{Framework} & \textbf{SSR/SSG} & \textbf{Learning Curve} & \textbf{Ecosystem} \\
+\hline
+Next.js & Có (built-in) & Trung bình & Rộng, tích hợp tốt \\
+\hline
+Create React App & Không & Dễ & Cần setup thêm \\
+\hline
+Gatsby & SSG only & Khó & Tập trung static sites \\
+\hline
+Nuxt.js (Vue) & Có & Trung bình & Ecosystem Vue \\
+\hline
+\end{tabular}
+\caption{So sánh Next.js với các framework khác}
+\end{table}
+
+\textbf{Lý do lựa chọn:} Next.js được chọn vì cung cấp giải pháp toàn diện cho yêu cầu hiệu năng cao và SEO tốt của ứng dụng healthcare, đồng thời có ecosystem mạnh và documentation chi tiết.
+
+\subsection{React Library}
+\label{subsection:3.1.2}
+
+\textbf{Mô tả và đặc điểm:}
+
+React là một JavaScript library được phát triển bởi Facebook để xây dựng user interfaces, đặc biệt là Single Page Applications (SPAs) \cite{react}. React sử dụng mô hình component-based và Virtual DOM để tối ưu hóa hiệu năng rendering.
+
+Các đặc điểm nổi bật của React:
+\begin{itemize}
+    \item \textbf{Component-based Architecture:} Tái sử dụng code hiệu quả
+    \item \textbf{Virtual DOM:} Tối ưu hóa DOM manipulation
+    \item \textbf{Unidirectional Data Flow:} Dễ debug và maintain
+    \item \textbf{Rich Ecosystem:} Hàng nghìn thư viện hỗ trợ
+    \item \textbf{Developer Tools:} React DevTools mạnh mẽ
+\end{itemize}
+
+\textbf{Giải quyết yêu cầu từ Chương 2:}
+
+React đáp ứng yêu cầu về trải nghiệm người dùng được nêu tại mục 2.4.4:
+\begin{itemize}
+    \item \textbf{Responsive design:} Component-based cho phép tạo UI linh hoạt
+    \item \textbf{User-friendly interface:} Rich ecosystem với UI libraries như Material-UI, Ant Design
+    \item \textbf{Interactive features:} State management mạnh mẽ cho real-time interactions
+\end{itemize}
+
+\textbf{So sánh với các lựa chọn thay thế:}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{2.5cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}|}
+\hline
+\textbf{Library/Framework} & \textbf{Learning Curve} & \textbf{Performance} & \textbf{Community} & \textbf{Job Market} \\
+\hline
+React & Trung bình & Cao & Rất lớn & Rất tốt \\
+\hline
+Vue.js & Dễ & Cao & Lớn & Tốt \\
+\hline
+Angular & Khó & Cao & Lớn & Tốt \\
+\hline
+Svelte & Dễ & Rất cao & Nhỏ & Ít \\
+\hline
+\end{tabular}
+\caption{So sánh React với các frontend frameworks khác}
+\end{table}
+
+\textbf{Lý do lựa chọn:} React được chọn vì có community lớn nhất, ecosystem phong phú cho healthcare applications, và khả năng tương thích tốt với Next.js framework.
+
+\section{Ngôn ngữ lập trình và Type Safety}
+\label{section:3.2}
+
+\subsection{TypeScript}
+\label{subsection:3.2.1}
+
+\textbf{Mô tả và đặc điểm:}
+
+TypeScript là một ngôn ngữ lập trình được phát triển bởi Microsoft, mở rộng JavaScript bằng cách thêm static type definitions \cite{typescript}. TypeScript được compile thành JavaScript và tương thích với tất cả JavaScript libraries.
+
+Các tính năng chính của TypeScript:
+\begin{itemize}
+    \item \textbf{Static Type Checking:} Phát hiện lỗi tại compile time
+    \item \textbf{Enhanced IDE Support:} IntelliSense, auto-completion mạnh mẽ
+    \item \textbf{Modern JavaScript Features:} Hỗ trợ ES6+ features
+    \item \textbf{Interface và Type Definitions:} Định nghĩa contracts rõ ràng
+    \item \textbf{Backward Compatibility:} Tương thích hoàn toàn với JavaScript
+\end{itemize}
+
+\textbf{Giải quyết yêu cầu từ Chương 2:}
+
+TypeScript đáp ứng yêu cầu về bảo mật và độ tin cậy được nêu tại mục 2.4.2 và 2.4.3:
+\begin{itemize}
+    \item \textbf{Type safety cho dữ liệu y tế:} Đảm bảo data integrity cho thông tin nhạy cảm
+    \item \textbf{Error handling tốt hơn:} Compile-time checking giảm runtime errors
+    \item \textbf{Code maintainability:} Refactoring an toàn và documentation tự động
+\end{itemize}
+
+\textbf{So sánh với các lựa chọn thay thế:}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{3cm}|p{3cm}|p{4cm}|}
+\hline
+\textbf{Ngôn ngữ} & \textbf{Type Safety} & \textbf{Development Speed} & \textbf{Healthcare Suitability} \\
+\hline
+TypeScript & Tĩnh, mạnh & Cao (sau learning curve) & Rất tốt \\
+\hline
+JavaScript & Động, yếu & Rất cao & Trung bình \\
+\hline
+Flow & Tĩnh (Facebook) & Trung bình & Tốt \\
+\hline
+Dart & Tĩnh, mạnh & Cao & Tốt (Flutter focus) \\
+\hline
+\end{tabular}
+\caption{So sánh TypeScript với các ngôn ngữ khác}
+\end{table}
+
+\textbf{Lý do lựa chọn:} TypeScript được chọn vì đảm bảo type safety cho dữ liệu y tế quan trọng, giảm bugs trong production, và có hỗ trợ tốt từ Next.js ecosystem.
+
+\section{Hệ quản trị cơ sở dữ liệu}
+\label{section:3.3}
+
+\subsection{PostgreSQL}
+\label{subsection:3.3.1}
+
+\textbf{Mô tả và đặc điểm:}
+
+PostgreSQL là một hệ quản trị cơ sở dữ liệu quan hệ mã nguồn mở, được biết đến với độ tin cậy cao, tính năng phong phú và tuân thủ standards \cite{postgresql}. PostgreSQL hỗ trợ cả SQL và JSON, làm cho nó phù hợp cho các ứng dụng hiện đại.
+
+Các tính năng nổi bật của PostgreSQL:
+\begin{itemize}
+    \item \textbf{ACID Compliance:} Đảm bảo tính toàn vẹn dữ liệu
+    \item \textbf{Advanced Data Types:} JSON, Arrays, Geometric types
+    \item \textbf{Full-text Search:} Tìm kiếm văn bản mạnh mẽ
+    \item \textbf{Extensibility:} Custom functions, operators, data types
+    \item \textbf{Concurrency Control:} MVCC (Multi-Version Concurrency Control)
+\end{itemize}
+
+\textbf{Giải quyết yêu cầu từ Chương 2:}
+
+PostgreSQL đáp ứng các yêu cầu về bảo mật và độ tin cậy tại mục 2.4.2 và 2.4.3:
+\begin{itemize}
+    \item \textbf{Data integrity cho thông tin y tế:} ACID properties và constraints mạnh mẽ
+    \item \textbf{Backup và recovery:} Point-in-time recovery và replication
+    \item \textbf{Security features:} Row-level security, encryption, SSL support
+    \item \textbf{Scalability:} Read replicas và partitioning cho high throughput
+\end{itemize}
+
+\textbf{So sánh với các lựa chọn thay thế:}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{2.5cm}|p{2cm}|p{2cm}|p{2cm}|p{2cm}|p{2cm}|}
+\hline
+\textbf{Database} & \textbf{ACID} & \textbf{JSON Support} & \textbf{Scalability} & \textbf{Cost} & \textbf{Healthcare Use} \\
+\hline
+PostgreSQL & Có & Tốt & Tốt & Miễn phí & Rất phổ biến \\
+\hline
+MySQL & Có & Cơ bản & Tốt & Miễn phí & Phổ biến \\
+\hline
+MongoDB & Eventual & Native & Rất tốt & Miễn phí & Ít hơn \\
+\hline
+Oracle & Có & Tốt & Rất tốt & Đắt & Phổ biến \\
+\hline
+\end{tabular}
+\caption{So sánh PostgreSQL với các database khác}
+\end{table}
+
+\textbf{Lý do lựa chọn:} PostgreSQL được chọn vì đáp ứng đầy đủ yêu cầu về data integrity, security và performance cho healthcare applications, đồng thời có chi phí thấp và community hỗ trợ mạnh.
+
+\subsection{Prisma ORM}
+\label{subsection:3.3.2}
+
+\textbf{Mô tả và đặc điểm:}
+
+Prisma là một next-generation ORM (Object-Relational Mapping) cho Node.js và TypeScript, cung cấp type-safe database client và migration system \cite{prisma}. Prisma tự động generate type-safe client từ database schema.
+
+Các tính năng chính của Prisma:
+\begin{itemize}
+    \item \textbf{Type-safe Database Client:} Auto-generated từ schema
+    \item \textbf{Declarative Database Schema:} Định nghĩa schema bằng Prisma Schema Language
+    \item \textbf{Database Migrations:} Automated migration generation
+    \item \textbf{Prisma Studio:} GUI tool để quản lý dữ liệu
+    \item \textbf{Query Optimization:} Efficient SQL generation
+\end{itemize}
+
+\textbf{Giải quyết yêu cầu từ Chương 2:}
+
+Prisma hỗ trợ yêu cầu về type safety và development efficiency:
+\begin{itemize}
+    \item \textbf{Type safety cho medical data:} Prevent data corruption qua type checking
+    \item \textbf{Database schema management:} Version control cho database changes
+    \item \textbf{Developer productivity:} Auto-completion và compile-time checking
+\end{itemize}
+
+\textbf{So sánh với các lựa chọn thay thế:}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{3cm}|p{3cm}|p{4cm}|}
+\hline
+\textbf{ORM} & \textbf{Type Safety} & \textbf{Learning Curve} & \textbf{Performance} \\
+\hline
+Prisma & Rất tốt & Dễ & Tốt \\
+\hline
+TypeORM & Tốt & Trung bình & Tốt \\
+\hline
+Sequelize & Cơ bản & Dễ & Trung bình \\
+\hline
+Knex.js & Không & Khó & Rất tốt \\
+\hline
+\end{tabular}
+\caption{So sánh Prisma với các ORM khác}
+\end{table}
+
+\textbf{Lý do lựa chọn:} Prisma được chọn vì cung cấp type safety tốt nhất cho TypeScript, có developer experience xuất sắc, và migration system mạnh mẽ phù hợp với healthcare data requirements.
+
+\section{Trí tuệ nhân tạo và Chatbot}
+\label{section:3.4}
+
+\subsection{OpenAI GPT-4 API}
+\label{subsection:3.4.1}
+
+\textbf{Mô tả và đặc điểm:}
+
+OpenAI GPT-4 là một large language model (LLM) tiên tiến, có khả năng hiểu và sinh ra văn bản tự nhiên với độ chính xác cao \cite{openai}. GPT-4 được huấn luyện trên dữ liệu đa dạng và có thể xử lý các tác vụ phức tạp về ngôn ngữ tự nhiên.
+
+Các khả năng chính của GPT-4:
+\begin{itemize}
+    \item \textbf{Natural Language Understanding:} Hiểu context và intent của người dùng
+    \item \textbf{Medical Knowledge:} Được huấn luyện trên dữ liệu y tế rộng lớn
+    \item \textbf{Conversational AI:} Duy trì context qua nhiều lượt hội thoại
+    \item \textbf{Multilingual Support:} Hỗ trợ tiếng Việt và tiếng Anh
+    \item \textbf{Safety Measures:} Built-in content filtering và ethical guidelines
+\end{itemize}
+
+\textbf{Giải quyết yêu cầu từ Chương 2:}
+
+GPT-4 API đáp ứng yêu cầu tư vấn AI được nêu trong use case UC004 tại mục 2.2.4:
+\begin{itemize}
+    \item \textbf{Tư vấn triệu chứng sơ bộ:} Phân tích triệu chứng và gợi ý chuyên khoa
+    \item \textbf{Hỗ trợ 24/7:} API có thể hoạt động liên tục
+    \item \textbf{Đa ngôn ngữ:} Hỗ trợ cả tiếng Việt và tiếng Anh theo yêu cầu tại mục 2.4.4
+\end{itemize}
+
+\textbf{So sánh với các lựa chọn thay thế:}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}|}
+\hline
+\textbf{AI Service} & \textbf{Medical Knowledge} & \textbf{Vietnamese} & \textbf{API Quality} & \textbf{Cost} \\
+\hline
+GPT-4 & Rất tốt & Tốt & Rất tốt & Cao \\
+\hline
+GPT-3.5 & Tốt & Tốt & Tốt & Trung bình \\
+\hline
+Claude & Tốt & Trung bình & Tốt & Cao \\
+\hline
+PaLM 2 & Tốt & Cơ bản & Tốt & Trung bình \\
+\hline
+\end{tabular}
+\caption{So sánh GPT-4 với các AI services khác}
+\end{table}
+
+\textbf{Lý do lựa chọn:} GPT-4 được chọn vì có kiến thức y tế sâu rộng nhất, hỗ trợ tiếng Việt tốt, và có API documentation đầy đủ với safety measures phù hợp cho healthcare applications.
+
+\section{Xác thực và Bảo mật}
+\label{section:3.5}
+
+\subsection{JSON Web Token (JWT)}
+\label{subsection:3.5.1}
+
+\textbf{Mô tả và đặc điểm:}
+
+JSON Web Token (JWT) là một open standard (RFC 7519) để truyền tải thông tin một cách an toàn giữa các parties dưới dạng JSON object \cite{jwt}. JWT được sử dụng rộng rãi cho authentication và authorization trong các ứng dụng web hiện đại.
+
+Cấu trúc của JWT gồm 3 phần:
+\begin{itemize}
+    \item \textbf{Header:} Chứa metadata về token type và signing algorithm
+    \item \textbf{Payload:} Chứa claims (thông tin về user và metadata)
+    \item \textbf{Signature:} Đảm bảo tính toàn vẹn của token
+\end{itemize}
+
+\textbf{Giải quyết yêu cầu từ Chương 2:}
+
+JWT đáp ứng yêu cầu về bảo mật được nêu tại mục 2.4.3:
+\begin{itemize}
+    \item \textbf{Stateless authentication:} Giảm tải cho server và tăng scalability
+    \item \textbf{Session timeout 24h:} Configurable expiration time
+    \item \textbf{Role-based authorization:} Embed user roles trong payload
+    \item \textbf{Secure transmission:} Signed tokens đảm bảo integrity
+\end{itemize}
+
+\textbf{So sánh với các lựa chọn thay thế:}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}|}
+\hline
+\textbf{Auth Method} & \textbf{Stateless} & \textbf{Scalability} & \textbf{Security} & \textbf{Complexity} \\
+\hline
+JWT & Có & Rất tốt & Tốt & Thấp \\
+\hline
+Session Cookies & Không & Trung bình & Tốt & Thấp \\
+\hline
+OAuth 2.0 & Có & Tốt & Rất tốt & Cao \\
+\hline
+SAML & Có & Tốt & Rất tốt & Rất cao \\
+\hline
+\end{tabular}
+\caption{So sánh JWT với các phương pháp authentication khác}
+\end{table}
+
+\textbf{Lý do lựa chọn:} JWT được chọn vì cung cấp giải pháp stateless authentication phù hợp với microservices architecture, dễ implement và có security level phù hợp với healthcare applications.
+
+\section{Styling và User Interface}
+\label{section:3.6}
+
+\subsection{Tailwind CSS}
+\label{subsection:3.6.1}
+
+\textbf{Mô tả và đặc điểm:}
+
+Tailwind CSS là một utility-first CSS framework cung cấp low-level utility classes để xây dựng custom designs \cite{tailwind}. Khác với component-based frameworks như Bootstrap, Tailwind cho phép tạo ra designs độc đáo mà không cần override styles.
+
+Các đặc điểm chính của Tailwind CSS:
+\begin{itemize}
+    \item \textbf{Utility-first Approach:} Compose styles từ small utility classes
+    \item \textbf{Responsive Design:} Built-in responsive utilities
+    \item \textbf{Customizable:} Extensive configuration options
+    \item \textbf{Performance:} PurgeCSS removes unused styles
+    \item \textbf{Dark Mode Support:} First-class dark mode utilities
+\end{itemize}
+
+\textbf{Giải quyết yêu cầu từ Chương 2:}
+
+Tailwind CSS đáp ứng yêu cầu về UI/UX tại mục 2.4.4:
+\begin{itemize}
+    \item \textbf{Responsive design:} Mobile-first utilities cho tất cả devices
+    \item \textbf{Accessibility:} Built-in focus states và screen reader utilities
+    \item \textbf{Consistent design system:} Predefined spacing, colors, typography
+    \item \textbf{Development speed:} Rapid prototyping với utility classes
+\end{itemize}
+
+\textbf{So sánh với các lựa chọn thay thế:}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}|}
+\hline
+\textbf{CSS Framework} & \textbf{Customization} & \textbf{File Size} & \textbf{Learning Curve} & \textbf{Flexibility} \\
+\hline
+Tailwind CSS & Rất tốt & Nhỏ (purged) & Trung bình & Rất cao \\
+\hline
+Bootstrap & Trung bình & Lớn & Dễ & Trung bình \\
+\hline
+Material-UI & Thấp & Lớn & Dễ & Thấp \\
+\hline
+Styled Components & Rất tốt & Trung bình & Khó & Rất cao \\
+\hline
+\end{tabular}
+\caption{So sánh Tailwind CSS với các CSS frameworks khác}
+\end{table}
+
+\textbf{Lý do lựa chọn:} Tailwind CSS được chọn vì cho phép tạo ra healthcare-specific design system, có performance tốt, responsive utilities mạnh mẽ, và tích hợp tốt với Next.js ecosystem.
+
+\section{Tích hợp và Deployment}
+\label{section:3.7}
+
+\subsection{Vercel Platform}
+\label{subsection:3.7.1}
+
+\textbf{Mô tả và đặc điểm:}
+
+Vercel là một cloud platform được tối ưu hóa cho frontend frameworks, đặc biệt là Next.js \cite{vercel}. Vercel cung cấp global CDN, automatic scaling, và serverless functions.
+
+Các tính năng chính của Vercel:
+\begin{itemize}
+    \item \textbf{Global Edge Network:} Deploy tại 40+ regions worldwide
+    \item \textbf{Automatic HTTPS:} SSL certificates tự động
+    \item \textbf{Serverless Functions:} API endpoints với auto-scaling
+    \item \textbf{Preview Deployments:} Unique URLs cho mỗi commit
+    \item \textbf{Performance Monitoring:} Built-in analytics và performance metrics
+\end{itemize}
+
+\textbf{Giải quyết yêu cầu từ Chương 2:}
+
+Vercel đáp ứng các yêu cầu về deployment được nêu tại mục 2.4.6:
+\begin{itemize}
+    \item \textbf{Global availability:} Edge network giảm latency
+    \item \textbf{Auto-scaling:} Handle traffic spikes tự động
+    \item \textbf{HTTPS enforcement:} Built-in SSL cho security requirements
+    \item \textbf{Monitoring và logging:} Real-time performance tracking
+\end{itemize}
+
+\subsection{Docker Containerization}
+\label{subsection:3.7.2}
+
+\textbf{Mô tả và đặc điểm:}
+
+Docker là một containerization platform cho phép package applications cùng với dependencies vào lightweight containers \cite{docker}. Container đảm bảo consistency across different environments.
+
+Lợi ích của Docker:
+\begin{itemize}
+    \item \textbf{Environment Consistency:} "Works on my machine" không còn là vấn đề
+    \item \textbf{Resource Efficiency:} Chia sẻ OS kernel, nhẹ hơn VMs
+    \item \textbf{Scalability:} Dễ dàng scale containers theo demand
+    \item \textbf{CI/CD Integration:} Streamline deployment pipeline
+\end{itemize}
+
+\textbf{Giải quyết yêu cầu từ Chương 2:}
+
+Docker hỗ trợ yêu cầu về môi trường triển khai tại mục 2.4.6:
+\begin{itemize}
+    \item \textbf{Environment isolation:} Tách biệt dependencies giữa services
+    \item \textbf{Deployment consistency:} Same environment từ dev đến production
+    \item \textbf{Microservices support:} Container cho từng service component
+\end{itemize}
+
+\section{Kiến trúc tổng thể}
+\label{section:3.8}
+
+\subsection{Microservices Architecture Pattern}
+\label{subsection:3.8.1}
+
+\textbf{Mô tả và lý thuyết:}
+
+Microservices là một architectural pattern chia ứng dụng thành các services nhỏ, độc lập, có thể deploy riêng biệt \cite{microservices}. Mỗi service chịu trách nhiệm cho một business domain cụ thể và communicate qua well-defined APIs.
+
+Các nguyên tắc chính của Microservices:
+\begin{itemize}
+    \item \textbf{Single Responsibility:} Mỗi service có một business purpose rõ ràng
+    \item \textbf{Decentralized:} Autonomous development và deployment
+    \item \textbf{Technology Agnostic:} Mỗi service có thể sử dụng technology stack riêng
+    \item \textbf{Failure Isolation:} Lỗi ở một service không affect toàn hệ thống
+\end{itemize}
+
+\textbf{Áp dụng vào hệ thống:}
+
+Dựa trên phân tích use cases ở Chương 2, hệ thống được chia thành các services:
+\begin{itemize}
+    \item \textbf{User Service:} Quản lý authentication và user profiles
+    \item \textbf{Appointment Service:} Xử lý booking và scheduling logic
+    \item \textbf{Medical Records Service:} Lưu trữ và quản lý health records
+    \item \textbf{AI Consultation Service:} Tích hợp GPT-4 cho chatbot
+    \item \textbf{Notification Service:} Email và SMS notifications
+\end{itemize}
+
+\section*{Kết chương}
+
+Chương này đã trình bày chi tiết các công nghệ được lựa chọn để phát triển hệ thống đặt lịch khám bệnh trực tuyến. Mỗi công nghệ đều được phân tích kỹ lưỡng về mặt kỹ thuật và so sánh với các alternatives để đưa ra quyết định phù hợp nhất.
+
+Việc lựa chọn Next.js + React + TypeScript tạo nên foundation mạnh mẽ cho frontend với type safety và performance cao. PostgreSQL + Prisma đảm bảo data integrity và developer experience tốt cho healthcare data. OpenAI GPT-4 cung cấp AI capabilities tiên tiến cho tính năng tư vấn. JWT authentication và Tailwind CSS hoàn thiện stack với security và UI/UX requirements.
+
+Kiến trúc microservices được áp dụng để đảm bảo scalability và maintainability, phù hợp với các yêu cầu phi chức năng đã được định nghĩa. Tất cả các công nghệ được chọn đều có ecosystem mạnh, documentation tốt, và được sử dụng rộng rãi trong industry, đảm bảo tính bền vững cho dự án.
+
+\end{document} 

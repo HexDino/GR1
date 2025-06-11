@@ -2,30 +2,30 @@ const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
 
-// Database check functions consolidated
+// Các hàm kiểm tra cơ sở dữ liệu được gộp chung
 async function checkDatabase() {
   try {
-    console.log('🔍 Checking database...');
+    console.log('🔍 Đang kiểm tra cơ sở dữ liệu...');
     
     const users = await prisma.user.findMany();
-    console.log(`👥 Total users: ${users.length}`);
-    console.log(`👨‍⚕️ Doctors: ${users.filter(u => u.role === 'DOCTOR').length}`);
-    console.log(`🤒 Patients: ${users.filter(u => u.role === 'PATIENT').length}`);
-    console.log(`👨‍💼 Admins: ${users.filter(u => u.role === 'ADMIN').length}`);
+    console.log(`👥 Tổng số người dùng: ${users.length}`);
+    console.log(`👨‍⚕️ Bác sĩ: ${users.filter(u => u.role === 'DOCTOR').length}`);
+    console.log(`🤒 Bệnh nhân: ${users.filter(u => u.role === 'PATIENT').length}`);
+    console.log(`👨‍💼 Quản trị viên: ${users.filter(u => u.role === 'ADMIN').length}`);
     
     const doctors = await prisma.doctor.findMany();
-    console.log(`🩺 Doctor records: ${doctors.length}`);
+    console.log(`🩺 Hồ sơ bác sĩ: ${doctors.length}`);
     
     const patients = await prisma.patient.findMany();
-    console.log(`📋 Patient records: ${patients.length}`);
+    console.log(`📋 Hồ sơ bệnh nhân: ${patients.length}`);
     
     const appointments = await prisma.appointment.count();
-    console.log(`📅 Appointments: ${appointments}`);
+    console.log(`📅 Lịch hẹn: ${appointments}`);
     
     const medicines = await prisma.medicine.count();
-    console.log(`💊 Medicines: ${medicines}`);
+    console.log(`💊 Thuốc: ${medicines}`);
     
-    console.log('\n📧 Sample user emails:');
+    console.log('\n📧 Email người dùng mẫu:');
     users.slice(0, 5).forEach(user => {
       console.log(`- ${user.email} (${user.role})`);
     });
@@ -37,9 +37,9 @@ async function checkDatabase() {
 
 async function debugUsers() {
   try {
-    console.log('🔍 Debugging user relationships...');
+    console.log('🔍 Đang debug mối quan hệ người dùng...');
     
-    // Check patients with their User relationship
+    // Kiểm tra bệnh nhân với mối quan hệ User của họ
     const patients = await prisma.patient.findMany({
       include: {
         user: {
@@ -52,12 +52,12 @@ async function debugUsers() {
       }
     });
     
-    console.log('\n🤒 Patients and their User records:');
+    console.log('\n🤒 Bệnh nhân và hồ sơ User của họ:');
     patients.forEach(patient => {
-      console.log(`- Patient ID: ${patient.id} | User ID: ${patient.userId} | Email: ${patient.user.email}`);
+      console.log(`- ID Bệnh nhân: ${patient.id} | ID User: ${patient.userId} | Email: ${patient.user.email}`);
     });
     
-    // Check doctors with their User relationship
+    // Kiểm tra bác sĩ với mối quan hệ User của họ
     const doctors = await prisma.doctor.findMany({
       include: {
         user: {
@@ -70,12 +70,12 @@ async function debugUsers() {
       }
     });
     
-    console.log('\n👨‍⚕️ Doctors and their User records:');
+    console.log('\n👨‍⚕️ Bác sĩ và hồ sơ User của họ:');
     doctors.forEach(doctor => {
-      console.log(`- Doctor ID: ${doctor.id} | User ID: ${doctor.userId} | Email: ${doctor.user.email}`);
+      console.log(`- ID Bác sĩ: ${doctor.id} | ID User: ${doctor.userId} | Email: ${doctor.user.email}`);
     });
     
-    // Check for missing relationships
+    // Kiểm tra các mối quan hệ bị thiếu
     const patientUsers = await prisma.user.findMany({
       where: { role: 'PATIENT' },
       include: { patient: true }
@@ -86,16 +86,16 @@ async function debugUsers() {
       include: { doctor: true }
     });
     
-    console.log('\n⚠️  Missing relationships:');
+    console.log('\n⚠️  Mối quan hệ bị thiếu:');
     patientUsers.forEach(user => {
       if (!user.patient) {
-        console.log(`- Missing Patient record for user: ${user.email}`);
+        console.log(`- Thiếu hồ sơ Bệnh nhân cho user: ${user.email}`);
       }
     });
     
     doctorUsers.forEach(user => {
       if (!user.doctor) {
-        console.log(`- Missing Doctor record for user: ${user.email}`);
+        console.log(`- Thiếu hồ sơ Bác sĩ cho user: ${user.email}`);
       }
     });
     
@@ -106,9 +106,9 @@ async function debugUsers() {
 
 async function finalDatabaseCheck() {
   try {
-    console.log('🏁 Final database validation...');
+    console.log('🏁 Kiểm tra cơ sở dữ liệu cuối cùng...');
     
-    // Check all critical tables
+    // Kiểm tra tất cả các bảng quan trọng
     const counts = await Promise.all([
       prisma.user.count(),
       prisma.doctor.count(),
@@ -118,15 +118,15 @@ async function finalDatabaseCheck() {
       prisma.medicine.count()
     ]);
     
-    console.log('\n📊 Database Summary:');
-    console.log(`Users: ${counts[0]}`);
-    console.log(`Doctors: ${counts[1]}`);
-    console.log(`Patients: ${counts[2]}`);
-    console.log(`Appointments: ${counts[3]}`);
-    console.log(`Prescriptions: ${counts[4]}`);
-    console.log(`Medicines: ${counts[5]}`);
+    console.log('\n📊 Tóm tắt cơ sở dữ liệu:');
+    console.log(`Người dùng: ${counts[0]}`);
+    console.log(`Bác sĩ: ${counts[1]}`);
+    console.log(`Bệnh nhân: ${counts[2]}`);
+    console.log(`Lịch hẹn: ${counts[3]}`);
+    console.log(`Đơn thuốc: ${counts[4]}`);
+    console.log(`Thuốc: ${counts[5]}`);
     
-    // Check data integrity
+    // Kiểm tra tính toàn vẹn dữ liệu
     const usersWithoutRoleRecords = await prisma.user.findMany({
       where: {
         OR: [
@@ -137,12 +137,12 @@ async function finalDatabaseCheck() {
     });
     
     if (usersWithoutRoleRecords.length > 0) {
-      console.log('\n⚠️  Data integrity issues:');
+      console.log('\n⚠️  Vấn đề về tính toàn vẹn dữ liệu:');
       usersWithoutRoleRecords.forEach(user => {
-        console.log(`- ${user.email} (${user.role}) missing role record`);
+        console.log(`- ${user.email} (${user.role}) thiếu hồ sơ vai trò`);
       });
     } else {
-      console.log('\n✅ Data integrity: OK');
+      console.log('\n✅ Tính toàn vẹn dữ liệu: OK');
     }
     
   } catch (error) {
@@ -150,7 +150,7 @@ async function finalDatabaseCheck() {
   }
 }
 
-// Main function to run selected checks
+// Hàm chính để chạy các kiểm tra đã chọn
 async function main() {
   const command = process.argv[2];
   
@@ -173,11 +173,11 @@ async function main() {
         await finalDatabaseCheck();
         break;
       default:
-        console.log('Usage: node scripts/database-utils.js [check|debug|final|all]');
-        console.log('  check - Basic database check');
-        console.log('  debug - Debug user relationships');
-        console.log('  final - Final validation');
-        console.log('  all   - Run all checks');
+        console.log('Cách sử dụng: node scripts/database-utils.js [check|debug|final|all]');
+        console.log('  check - Kiểm tra cơ sở dữ liệu cơ bản');
+        console.log('  debug - Debug mối quan hệ người dùng');
+        console.log('  final - Kiểm tra cuối cùng');
+        console.log('  all   - Chạy tất cả kiểm tra');
         break;
     }
   } catch (error) {

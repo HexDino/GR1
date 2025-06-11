@@ -1,0 +1,45 @@
+\documentclass[../DoAn.tex]{subfiles}
+\begin{document}
+\section{Đặt vấn đề}
+\label{section:1.1}
+
+Trong bối cảnh y tế hiện đại, việc tiếp cận dịch vụ khám chữa bệnh đang đối mặt với nhiều thách thức nghiêm trọng. Hệ thống đặt lịch khám bệnh truyền thống tại các bệnh viện và phòng khám thường yêu cầu bệnh nhân phải đến trực tiếp để đăng ký, dẫn đến tình trạng xếp hàng chờ đợi kéo dài và lãng phí thời gian. Đặc biệt trong giai đoạn dịch bệnh COVID-19, việc tập trung đông người tại các cơ sở y tế tạo ra nguy cơ lây nhiễm cao và ảnh hưởng tiêu cực đến sức khỏe cộng đồng.
+
+Bên cạnh đó, việc quản lý thông tin bệnh nhân và lịch sử khám bệnh hiện tại chủ yếu dựa vào hồ sơ giấy tờ, gây khó khăn trong việc theo dõi, tra cứu và chia sẻ thông tin giữa các bác sĩ. Bệnh nhân thường gặp khó khăn trong việc lựa chọn bác sĩ phù hợp do thiếu thông tin minh bạch về chuyên môn, kinh nghiệm và đánh giá từ những bệnh nhân khác. Hơn nữa, việc tư vấn sơ bộ về triệu chứng trước khi đến khám chưa được hỗ trợ hiệu quả, dẫn đến tình trạng bệnh nhân đến sai chuyên khoa hoặc không chuẩn bị đầy đủ thông tin cần thiết.
+
+Nếu những vấn đề này được giải quyết một cách toàn diện, hệ thống y tế sẽ hoạt động hiệu quả hơn đáng kể. Bệnh nhân sẽ tiết kiệm được thời gian và chi phí di chuyển, đồng thời có trải nghiệm khám chữa bệnh thuận lợi và an toàn hơn. Đối với các cơ sở y tế, việc số hóa quy trình quản lý sẽ giúp tối ưu hóa việc sử dụng nguồn lực, giảm tải công việc hành chính và nâng cao chất lượng dịch vụ chăm sóc sức khỏe.
+
+\section{Mục tiêu và phạm vi đề tài}
+\label{section:1.2}
+
+Hiện tại, thị trường đã xuất hiện một số giải pháp đặt lịch khám bệnh trực tuyến như BookingCare, Medpro hay Doctor Anywhere. Những ứng dụng này chủ yếu tập trung vào việc số hóa quy trình đặt lịch cơ bản, cho phép bệnh nhân tìm kiếm bác sĩ theo chuyên khoa và đặt lịch hẹn thông qua giao diện web hoặc mobile. Một số nền tảng cũng cung cấp tính năng tele-health để hỗ trợ tư vấn từ xa.
+
+Tuy nhiên, các giải pháp hiện tại vẫn tồn tại những hạn chế đáng kể. Thứ nhất, hầu hết các hệ thống thiếu khả năng tư vấn sơ bộ thông minh, buộc bệnh nhân phải tự xác định chuyên khoa phù hợp mà không có sự hỗ trợ từ hệ thống. Thứ hai, việc quản lý đơn thuốc và theo dõi sức khỏe sau khám chưa được tích hợp hiệu quả, dẫn đến sự gián đoạn trong quy trình chăm sóc sức khỏe liên tục. Thứ ba, các hệ thống hiện tại chưa có khả năng phân tích và đưa ra khuyến nghị về sức khỏe dựa trên lịch sử khám bệnh và các chỉ số sinh học của bệnh nhân.
+
+Dựa trên những phân tích trên, đề tài hướng tới việc phát triển một hệ thống quản lý lịch hẹn khám bệnh trực tuyến toàn diện, tích hợp chatbot trí tuệ nhân tạo để hỗ trợ tư vấn sơ bộ và đặt lịch thông minh. Hệ thống sẽ có các chức năng chính bao gồm quản lý thông tin bệnh nhân và bác sĩ với phân quyền rõ ràng, hệ thống đặt lịch hẹn thông minh tránh xung đột thời gian, quản lý đơn thuốc điện tử, tích hợp chatbot AI để tư vấn triệu chứng và hỗ trợ đặt lịch, cùng với module theo dõi sức khỏe cá nhân. Hệ thống cũng sẽ cung cấp tính năng đánh giá và phản hồi về chất lượng dịch vụ của bác sĩ nhằm nâng cao minh bạch thông tin và chất lượng chăm sóc y tế.
+
+\section{Định hướng giải pháp}
+\label{section:1.3}
+
+Để giải quyết các vấn đề đã nêu, đề tài lựa chọn định hướng phát triển ứng dụng web sử dụng kiến trúc full-stack hiện đại kết hợp với công nghệ trí tuệ nhân tạo. Cụ thể, hệ thống được xây dựng trên nền tảng Next.js framework với React cho frontend, đảm bảo giao diện người dùng tương tác mượt mà và hiệu suất cao. Backend sử dụng Next.js API Routes kết hợp với Prisma ORM để quản lý cơ sở dữ liệu PostgreSQL, tạo nên kiến trúc ổn định và có khả năng mở rộng. Đặc biệt, hệ thống tích hợp OpenAI GPT-4 API để xây dựng chatbot thông minh, có khả năng hiểu và phân tích các triệu chứng mô tả bằng ngôn ngữ tự nhiên.
+
+Giải pháp của đề tài là một hệ thống web toàn diện cho phép bệnh nhân tương tác với chatbot AI để được tư vấn sơ bộ về triệu chứng và nhận khuyến nghị về chuyên khoa phù hợp trước khi đặt lịch hẹn. Hệ thống cung cấp giao diện trực quan để quản lý thông tin cá nhân, lịch sử khám bệnh, đơn thuốc và các chỉ số sức khỏe. Bác sĩ có thể quản lý lịch trình, thông tin bệnh nhân và kê đơn thuốc điện tử thông qua dashboard chuyên dụng. Administrator có toàn quyền quản lý hệ thống, giám sát hoạt động và đảm bảo chất lượng dịch vụ.
+
+Đóng góp chính của đồ án là việc tạo ra một nền tảng y tế số tích hợp hoàn chỉnh, kết hợp được tính tiện lợi của công nghệ web hiện đại với khả năng hỗ trợ thông minh của trí tuệ nhân tạo. Hệ thống không chỉ giải quyết được các vấn đề về đặt lịch và quản lý thông tin mà còn mang lại trải nghiệm người dùng vượt trội thông qua chatbot AI và các tính năng theo dõi sức khỏe thông minh. Kết quả đạt được là một ứng dụng web hoạt động ổn định, có khả năng xử lý đồng thời nhiều người dùng và sẵn sàng triển khai trong môi trường thực tế.
+
+\section{Bố cục đồ án}
+\label{section:1.4}
+
+Phần còn lại của báo cáo đồ án tốt nghiệp này được tổ chức như sau.
+
+Chương 2 trình bày cơ sở lý thuyết và các công nghệ nền tảng được sử dụng trong dự án. Chương này sẽ giới thiệu về kiến trúc ứng dụng web full-stack, các đặc điểm và ưu điểm của Next.js framework, React library cho xây dựng giao diện người dùng, cùng với TypeScript để đảm bảo tính an toàn kiểu dữ liệu. Bên cạnh đó, chương này cũng phân tích về hệ quản trị cơ sở dữ liệu PostgreSQL, Prisma ORM và các công nghệ xác thực người dùng. Phần cuối chương sẽ đề cập đến công nghệ trí tuệ nhân tạo, đặc biệt là OpenAI GPT-4 và cách tích hợp API để xây dựng chatbot thông minh.
+
+Trong Chương 3, tôi phân tích chi tiết yêu cầu hệ thống thông qua việc xác định các nhóm người dùng chính và các chức năng cần thiết cho từng nhóm. Chương này trình bày quá trình thu thập và phân tích yêu cầu chức năng bao gồm quản lý người dùng, đặt lịch hẹn, tư vấn AI, quản lý đơn thuốc và theo dõi sức khỏe. Đồng thời, các yêu cầu phi chức năng về hiệu suất, bảo mật, khả năng mở rộng và trải nghiệm người dùng cũng được xác định rõ ràng. Chương này cũng bao gồm việc mô hình hóa các ca sử dụng chính và xây dựng sơ đồ luồng hoạt động của hệ thống.
+
+Chương 4 tập trung vào thiết kế kiến trúc và giao diện hệ thống. Trong phần đầu, tôi trình bày thiết kế kiến trúc tổng thể của hệ thống theo mô hình MVC, phân tích các thành phần chính và cách thức tương tác giữa chúng. Tiếp theo là thiết kế cơ sở dữ liệu với các bảng, mối quan hệ và ràng buộc dữ liệu được mô tả thông qua ERD và schema Prisma. Phần thiết kế API REST endpoints sẽ định nghĩa các giao diện lập trình cho các chức năng chính của hệ thống. Cuối chương trình bày thiết kế giao diện người dùng với wireframes và mockups cho các màn hình chính, đảm bảo tính nhất quán và thân thiện với người dùng.
+
+Chương 5 mô tả quá trình cài đặt và phát triển hệ thống từ việc thiết lập môi trường phát triển đến triển khai các module chức năng. Chương này chi tiết cách cài đặt và cấu hình Next.js project, thiết lập cơ sở dữ liệu PostgreSQL và Prisma ORM, cùng với việc tích hợp các thư viện cần thiết. Quá trình phát triển các component React, xây dựng API endpoints, implementat chatbot AI và các tính năng bảo mật được trình bày một cách có hệ thống. Đặc biệt, chương này sẽ đi sâu vào việc tích hợp OpenAI GPT-4 API và xây dựng logic xử lý ngôn ngữ tự nhiên cho chatbot tư vấn y tế.
+
+Chương 6 trình bày kết quả thử nghiệm và đánh giá hệ thống thông qua các test case được thiết kế để kiểm tra tính đúng đắn của các chức năng chính. Chương này bao gồm việc thử nghiệm chức năng đăng ký, đăng nhập, đặt lịch hẹn, tương tác với chatbot AI, quản lý đơn thuốc và theo dõi sức khỏe. Bên cạnh đó, các thử nghiệm về hiệu suất, bảo mật và khả năng chịu tải của hệ thống cũng được thực hiện và phân tích. Phần cuối chương đánh giá tổng thể về mức độ hoàn thành các yêu cầu đã đề ra và so sánh với các giải pháp hiện có trên thị trường.
+
+\end{document}

@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
-// Service card component
+// Component thẻ dịch vụ
 const ServiceCard = ({ 
   title,
   description,
@@ -68,7 +68,7 @@ export const DepartmentSection = () => {
       id: 'orthopedics',
       name: 'Orthopedics',
       description: 'Treatment for bone, joint, and muscle conditions',
-      icon: '/icons/cardiology.png'  // Using existing image as placeholder
+      icon: '/icons/cardiology.png'  // Sử dụng hình ảnh hiện có làm placeholder
     },
     {
       id: 'dermatology',
@@ -80,7 +80,7 @@ export const DepartmentSection = () => {
       id: 'gastroenterology',
       name: 'Gastroenterology',
       description: 'Specialized care for digestive system disorders',
-      icon: '/icons/neurology.png'  // Using existing image as placeholder
+      icon: '/icons/neurology.png'  // Sử dụng hình ảnh hiện có làm placeholder
     },
     {
       id: 'ophthalmology',

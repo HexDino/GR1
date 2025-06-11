@@ -1,88 +1,162 @@
-# Medical Appointment System
+# Hệ Thống Đặt Lịch Khám Bệnh Trực Tuyến
 
-A comprehensive medical appointment booking system with full features for managing doctors, patients, appointments, prescriptions, and an intelligent chatbot to assist users.
+Một hệ thống đặt lịch khám bệnh trực tuyến hoàn chỉnh với đầy đủ các tính năng quản lý bác sĩ, bệnh nhân, lịch hẹn, đơn thuốc và chatbot AI thông minh hỗ trợ người dùng.
 
-## Key Features
+## ✨ Tính Năng Chính
 
-- **Doctor and Patient Management**: Complete profiles with medical information.
-- **Appointment Booking**: Smart booking system with conflict checking.
-- **Prescription Management**: Prescribe, track, and view prescription history.
-- **Health Monitoring**: Record and analyze health metrics.
-- **Smart Notifications**: Automatic appointment reminders and doctor reviews.
-- **Support Chatbot**: Integrated GPT-4 to answer medical questions and assist with booking.
+- **🏥 Quản Lý Bác Sĩ & Bệnh Nhân**: Hồ sơ chi tiết với thông tin y tế đầy đủ
+- **📅 Đặt Lịch Khám**: Hệ thống đặt lịch thông minh với kiểm tra xung đột lịch trình
+- **💊 Quản Lý Đơn Thuốc**: Kê đơn, theo dõi và xem lịch sử đơn thuốc
+- **📊 Theo Dõi Sức Khỏe**: Ghi nhận và phân tích các chỉ số sức khỏe
+- **🔔 Thông Báo Thông Minh**: Nhắc nhở lịch hẹn tự động và đánh giá bác sĩ
+- **🤖 Chatbot Hỗ Trợ**: Tích hợp GPT-4 để tư vấn y tế và hỗ trợ đặt lịch
 
-## Installation
+## 🛠 Công Nghệ Sử Dụng
 
-1. Clone the project
+- **Frontend**: Next.js 13, React, TypeScript, Tailwind CSS
+- **Backend**: Next.js API Routes, Prisma ORM
+- **Database**: PostgreSQL
+- **Authentication**: NextAuth.js, JWT
+- **AI Integration**: OpenAI GPT-4
+- **Cloud Storage**: Cloudinary
+- **UI Components**: Heroicons, React Icons
+
+## 📋 Yêu Cầu Hệ Thống
+
+- Node.js 18+
+- PostgreSQL 12+
+- npm hoặc yarn
+
+## 🚀 Cài Đặt
+
+### 1. Clone dự án
 ```bash
 git clone <repository_url>
 cd medical-appointment-system
 ```
 
-2. Install dependencies
+### 2. Cài đặt dependencies
 ```bash
 npm install
 ```
 
-3. Create `.env.local` file with the following content:
-```
-# Database configuration
+### 3. Tạo file `.env.local` với nội dung sau:
+```env
+# Cấu hình database
 DATABASE_URL="postgresql://username:password@localhost:5432/medical_app"
 
-# JWT configuration
+# Cấu hình JWT
 JWT_SECRET="your-super-secret-jwt-key"
 
-# OpenAI API configuration for chatbot
+# Cấu hình OpenAI API cho chatbot
 OPENAI_API_KEY="your-openai-api-key"
+
+# Cấu hình NextAuth
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your-nextauth-secret"
+
+# Cấu hình Cloudinary (optional)
+CLOUDINARY_CLOUD_NAME="your-cloud-name"
+CLOUDINARY_API_KEY="your-api-key"
+CLOUDINARY_API_SECRET="your-api-secret"
 ```
 
-4. Configure database
+### 4. Thiết lập database
 ```bash
+# Chạy migration
 npx prisma migrate dev
+
+# Seed dữ liệu mẫu (optional)
+npm run seed
 ```
 
-5. Start the application
+### 5. Chạy ứng dụng
 ```bash
+# Development mode
 npm run dev
+
+# Production build
+npm run build
+npm start
 ```
 
-## Chatbot Configuration with GPT-4
+Ứng dụng sẽ chạy tại `http://localhost:3000`
 
-The chatbot system is integrated with OpenAI GPT-4 to handle:
-- Preliminary symptom analysis
-- General medical Q&A
-- Smart appointment booking assistance
+## 🤖 Cấu Hình Chatbot với GPT-4
 
-To use this feature, you need to:
-1. Register an account at [OpenAI](https://platform.openai.com/)
-2. Create an API key at [OpenAI API Keys](https://platform.openai.com/account/api-keys)
-3. Add the API key to `.env.local` file
+Hệ thống chatbot được tích hợp với OpenAI GPT-4 để xử lý:
+- Phân tích triệu chứng sơ bộ
+- Tư vấn y tế tổng quát
+- Hỗ trợ đặt lịch thông minh
 
-## API Endpoints
+**Để sử dụng tính năng này:**
+1. Đăng ký tài khoản tại [OpenAI](https://platform.openai.com/)
+2. Tạo API key tại [OpenAI API Keys](https://platform.openai.com/account/api-keys)
+3. Thêm API key vào file `.env.local`
 
-### Authentication
-- `POST /api/auth/register`: Register new account
-- `POST /api/auth/login`: Login
+## 📖 API Endpoints
 
-### Doctors
-- `GET /api/doctors`: Get list of doctors
-- `GET /api/doctors/[id]`: View doctor information
-- `GET /api/doctors/[id]/schedule`: View doctor's schedule
+### 🔐 Xác Thực
+- `POST /api/auth/register` - Đăng ký tài khoản mới
+- `POST /api/auth/login` - Đăng nhập
 
-### Appointments
-- `GET /api/appointments`: Get list of appointments
-- `POST /api/appointments`: Create new appointment
-- `PUT /api/appointments/[id]`: Update appointment
-- `GET /api/appointments/[id]/prescriptions`: View appointment prescriptions
+### 👨‍⚕️ Bác Sĩ
+- `GET /api/doctors` - Lấy danh sách bác sĩ
+- `GET /api/doctors/[id]` - Xem thông tin bác sĩ
+- `GET /api/doctors/[id]/schedule` - Xem lịch trình bác sĩ
 
-### Chatbot
-- `POST /api/chat`: Send message to chatbot
+### 📅 Lịch Hẹn
+- `GET /api/appointments` - Lấy danh sách lịch hẹn
+- `POST /api/appointments` - Tạo lịch hẹn mới
+- `PUT /api/appointments/[id]` - Cập nhật lịch hẹn
+- `GET /api/appointments/[id]/prescriptions` - Xem đơn thuốc của lịch hẹn
 
-### Health
-- `GET /api/health/metrics`: View health monitoring data
-- `POST /api/health/metrics`: Add new health metrics
-- `GET /api/health/insights`: View health analysis
+### 🤖 Chatbot
+- `POST /api/chat` - Gửi tin nhắn đến chatbot
 
-## Author
+### 📊 Sức Khỏe
+- `GET /api/health/metrics` - Xem dữ liệu theo dõi sức khỏe
+- `POST /api/health/metrics` - Thêm chỉ số sức khỏe mới
+- `GET /api/health/insights` - Xem phân tích sức khỏe
 
-© 2025. Course Project. 
+## 📁 Cấu Trúc Dự Án
+
+```
+src/
+├── app/                 # Next.js App Router
+│   ├── api/            # API routes
+│   ├── dashboard/      # Dashboard pages
+│   ├── doctors/        # Doctor pages
+│   ├── login/          # Authentication pages
+│   └── ...
+├── components/         # React components
+├── lib/               # Utility libraries
+├── services/          # Business logic
+├── hooks/             # Custom React hooks
+└── types/             # TypeScript types
+
+prisma/
+├── schema.prisma      # Database schema
+├── migrations/        # Database migrations
+└── seed/              # Seed data
+```
+
+## 🤝 Đóng Góp
+
+1. Fork dự án
+2. Tạo feature branch (`git checkout -b feature/TinhNangMoi`)
+3. Commit thay đổi (`git commit -m 'Thêm tính năng mới'`)
+4. Push lên branch (`git push origin feature/TinhNangMoi`)
+5. Tạo Pull Request
+
+## 📄 Giấy Phép
+
+Dự án này được phát triển cho mục đích học tập.
+
+## 👨‍💻 Tác Giả
+
+© 2025. Đồ án môn học.
+
+---
+
+**Lưu ý**: Đây là hệ thống demo cho mục đích học tập. Không sử dụng cho mục đích y tế thực tế mà không có sự giám sát của chuyên gia y tế. 

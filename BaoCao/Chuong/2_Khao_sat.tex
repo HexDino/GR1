@@ -1,0 +1,877 @@
+\documentclass[../DoAn.tex]{subfiles}
+\begin{document}
+
+Chương này trình bày quá trình phân tích yêu cầu và thiết kế hệ thống quản lý lịch hẹn khám bệnh trực tuyến. Nội dung chương bao gồm khảo sát hiện trạng từ ba nguồn chính (người dùng, hệ thống hiện có, ứng dụng tương tự), tổng quan các chức năng hệ thống thông qua biểu đồ use case, đặc tả chi tiết các use case quan trọng nhất, và xác định các yêu cầu phi chức năng. Kết quả của chương này sẽ tạo nền tảng cho việc thiết kế kiến trúc và triển khai hệ thống trong các chương tiếp theo.
+
+\section{Khảo sát hiện trạng}
+\label{section:2.1}
+
+\subsection{Khảo sát người dùng và nhu cầu thực tế}
+
+Để hiểu rõ nhu cầu thực tế, nhóm đã tiến hành khảo sát 150 đối tượng bao gồm bệnh nhân (60\%), nhân viên y tế (25\%), và quản trị viên cơ sở y tế (15\%) tại các bệnh viện và phòng khám tư nhân ở TP.HCM trong giai đoạn tháng 9-10/2024.
+
+\textbf{Kết quả khảo sát bệnh nhân:}
+\begin{itemize}
+    \item 78\% gặp khó khăn khi đặt lịch hẹn qua điện thoại do thường xuyên bận hoặc ngoài giờ làm việc
+    \item 65\% mong muốn có thể xem lịch trình bác sĩ và chọn thời gian phù hợp
+    \item 71\% quan tâm đến tính năng tư vấn sơ bộ trước khi quyết định đặt lịch khám
+    \item 82\% ưu tiên giao diện đơn giản, dễ sử dụng trên thiết bị di động
+    \item 89\% lo ngại về bảo mật thông tin cá nhân và y tế
+\end{itemize}
+
+\textbf{Kết quả khảo sát nhân viên y tế:}
+\begin{itemize}
+    \item 70\% nhân viên y tế dành 20-30\% thời gian làm việc để xử lý việc đặt lịch hẹn qua điện thoại
+    \item 85\% mong muốn hệ thống tự động quản lý lịch hẹn để giảm tải công việc
+    \item 68\% quan tâm đến khả năng xem trước thông tin bệnh nhân và chuẩn bị trước buổi khám
+    \item 74\% cho rằng cần có hệ thống thông báo tự động cho bệnh nhân về lịch hẹn
+\end{itemize}
+
+\textbf{Kết quả khảo sát quản trị viên:}
+\begin{itemize}
+    \item 90\% cần khả năng theo dõi và thống kê lịch hẹn để tối ưu hóa tài nguyên
+    \item 75\% mong muốn tích hợp với hệ thống quản lý bệnh viện hiện có
+    \item 85\% ưu tiên tính năng báo cáo và phân tích dữ liệu hoạt động
+\end{itemize}
+
+\subsection{Phân tích hệ thống hiện tại}
+
+Hiện tại, các cơ sở y tế chủ yếu sử dụng các phương thức đặt lịch truyền thống:
+
+\textbf{Đặt lịch qua điện thoại:}
+\begin{itemize}
+    \item \textit{Ưu điểm:} Tương tác trực tiếp, có thể tư vấn ngay lập tức
+    \item \textit{Nhược điểm:} Giới hạn giờ làm việc, dễ bận línhe, tốn nhân lực, không có lưu trữ điện tử, dễ nhầm lẫn thông tin
+\end{itemize}
+
+\textbf{Đặt lịch trực tiếp tại quầy:}
+\begin{itemize}
+    \item \textit{Ưu điểm:} Xử lý trực tiếp, có thể thanh toán ngay
+    \item \textit{Nhược điểm:} Bất tiện cho bệnh nhân, phải di chuyển, xếp hàng chờ đợi, không linh hoạt về thời gian
+\end{itemize}
+
+\textbf{Hệ thống nội bộ đơn giản:}
+Một số cơ sở y tế đã triển khai hệ thống quản lý đơn giản nhưng chủ yếu phục vụ nội bộ, không có interface cho bệnh nhân và thiếu tính năng nâng cao.
+
+\subsection{Khảo sát các ứng dụng tương tự}
+
+Nhóm đã khảo sát và phân tích các ứng dụng đặt lịch y tế phổ biến hiện tại:
+
+\begin{table}[H]
+\centering
+\caption{So sánh các ứng dụng đặt lịch y tế hiện có}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\textbf{Tiêu chí} & \textbf{Bookingcare} & \textbf{Medpro} & \textbf{HelloBacsi} & \textbf{JioHealth} & \textbf{Hệ thống đề xuất} \\
+\hline
+Giao diện người dùng & Tốt & Trung bình & Tốt & Khá tốt & Rất tốt \\
+\hline
+Tính năng đặt lịch & Đầy đủ & Cơ bản & Đầy đủ & Khá đầy đủ & Đầy đủ + \\
+\hline
+Tư vấn AI/Chatbot & Không & Không & Cơ bản & Không & Có (GPT-4) \\
+\hline
+Quản lý hồ sơ y tế & Cơ bản & Không & Cơ bản & Có & Đầy đủ \\
+\hline
+Thanh toán trực tuyến & Có & Không & Có & Có & Có \\
+\hline
+Thông báo tự động & SMS & Không & SMS/Email & SMS & SMS/Email/Push \\
+\hline
+Báo cáo thống kê & Không & Cơ bản & Không & Cơ bản & Đầy đủ \\
+\hline
+Tích hợp hệ thống & Hạn chế & Không & Hạn chế & Có & Linh hoạt \\
+\hline
+Bảo mật dữ liệu & Cơ bản & Cơ bản & Khá tốt & Tốt & Rất tốt \\
+\hline
+Hỗ trợ đa nền tảng & Web + Mobile & Web & Web + Mobile & Mobile & Web + Mobile \\
+\hline
+\textbf{Đánh giá tổng thể} & \textbf{7/10} & \textbf{5/10} & \textbf{7.5/10} & \textbf{7/10} & \textbf{9/10} \\
+\hline
+\end{tabular}
+}
+\label{table:comparison}
+\end{table}
+
+\subsection{Xác định các tính năng cần phát triển}
+
+Dựa trên kết quả khảo sát và phân tích, các tính năng quan trọng cần phát triển được xác định như sau:
+
+\textbf{Tính năng cốt lõi:}
+\begin{enumerate}
+    \item \textbf{Đặt lịch hẹn thông minh:} Cho phép bệnh nhân xem lịch trình bác sĩ real-time, chọn thời gian phù hợp, và đặt lịch 24/7
+    \item \textbf{Quản lý hồ sơ bệnh nhân:} Lưu trữ và quản lý thông tin y tế an toàn, lịch sử khám bệnh
+    \item \textbf{Hệ thống xác thực và phân quyền:} Đảm bảo bảo mật với các vai trò khác nhau (bệnh nhân, bác sĩ, admin)
+    \item \textbf{Thanh toán trực tuyến:} Tích hợp các phương thức thanh toán phổ biến
+\end{enumerate}
+
+\textbf{Tính năng nâng cao:}
+\begin{enumerate}
+    \item \textbf{Chatbot AI hỗ trợ:} Tư vấn sơ bộ triệu chứng và gợi ý chuyên khoa phù hợp sử dụng GPT-4
+    \item \textbf{Hệ thống thông báo đa kênh:} SMS, Email, và Push notification
+    \item \textbf{Báo cáo và thống kê:} Dashboard cho quản trị viên theo dõi hoạt động
+    \item \textbf{Tích hợp linh hoạt:} API để tích hợp với các hệ thống y tế hiện có
+\end{enumerate}
+
+\section{Tổng quan chức năng}
+\label{section:2.2}
+
+Phần này tóm tắt các chức năng chính của hệ thống quản lý lịch hẹn khám bệnh thông qua các biểu đồ use case ở mức tổng quan và chi tiết.
+
+\subsection{Biểu đồ use case tổng quát}
+\label{subsection:2.2.1}
+
+Hệ thống có ba tác nhân chính:
+
+\textbf{Bệnh nhân (Patient):} Là người dùng cuối cần đặt lịch khám bệnh, quản lý hồ sơ cá nhân, và sử dụng các dịch vụ hỗ trợ của hệ thống.
+
+\textbf{Bác sĩ (Doctor):} Là nhân viên y tế quản lý lịch làm việc, xem thông tin bệnh nhân, và cập nhật kết quả khám bệnh.
+
+\textbf{Quản trị viên (Administrator):} Là người quản lý toàn bộ hệ thống, theo dõi hoạt động, và tạo báo cáo thống kê.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Hinhve/usecase_overview.png}
+    \caption{Biểu đồ use case tổng quát của hệ thống}
+    \label{fig:usecase_overview}
+\end{figure}
+
+Các use case chính trong hệ thống:
+\begin{itemize}
+    \item \textbf{Quản lý tài khoản:} Đăng ký, đăng nhập, cập nhật thông tin cá nhân
+    \item \textbf{Quản lý lịch hẹn:} Đặt lịch, xem lịch, hủy lịch, xác nhận lịch hẹn
+    \item \textbf{Quản lý hồ sơ y tế:} Lưu trữ, cập nhật thông tin sức khỏe và lịch sử khám bệnh
+    \item \textbf{Tư vấn AI:} Sử dụng chatbot để tư vấn sơ bộ về triệu chứng
+    \item \textbf{Thông báo:} Gửi và nhận thông báo về lịch hẹn
+    \item \textbf{Báo cáo thống kê:} Tạo và xem các báo cáo hoạt động hệ thống
+\end{itemize}
+
+\subsection{Biểu đồ use case phân rã Quản lý lịch hẹn}
+\label{subsection:2.2.2}
+
+Use case "Quản lý lịch hẹn" được phân rã thành các use case con:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Hinhve/usecase_appointment.png}
+    \caption{Biểu đồ use case phân rã Quản lý lịch hẹn}
+    \label{fig:usecase_appointment}
+\end{figure}
+
+\textbf{Cho Bệnh nhân:}
+\begin{itemize}
+    \item \textbf{Tìm kiếm bác sĩ:} Tìm theo chuyên khoa, tên, địa điểm
+    \item \textbf{Xem lịch trình bác sĩ:} Hiển thị thời gian có sẵn của bác sĩ
+    \item \textbf{Đặt lịch hẹn:} Chọn thời gian và xác nhận đặt lịch
+    \item \textbf{Xem lịch hẹn của mình:} Danh sách lịch hẹn đã đặt
+    \item \textbf{Hủy lịch hẹn:} Hủy lịch hẹn đã đặt trước (trong thời hạn cho phép)
+    \item \textbf{Đánh giá bác sĩ:} Đưa ra đánh giá sau khi khám xong
+\end{itemize}
+
+\textbf{Cho Bác sĩ:}
+\begin{itemize}
+    \item \textbf{Quản lý lịch làm việc:} Thiết lập thời gian làm việc, nghỉ phép
+    \item \textbf{Xem danh sách bệnh nhân:} Danh sách lịch hẹn trong ngày
+    \item \textbf{Xác nhận lịch hẹn:} Chấp nhận hoặc từ chối lịch hẹn
+    \item \textbf{Cập nhật trạng thái khám:} Đánh dấu hoàn thành, hủy, hoãn
+\end{itemize}
+
+\subsection{Biểu đồ use case phân rã Quản lý tài khoản}
+\label{subsection:2.2.3}
+
+Use case "Quản lý tài khoản" được phân rã thành các use case con:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Hinhve/usecase_account.png}
+    \caption{Biểu đồ use case phân rã Quản lý tài khoản}
+    \label{fig:usecase_account}
+\end{figure}
+
+\textbf{Cho Bệnh nhân:}
+\begin{itemize}
+    \item \textbf{Đăng ký tài khoản:} Tạo tài khoản mới với xác thực OTP
+    \item \textbf{Đăng nhập:} Xác thực và truy cập hệ thống
+    \item \textbf{Quên mật khẩu:} Khôi phục mật khẩu qua email/SMS
+    \item \textbf{Cập nhật thông tin cá nhân:} Chỉnh sửa profile, thay đổi mật khẩu
+    \item \textbf{Đăng xuất:} Kết thúc phiên làm việc an toàn
+\end{itemize}
+
+\textbf{Cho Bác sĩ:}
+\begin{itemize}
+    \item \textbf{Đăng nhập chuyên môn:} Truy cập với quyền bác sĩ
+    \item \textbf{Cập nhật thông tin nghề nghiệp:} Chuyên khoa, bằng cấp, kinh nghiệm
+    \item \textbf{Quản lý chứng chỉ:} Upload và cập nhật các chứng chỉ hành nghề
+\end{itemize}
+
+\textbf{Cho Quản trị viên:}
+\begin{itemize}
+    \item \textbf{Quản lý người dùng:} Tạo, sửa, khóa tài khoản
+    \item \textbf{Phân quyền:} Gán và quản lý quyền truy cập
+    \item \textbf{Kiểm duyệt bác sĩ:} Xác thực và phê duyệt hồ sơ bác sĩ
+\end{itemize}
+
+\subsection{Biểu đồ use case phân rã Quản lý hồ sơ y tế}
+\label{subsection:2.2.4}
+
+Use case "Quản lý hồ sơ y tế" bao gồm:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Hinhve/usecase_medical_record.png}
+    \caption{Biểu đồ use case phân rã Quản lý hồ sơ y tế}
+    \label{fig:usecase_medical_record}
+\end{figure}
+
+\textbf{Cho Bệnh nhân:}
+\begin{itemize}
+    \item \textbf{Xem hồ sơ cá nhân:} Thông tin cơ bản, tiền sử bệnh
+    \item \textbf{Cập nhật thông tin sức khỏe:} Cập nhật tình trạng sức khỏe hiện tại
+    \item \textbf{Xem lịch sử khám bệnh:} Danh sách các lần khám trước
+    \item \textbf{Tải xuống kết quả:} Export hồ sơ y tế dạng PDF
+    \item \textbf{Chia sẻ hồ sơ:} Cấp quyền truy cập cho bác sĩ khác
+\end{itemize}
+
+\textbf{Cho Bác sĩ:}
+\begin{itemize}
+    \item \textbf{Xem hồ sơ bệnh nhân:} Truy cập thông tin y tế của bệnh nhân
+    \item \textbf{Cập nhật kết quả khám:} Ghi nhận chẩn đoán, kê đơn thuốc
+    \item \textbf{Tạo báo cáo y tế:} Viết báo cáo chi tiết sau khám
+    \item \textbf{Lưu trữ hình ảnh y tế:} Upload X-quang, siêu âm, xét nghiệm
+\end{itemize}
+
+\subsection{Biểu đồ use case phân rã Tư vấn AI}
+\label{subsection:2.2.5}
+
+Use case "Tư vấn AI" bao gồm:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Hinhve/usecase_ai_consultation.png}
+    \caption{Biểu đồ use case phân rã Tư vấn AI}
+    \label{fig:usecase_ai_consultation}
+\end{figure}
+
+\textbf{Cho Bệnh nhân:}
+\begin{itemize}
+    \item \textbf{Mô tả triệu chứng:} Nhập thông tin về các triệu chứng hiện tại
+    \item \textbf{Nhận tư vấn sơ bộ:} AI phân tích và đưa ra gợi ý ban đầu
+    \item \textbf{Gợi ý chuyên khoa:} Đề xuất loại bác sĩ phù hợp để khám
+    \item \textbf{Đặt lịch từ tư vấn:} Chuyển trực tiếp đến chức năng đặt lịch
+    \item \textbf{Lưu lịch sử tư vấn:} Lưu trữ cuộc hội thoại với AI
+\end{itemize}
+
+\textbf{Hệ thống AI:}
+\begin{itemize}
+    \item \textbf{Phân tích ngôn ngữ tự nhiên:} Hiểu và xử lý mô tả triệu chứng
+    \item \textbf{Tra cứu cơ sở tri thức:} Tìm kiếm thông tin y tế liên quan
+    \item \textbf{Đưa ra khuyến nghị:} Gợi ý chuyên khoa và mức độ ưu tiên
+    \item \textbf{Cảnh báo khẩn cấp:} Phát hiện tình huống cần cấp cứu
+\end{itemize}
+
+\subsection{Biểu đồ use case phân rã Thông báo}
+\label{subsection:2.2.6}
+
+Use case "Thông báo" bao gồm:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Hinhve/usecase_notification.png}
+    \caption{Biểu đồ use case phân rã Thông báo}
+    \label{fig:usecase_notification}
+\end{figure}
+
+\textbf{Cho Bệnh nhân:}
+\begin{itemize}
+    \item \textbf{Nhận thông báo lịch hẹn:} SMS/Email xác nhận đặt lịch
+    \item \textbf{Nhận nhắc nhở:} Thông báo trước giờ khám 1 ngày và 1 giờ
+    \item \textbf{Thông báo trạng thái:} Cập nhật tình trạng lịch hẹn
+    \item \textbf{Cài đặt thông báo:} Tùy chỉnh cách thức và thời gian nhận thông báo
+    \item \textbf{Xem lịch sử thông báo:} Danh sách các thông báo đã nhận
+\end{itemize}
+
+\textbf{Cho Bác sĩ:}
+\begin{itemize}
+    \item \textbf{Thông báo lịch hẹn mới:} Nhận thông tin khi có bệnh nhân đặt lịch
+    \item \textbf{Nhắc nhở lịch làm việc:} Thông báo lịch trình trong ngày
+    \item \textbf{Thông báo khẩn cấp:} Cảnh báo về tình huống cần xử lý gấp
+\end{itemize}
+
+\textbf{Hệ thống:}
+\begin{itemize}
+    \item \textbf{Quản lý template:} Tạo và quản lý mẫu thông báo
+    \item \textbf{Lập lịch gửi:} Tự động gửi thông báo theo thời gian định sẵn
+    \item \textbf{Theo dõi delivery:} Kiểm tra tình trạng gửi thông báo
+\end{itemize}
+
+\subsection{Biểu đồ use case phân rã Báo cáo thống kê}
+\label{subsection:2.2.7}
+
+Use case "Báo cáo thống kê" được phân rã thành:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{Hinhve/usecase_reporting.png}
+    \caption{Biểu đồ use case phân rã Báo cáo thống kê}
+    \label{fig:usecase_reporting}
+\end{figure}
+
+\textbf{Cho Quản trị viên:}
+\begin{itemize}
+    \item \textbf{Báo cáo hoạt động hệ thống:} Thống kê số lượng đăng ký, đặt lịch
+    \item \textbf{Báo cáo doanh thu:} Phân tích thu nhập theo thời gian
+    \item \textbf{Báo cáo hiệu suất bác sĩ:} Đánh giá số lượng khám và rating
+    \item \textbf{Báo cáo người dùng:} Phân tích hành vi và sở thích người dùng
+    \item \textbf{Xuất báo cáo:} Export dữ liệu ra Excel, PDF
+\end{itemize}
+
+\textbf{Cho Bác sĩ:}
+\begin{itemize}
+    \item \textbf{Thống kê cá nhân:} Số lượng bệnh nhân, doanh thu cá nhân
+    \item \textbf{Phân tích đánh giá:} Feedback từ bệnh nhân
+    \item \textbf{Báo cáo lịch làm việc:} Thống kê thời gian làm việc hiệu quả
+\end{itemize}
+
+\textbf{Hệ thống:}
+\begin{itemize}
+    \item \textbf{Thu thập dữ liệu:} Tự động ghi nhận các hoạt động hệ thống
+    \item \textbf{Xử lý phân tích:} Tính toán các chỉ số thống kê
+    \item \textbf{Tạo biểu đồ:} Visualization dữ liệu dạng charts, graphs
+    \item \textbf{Tối ưu hiệu suất:} Phân tích và đề xuất cải thiện
+\end{itemize}
+
+\subsection{Quy trình nghiệp vụ chính}
+\label{subsection:2.2.8}
+
+\textbf{Quy trình đặt lịch khám bệnh hoàn chỉnh:}
+\begin{enumerate}
+    \item Bệnh nhân đăng ký/đăng nhập vào hệ thống
+    \item Sử dụng tính năng tư vấn AI (tùy chọn) để xác định chuyên khoa phù hợp
+    \item Tìm kiếm và chọn bác sĩ theo chuyên khoa hoặc tên
+    \item Xem lịch trình có sẵn của bác sĩ và chọn thời gian phù hợp
+    \item Điền thông tin lý do khám và xác nhận đặt lịch
+    \item Nhận xác nhận và thông báo lịch hẹn
+    \item Bác sĩ xem và xác nhận lịch hẹn
+    \item Cả hai bên nhận thông báo nhắc nhở trước giờ khám
+    \item Thực hiện buổi khám và cập nhật kết quả
+    \item Đánh giá dịch vụ sau khi hoàn thành
+\end{enumerate}
+
+\section{Đặc tả chức năng}
+\label{section:2.3}
+
+Phần này đặc tả chi tiết 5 use case quan trọng nhất của hệ thống.
+
+\subsection{Đặc tả use case UC001 "Đăng ký tài khoản"}
+\label{subsection:2.3.1}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{10cm}|}
+\hline
+\textbf{Mã Use case} & UC001 \\
+\hline
+\textbf{Tên Use case} & Đăng ký tài khoản \\
+\hline
+\textbf{Tác nhân} & Bệnh nhân \\
+\hline
+\textbf{Tiền điều kiện} & 
+\begin{itemize}
+    \item Người dùng có kết nối Internet
+    \item Người dùng chưa có tài khoản trong hệ thống
+\end{itemize} \\
+\hline
+\end{tabular}
+\caption{Thông tin cơ bản Use case UC001}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{1cm}|p{3cm}|p{9cm}|}
+\hline
+\multicolumn{3}{|c|}{\textbf{Luồng sự kiện chính}} \\
+\hline
+\textbf{STT} & \textbf{Thực hiện bởi} & \textbf{Hành động} \\
+\hline
+1. & Bệnh nhân & Truy cập trang đăng ký \\
+\hline
+2. & Hệ thống & Hiển thị form đăng ký \\
+\hline
+3. & Bệnh nhân & Nhập thông tin: họ tên, email, số điện thoại, mật khẩu, CCCD, ngày sinh \\
+\hline
+4. & Bệnh nhân & Xác nhận điều khoản sử dụng \\
+\hline
+5. & Bệnh nhân & Nhấn nút "Đăng ký" \\
+\hline
+6. & Hệ thống & Validate thông tin nhập vào \\
+\hline
+7. & Hệ thống & Gửi mã OTP đến số điện thoại \\
+\hline
+8. & Bệnh nhân & Nhập mã OTP \\
+\hline
+9. & Hệ thống & Xác thực OTP và tạo tài khoản \\
+\hline
+10. & Hệ thống & Gửi email chào mừng \\
+\hline
+11. & Hệ thống & Chuyển đến trang đăng nhập \\
+\hline
+\end{tabular}
+\caption{Luồng sự kiện chính UC001}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{1cm}|p{3cm}|p{9cm}|}
+\hline
+\multicolumn{3}{|c|}{\textbf{Luồng sự kiện thay thế}} \\
+\hline
+\textbf{STT} & \textbf{Thực hiện bởi} & \textbf{Hành động} \\
+\hline
+6a. & Hệ thống & Thông báo lỗi: Email đã tồn tại trong hệ thống \\
+\hline
+6b. & Hệ thống & Thông báo lỗi: Số điện thoại đã được đăng ký \\
+\hline
+6c. & Hệ thống & Thông báo lỗi: Mật khẩu không đủ mạnh, yêu cầu nhập lại \\
+\hline
+8a. & Hệ thống & Thông báo lỗi: OTP sai, cho phép nhập lại (tối đa 3 lần) \\
+\hline
+8b. & Hệ thống & Thông báo lỗi: OTP hết hạn, gửi lại OTP mới \\
+\hline
+\end{tabular}
+\caption{Luồng sự kiện thay thế UC001}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{10cm}|}
+\hline
+\textbf{Hậu điều kiện} & 
+\begin{itemize}
+    \item Tài khoản mới được tạo trong hệ thống
+    \item Người dùng có thể đăng nhập bằng thông tin vừa đăng ký
+\end{itemize} \\
+\hline
+\end{tabular}
+\caption{Hậu điều kiện UC001}
+\end{table}
+
+\subsection{Đặc tả use case UC002 "Đặt lịch hẹn"}
+\label{subsection:2.3.2}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{10cm}|}
+\hline
+\textbf{Mã Use case} & UC002 \\
+\hline
+\textbf{Tên Use case} & Đặt lịch hẹn \\
+\hline
+\textbf{Tác nhân} & Bệnh nhân \\
+\hline
+\textbf{Tiền điều kiện} & 
+\begin{itemize}
+    \item Bệnh nhân đã đăng nhập vào hệ thống
+    \item Bác sĩ có lịch trống trong thời gian mong muốn
+\end{itemize} \\
+\hline
+\end{tabular}
+\caption{Thông tin cơ bản Use case UC002}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{1cm}|p{3cm}|p{9cm}|}
+\hline
+\multicolumn{3}{|c|}{\textbf{Luồng sự kiện chính}} \\
+\hline
+\textbf{STT} & \textbf{Thực hiện bởi} & \textbf{Hành động} \\
+\hline
+1. & Bệnh nhân & Chọn chức năng "Đặt lịch khám" \\
+\hline
+2. & Hệ thống & Hiển thị form tìm kiếm bác sĩ \\
+\hline
+3. & Bệnh nhân & Nhập tiêu chí tìm kiếm (chuyên khoa, tên bác sĩ, địa điểm) \\
+\hline
+4. & Hệ thống & Hiển thị danh sách bác sĩ phù hợp \\
+\hline
+5. & Bệnh nhân & Chọn bác sĩ mong muốn \\
+\hline
+6. & Hệ thống & Hiển thị lịch trình có sẵn của bác sĩ \\
+\hline
+7. & Bệnh nhân & Chọn ngày và giờ khám \\
+\hline
+8. & Hệ thống & Hiển thị form thông tin lịch hẹn \\
+\hline
+9. & Bệnh nhân & Điền lý do khám, ghi chú (nếu có) \\
+\hline
+10. & Bệnh nhân & Xác nhận thông tin và nhấn "Đặt lịch" \\
+\hline
+11. & Hệ thống & Kiểm tra slot còn trống \\
+\hline
+12. & Hệ thống & Tạo lịch hẹn và gửi thông báo cho bác sĩ \\
+\hline
+13. & Hệ thống & Hiển thị thông báo đặt lịch thành công \\
+\hline
+14. & Hệ thống & Gửi email xác nhận cho bệnh nhân \\
+\hline
+\end{tabular}
+\caption{Luồng sự kiện chính UC002}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{1cm}|p{3cm}|p{9cm}|}
+\hline
+\multicolumn{3}{|c|}{\textbf{Luồng sự kiện thay thế}} \\
+\hline
+\textbf{STT} & \textbf{Thực hiện bởi} & \textbf{Hành động} \\
+\hline
+3a. & Hệ thống & Thông báo lỗi: Không tìm thấy bác sĩ phù hợp, gợi ý mở rộng tìm kiếm \\
+\hline
+6a. & Hệ thống & Thông báo: Bác sĩ không có lịch trống, gợi ý thời gian khác hoặc bác sĩ khác \\
+\hline
+11a. & Hệ thống & Thông báo lỗi: Slot đã bị đặt, yêu cầu chọn thời gian khác \\
+\hline
+\end{tabular}
+\caption{Luồng sự kiện thay thế UC002}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{10cm}|}
+\hline
+\textbf{Hậu điều kiện} & 
+\begin{itemize}
+    \item Lịch hẹn được tạo trong hệ thống với trạng thái "Chờ xác nhận"
+    \item Bác sĩ nhận được thông báo về lịch hẹn mới
+    \item Bệnh nhân có thể xem lịch hẹn trong danh sách của mình
+\end{itemize} \\
+\hline
+\end{tabular}
+\caption{Hậu điều kiện UC002}
+\end{table}
+
+\subsection{Đặc tả use case UC003 "Tư vấn AI"}
+\label{subsection:2.3.3}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{10cm}|}
+\hline
+\textbf{Mã Use case} & UC003 \\
+\hline
+\textbf{Tên Use case} & Tư vấn AI \\
+\hline
+\textbf{Tác nhân} & Bệnh nhân \\
+\hline
+\textbf{Tiền điều kiện} & 
+\begin{itemize}
+    \item Bệnh nhân đã đăng nhập vào hệ thống
+    \item Dịch vụ OpenAI GPT-4 API hoạt động bình thường
+\end{itemize} \\
+\hline
+\end{tabular}
+\caption{Thông tin cơ bản Use case UC003}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{1cm}|p{3cm}|p{9cm}|}
+\hline
+\multicolumn{3}{|c|}{\textbf{Luồng sự kiện chính}} \\
+\hline
+\textbf{STT} & \textbf{Thực hiện bởi} & \textbf{Hành động} \\
+\hline
+1. & Bệnh nhân & Chọn chức năng "Tư vấn AI" \\
+\hline
+2. & Hệ thống & Hiển thị giao diện chat với AI assistant \\
+\hline
+3. & Bệnh nhân & Mô tả triệu chứng hoặc vấn đề sức khỏe \\
+\hline
+4. & Hệ thống & Gửi request đến OpenAI GPT-4 API \\
+\hline
+5. & AI & Phân tích triệu chứng và đưa ra tư vấn sơ bộ \\
+\hline
+6. & Hệ thống & Hiển thị kết quả tư vấn cho bệnh nhân \\
+\hline
+7. & AI & Gợi ý chuyên khoa phù hợp để khám chi tiết \\
+\hline
+8. & Hệ thống & Hiển thị nút "Đặt lịch ngay" với chuyên khoa được gợi ý \\
+\hline
+9. & Bệnh nhân & Tiếp tục hỏi hoặc chọn đặt lịch \\
+\hline
+10. & Hệ thống & Lưu lịch sử tư vấn vào hồ sơ bệnh nhân \\
+\hline
+\end{tabular}
+\caption{Luồng sự kiện chính UC003}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{1cm}|p{3cm}|p{9cm}|}
+\hline
+\multicolumn{3}{|c|}{\textbf{Luồng sự kiện thay thế}} \\
+\hline
+\textbf{STT} & \textbf{Thực hiện bởi} & \textbf{Hành động} \\
+\hline
+3a. & AI & Thông báo: Triệu chứng không rõ ràng, yêu cầu bổ sung thông tin \\
+\hline
+4a. & Hệ thống & Thông báo lỗi: API lỗi, hiển thị thông báo lỗi và yêu cầu thử lại \\
+\hline
+5a. & AI & Cảnh báo: Triệu chứng nghiêm trọng, khuyến cáo đến cơ sở y tế ngay lập tức \\
+\hline
+\end{tabular}
+\caption{Luồng sự kiện thay thế UC003}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{10cm}|}
+\hline
+\textbf{Hậu điều kiện} & 
+\begin{itemize}
+    \item Lịch sử tư vấn được lưu trong hồ sơ bệnh nhân
+    \item Bệnh nhân có thông tin ban đầu về tình trạng sức khỏe
+    \item Bệnh nhân có gợi ý chuyên khoa để đặt lịch khám
+\end{itemize} \\
+\hline
+\end{tabular}
+\caption{Hậu điều kiện UC003}
+\end{table}
+
+\subsection{Đặc tả use case UC004 "Quản lý lịch làm việc"}
+\label{subsection:2.3.4}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{10cm}|}
+\hline
+\textbf{Mã Use case} & UC004 \\
+\hline
+\textbf{Tên Use case} & Quản lý lịch làm việc \\
+\hline
+\textbf{Tác nhân} & Bác sĩ \\
+\hline
+\textbf{Tiền điều kiện} & 
+\begin{itemize}
+    \item Bác sĩ đã đăng nhập vào hệ thống
+    \item Bác sĩ có quyền quản lý lịch làm việc
+\end{itemize} \\
+\hline
+\end{tabular}
+\caption{Thông tin cơ bản Use case UC004}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{1cm}|p{3cm}|p{9cm}|}
+\hline
+\multicolumn{3}{|c|}{\textbf{Luồng sự kiện chính}} \\
+\hline
+\textbf{STT} & \textbf{Thực hiện bởi} & \textbf{Hành động} \\
+\hline
+1. & Bác sĩ & Chọn chức năng "Quản lý lịch làm việc" \\
+\hline
+2. & Hệ thống & Hiển thị calendar view với lịch hiện tại \\
+\hline
+3. & Bác sĩ & Chọn ngày muốn thiết lập lịch \\
+\hline
+4. & Hệ thống & Hiển thị form thiết lập lịch làm việc \\
+\hline
+5. & Bác sĩ & Chọn giờ bắt đầu và kết thúc làm việc \\
+\hline
+6. & Bác sĩ & Thiết lập thời gian nghỉ trưa (nếu có) \\
+\hline
+7. & Bác sĩ & Thiết lập thời lượng mỗi buổi khám \\
+\hline
+8. & Bác sĩ & Xác nhận và lưu lịch làm việc \\
+\hline
+9. & Hệ thống & Cập nhật lịch và tạo các slot khám có sẵn \\
+\hline
+10. & Hệ thống & Hiển thị thông báo cập nhật thành công \\
+\hline
+\end{tabular}
+\caption{Luồng sự kiện chính UC004}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{1cm}|p{3cm}|p{9cm}|}
+\hline
+\multicolumn{3}{|c|}{\textbf{Luồng sự kiện thay thế}} \\
+\hline
+\textbf{STT} & \textbf{Thực hiện bởi} & \textbf{Hành động} \\
+\hline
+5a. & Hệ thống & Thông báo lỗi: Thời gian không hợp lệ \\
+\hline
+7a. & Hệ thống & Cảnh báo: Thời lượng khám quá ngắn hoặc quá dài, gợi ý điều chỉnh \\
+\hline
+8a. & Hệ thống & Thông báo: Đã có lịch hẹn trong thời gian muốn thay đổi, yêu cầu xử lý lịch hẹn trước \\
+\hline
+\end{tabular}
+\caption{Luồng sự kiện thay thế UC004}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{10cm}|}
+\hline
+\textbf{Hậu điều kiện} & 
+\begin{itemize}
+    \item Lịch làm việc của bác sĩ được cập nhật
+    \item Các slot thời gian có sẵn được tạo tự động
+    \item Bệnh nhân có thể thấy và đặt lịch trong thời gian mới
+\end{itemize} \\
+\hline
+\end{tabular}
+\caption{Hậu điều kiện UC004}
+\end{table}
+
+\subsection{Đặc tả use case UC005 "Tạo báo cáo thống kê"}
+\label{subsection:2.3.5}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{10cm}|}
+\hline
+\textbf{Mã Use case} & UC005 \\
+\hline
+\textbf{Tên Use case} & Tạo báo cáo thống kê \\
+\hline
+\textbf{Tác nhân} & Quản trị viên \\
+\hline
+\textbf{Tiền điều kiện} & 
+\begin{itemize}
+    \item Quản trị viên đã đăng nhập với quyền admin
+    \item Hệ thống có dữ liệu hoạt động để tạo báo cáo
+\end{itemize} \\
+\hline
+\end{tabular}
+\caption{Thông tin cơ bản Use case UC005}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{1cm}|p{3cm}|p{9cm}|}
+\hline
+\multicolumn{3}{|c|}{\textbf{Luồng sự kiện chính}} \\
+\hline
+\textbf{STT} & \textbf{Thực hiện bởi} & \textbf{Hành động} \\
+\hline
+1. & Quản trị viên & Chọn chức năng "Báo cáo thống kê" \\
+\hline
+2. & Hệ thống & Hiển thị các loại báo cáo có sẵn \\
+\hline
+3. & Quản trị viên & Chọn loại báo cáo (theo ngày, tháng, bác sĩ, chuyên khoa) \\
+\hline
+4. & Hệ thống & Hiển thị form thiết lập tham số báo cáo \\
+\hline
+5. & Quản trị viên & Nhập khoảng thời gian và các filter \\
+\hline
+6. & Quản trị viên & Nhấn "Tạo báo cáo" \\
+\hline
+7. & Hệ thống & Truy vấn database và xử lý dữ liệu \\
+\hline
+8. & Hệ thống & Tạo charts và graphs cho báo cáo \\
+\hline
+9. & Hệ thống & Hiển thị báo cáo trên màn hình \\
+\hline
+10. & Quản trị viên & Xuất báo cáo ra PDF/Excel (tùy chọn) \\
+\hline
+\end{tabular}
+\caption{Luồng sự kiện chính UC005}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{1cm}|p{3cm}|p{9cm}|}
+\hline
+\multicolumn{3}{|c|}{\textbf{Luồng sự kiện thay thế}} \\
+\hline
+\textbf{STT} & \textbf{Thực hiện bởi} & \textbf{Hành động} \\
+\hline
+5a. & Hệ thống & Thông báo lỗi: Tham số không hợp lệ, hiển thị lỗi validation \\
+\hline
+7a. & Hệ thống & Thông báo: Không có dữ liệu trong khoảng thời gian, gợi ý mở rộng \\
+\hline
+10a. & Hệ thống & Thông báo lỗi: Lỗi khi xuất file, cho phép thử lại \\
+\hline
+\end{tabular}
+\caption{Luồng sự kiện thay thế UC005}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|p{3cm}|p{10cm}|}
+\hline
+\textbf{Hậu điều kiện} & 
+\begin{itemize}
+    \item Báo cáo được tạo và hiển thị thành công
+    \item Quản trị viên có thông tin thống kê về hoạt động hệ thống
+    \item File báo cáo có thể được lưu và chia sẻ
+\end{itemize} \\
+\hline
+\end{tabular}
+\caption{Hậu điều kiện UC005}
+\end{table}
+
+\section{Yêu cầu phi chức năng}
+\label{section:2.4}
+
+\subsection{Yêu cầu về hiệu năng}
+\begin{itemize}
+    \item \textbf{Thời gian phản hồi:} Trang web phải tải trong vòng 3 giây với kết nối Internet bình thường
+    \item \textbf{Throughput:} Hệ thống phải xử lý được tối thiểu 1000 concurrent users
+    \item \textbf{Khả năng mở rộng:} Kiến trúc cho phép scale horizontal khi số lượng người dùng tăng
+\end{itemize}
+
+\subsection{Yêu cầu về độ tin cậy}
+\begin{itemize}
+    \item \textbf{Uptime:} Hệ thống phải có độ sẵn sàng 99.5\% (downtime < 3.65 ngày/năm)
+    \item \textbf{Backup:} Dữ liệu phải được backup hàng ngày và lưu trữ ở nhiều vị trí
+    \item \textbf{Error handling:} Tất cả lỗi phải được log và có cơ chế recovery tự động
+\end{itemize}
+
+\subsection{Yêu cầu về bảo mật}
+\begin{itemize}
+    \item \textbf{Authentication:} Sử dụng JWT với thời gian hết hạn 24h cho session
+    \item \textbf{Authorization:} Phân quyền rõ ràng cho từng role (Patient, Doctor, Admin)
+    \item \textbf{Data encryption:} Mã hóa dữ liệu nhạy cảm trong database và transmission
+    \item \textbf{HTTPS:} Tất cả communication phải sử dụng HTTPS
+    \item \textbf{Input validation:} Validate tất cả input để tránh SQL injection, XSS
+\end{itemize}
+
+\subsection{Yêu cầu về tính dễ sử dụng}
+\begin{itemize}
+    \item \textbf{Responsive design:} Giao diện tương thích với desktop, tablet, mobile
+    \item \textbf{Accessibility:} Tuân thủ WCAG 2.1 AA guidelines
+    \item \textbf{Multi-language:} Hỗ trợ tiếng Việt và tiếng Anh
+    \item \textbf{User-friendly:} Interface trực quan, dễ hiểu cho người dùng ở mọi lứa tuổi
+\end{itemize}
+
+\subsection{Yêu cầu về tích hợp}
+\begin{itemize}
+    \item \textbf{SMS service:} Tích hợp với nhà cung cấp SMS để gửi OTP và thông báo
+    \item \textbf{Email service:} Tích hợp SMTP để gửi email xác nhận và thông báo
+    \item \textbf{AI service:} Tích hợp OpenAI GPT-4 API cho chatbot
+\end{itemize}
+
+\subsection{Yêu cầu về môi trường triển khai}
+\begin{itemize}
+    \item \textbf{Database:} PostgreSQL 14+ với connection pooling
+    \item \textbf{Server:} Node.js 18+ environment
+    \item \textbf{Caching:} Redis cho session storage và caching
+    \item \textbf{CDN:} Sử dụng CDN cho static assets
+    \item \textbf{Monitoring:} Tích hợp logging và monitoring tools
+\end{itemize}
+
+\section*{Kết chương}
+
+Chương này đã hoàn thành quá trình phân tích yêu cầu và thiết kế tổng quan cho hệ thống quản lý lịch hẹn khám bệnh trực tuyến. Qua khảo sát 150 đối tượng và phân tích các ứng dụng tương tự, nhóm đã xác định được các gap trong thị trường và định hình các tính năng cần phát triển.
+
+Hệ thống được thiết kế với 3 tác nhân chính (Bệnh nhân, Bác sĩ, Quản trị viên) và 7 nhóm chức năng cốt lõi. Đặc biệt, việc tích hợp AI chatbot sử dụng GPT-4 và focus vào trải nghiệm người dùng sẽ tạo ra competitive advantage so với các giải pháp hiện tại.
+
+6 use case quan trọng nhất đã được đặc tả chi tiết với các luồng sự kiện chính và phát sinh, cung cấp blueprint rõ ràng cho việc implementation. Các yêu cầu phi chức năng được định nghĩa cụ thể về performance, security, usability và scalability, đảm bảo hệ thống đáp ứng standards của healthcare industry.
+
+Kết quả của chương này sẽ làm nền tảng cho việc thiết kế kiến trúc hệ thống, database design và implementation trong các chương tiếp theo.
+
+\end{document} 
